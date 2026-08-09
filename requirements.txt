@@ -1,0 +1,15 @@
+langchain-core
+langchain-ollama
+langgraph
+langsmith
+pandas
+plotly
+pydantic
+pydantic-settings
+python-dotenv
+streamlit
+tavily-python
+yfinance
+
+# Test dependencies
+pytest
