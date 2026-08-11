@@ -1,37 +1,17 @@
+
+# LangGraph API
+.langgraph_api
+
+# Local environment
+.env
+.venv/
+venv/
+
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
 .pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
 
-# Virtual environments
-venv/
-.venv/
-env/
-
-# Secrets and local config
-.env
-.env.*
-!.env.example
-
-# Streamlit
-.streamlit/secrets.toml
-
-# Local outputs and downloads
-output/
-tmp/
+# Local outputs
+reports/
 *.log
-*.pid
-*.trace
-trace-*.json
-*_Investment_Report*.md
-
-# OS / editor
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
