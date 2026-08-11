@@ -22,10 +22,10 @@ LEAN_ANALYST_PROFILE = HarnessProfile(
             "glob",
             "grep",
             "execute",
-            "write_todos",
+            
         }
     ),
-    general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False),
+    general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=True),
 )
 register_harness_profile("ollama", LEAN_ANALYST_PROFILE)
 
