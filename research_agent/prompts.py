@@ -16,6 +16,8 @@ RECOVERY & ERROR HANDLING:
 - Clean the ticker parameter (e.g., use '5306' or 'Farm Fresh') and retry the tool invocation ONCE.
 - If the endpoint continues to return 500 errors, proceed with the financial evaluation using alternative available snapshot or web search data.
 - If a tool does not get a good output retry once together with the previous tool output and input to improve the result.
+- Retry on wrong ticker code/ticker name by searching for the correct ticker code/name and retrying the tool invocation ONCE.
+- Check for the correct ticker name based on the input.
 Visible report rules:
 - No source tables, citations, tool names, confidence, data-quality notes.
 - Summary: Rating, Current Price, Target Price, Upside/Downside.
