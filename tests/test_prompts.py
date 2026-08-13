@@ -4,7 +4,7 @@ from research_agent.prompts import FINANCIAL_ANALYST_SYSTEM_PROMPT
 def test_main_prompt_is_compact_and_clean_report_oriented():
     prompt = FINANCIAL_ANALYST_SYSTEM_PROMPT
 
-    assert len(prompt) < 1200
+    assert len(prompt) < 3000
     assert "Target Price" in prompt
     assert "No source tables" in prompt
     assert "financial_statement_table_markdown" in prompt

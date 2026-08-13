@@ -25,7 +25,7 @@ LEAN_ANALYST_PROFILE = HarnessProfile(
             
         }
     ),
-    general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=True),
+    general_purpose_subagent=GeneralPurposeSubagentProfile(enabled=False),
 )
 register_harness_profile("ollama", LEAN_ANALYST_PROFILE)
 
@@ -42,4 +42,6 @@ graph = create_deep_agent(
     model=get_ollama_cloud_model(),
     tools=tools,
     system_prompt=FINANCIAL_ANALYST_SYSTEM_PROMPT,
+    memory=["./AGENT.md"],
+    skills=["skills/"],
 )
