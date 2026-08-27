@@ -210,19 +210,18 @@ with st.container(horizontal=True):
 render_price_chart(df_history, f"{company_name} Price Action")
 
 if run_analysis and selected_ticker:
-    prompt = f"""
-Write an equity research report for {company_name} ({selected_ticker}).
-First call build_bursa_research_snapshot once.
-Use financial_statement_table_markdown exactly in section 2.
-Keep its 4Q financial statement table and latest valuation-ratio table.
-If 4Q data is incomplete, inspect missing_quarter_retry and use only explicit searched figures; otherwise N/A.
-Output sections: Executive Summary; Financial Statements, Key Ratios, Historical Performance;
-Sector Insight, Forecast Explanation, Valuation, Risks; Final Investment View.
-Use exactly these four numbered sections as ## headings; no bold-only headings and no extra headings.
-No sources, tool names, confidence, or data-quality notes. No invented peer/sector/consensus numbers.
-Summary must include rating, current price, target price, and upside/downside.
-End with the education-only disclaimer. Target length: 500-700 words.
-"""
+    prompt = f"""Generate an equity research report for {company_name} (Ticker: {selected_ticker}).
+
+    MANDATORY ACTION:
+    Call `build_bursa_research_snapshot` for '{selected_ticker}' as your FIRST step.
+
+    REPORT REQUIREMENTS:
+    1. Output the 4 exact `##` sections (Executive Summary, Financial Statements, Sector Insight & Valuation, Final View).
+    2. In Section 2, insert `financial_statement_table_markdown` verbatim.
+    3. Include Rating, Current Price, Target Price, and % Upside/Downside in Section 1.
+    4. Provide company-specific financial reasoning for the DCF valuation and trade ranges.
+    5. Target Length: ~500–700 words. End with the educational disclaimer.
+    """
     start_agent_run(prompt)
 
 if st.session_state.active_future is not None:

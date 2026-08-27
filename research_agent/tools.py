@@ -1,5 +1,6 @@
 from typing import Any, cast
-
+import pandas as pd
+import numpy as np
 import yfinance as yf
 from langchain_core.tools import tool
 
@@ -19,7 +20,7 @@ from research_agent.market_data import (
     compact_valuation_ratios as _compact_valuation_ratios,
 )
 from research_agent.reporting import clean_visible_report
-from research_agent.schemas import DCFValuationRequest, ReportFormatResult
+from research_agent.schemas import DCFValuationRequest, ReportFormatResult, TradeLevelsResult
 from research_agent.search import build_fast_market_context, build_market_news_context, build_missing_quarter_search
 from research_agent.search import cached_official_bursa_filings as _cached_official_bursa_filings
 from research_agent.search import search_with_tavily as _search_with_tavily
@@ -63,11 +64,12 @@ def search_bursa_stock(query: str) -> list[dict]:
 @tool
 def fetch_bursa_stock_data(ticker_code_or_name: str) -> dict:
     """Fetch a compact Bursa stock snapshot: price, ratios, dividend, market cap, sector, and summary."""
-    result = YFinanceUtils.get_stock_info(ticker_code_or_name)
+    ticker = resolve_bursa_ticker(ticker_code_or_name)
+    result = YFinanceUtils.get_stock_info(ticker)
     if result.get("status") == "FAILED":
         return result
     return {
-        "symbol": result.get("symbol"),
+        "symbol": result.get("symbol", ticker),
         "company_name": result.get("company_name"),
         "sector": result.get("sector"),
         "industry": result.get("industry"),
@@ -92,9 +94,10 @@ def fetch_bursa_stock_data(ticker_code_or_name: str) -> dict:
 @tool
 def fetch_bursa_quarterly_reports(ticker_code_or_name: str) -> dict:
     """Fetch compact recent quarterly revenue, EBITDA, operating income, net income, and EPS for a Bursa stock."""
+    ticker = resolve_bursa_ticker(ticker_code_or_name)
     result = YFinanceUtils.get_quarterly_reports(ticker_code_or_name)
     return {
-        "symbol": result.get("symbol"),
+        "symbol": result.get("symbol", ticker),
         "company_name": result.get("company_name"),
         "quarterly_financials": result.get("quarterly_financials", {}),
     }
@@ -102,24 +105,28 @@ def fetch_bursa_quarterly_reports(ticker_code_or_name: str) -> dict:
 
 @tool
 def build_bursa_research_snapshot(ticker_code_or_name: str) -> dict:
-    """Build one compact report-ready snapshot with financial statements, ratios, valuation, and developments."""
-    stock = cast(Any, fetch_bursa_stock_data).func(ticker_code_or_name)
-    quarters = cast(Any, fetch_bursa_quarterly_reports).func(ticker_code_or_name)
-    ticker = stock.get("symbol") or resolve_bursa_ticker(ticker_code_or_name)
+    """Build one compact report-ready snapshot with financial statements, ratios, valuation, trade levels, and developments.
+
+    Accepts company names (e.g. 'Focus Point', 'Genting') or numeric codes (e.g. '0157', '3182').
+    """
+    # 1. ALWAYS RESOLVE TICKER FIRST
+    ticker = resolve_bursa_ticker(ticker_code_or_name)
+    
+    # 2. Pass the resolved 4-digit .KL ticker to data fetchers
+    stock = cast(Any, fetch_bursa_stock_data).func(ticker) or {}
+    quarters = cast(Any, fetch_bursa_quarterly_reports).func(ticker) or {}
+    technicals = cast(Any, fetch_bursa_technical_indicators).func(ticker) or {}
+
     stock_obj = yf.Ticker(ticker)
-    quarterly_summary = quarters.get("quarterly_financials", {})
-    balance_sheet = _compact_balance_sheet(stock_obj)
-    cash_flow = _compact_cash_flow(stock_obj)
-    valuation_ratios = _compact_valuation_ratios(stock)
+    quarterly_summary = quarters.get("quarterly_financials") or {}
+    balance_sheet = _compact_balance_sheet(stock_obj) or {}
+    cash_flow = _compact_cash_flow(stock_obj) or {}
+    valuation_ratios = _compact_valuation_ratios(stock) or {}
+
     complete_periods = _complete_statement_periods(
         quarterly_summary=quarterly_summary,
         balance_sheet=balance_sheet,
         cash_flow=cash_flow,
-    )
-    missing_quarter_retry = build_missing_quarter_search(
-        company_name=stock.get("company_name") or ticker_code_or_name,
-        ticker=ticker,
-        known_periods=complete_periods,
     )
     financial_table_markdown = _build_last_4q_financial_table(
         quarterly_summary=quarterly_summary,
@@ -127,11 +134,23 @@ def build_bursa_research_snapshot(ticker_code_or_name: str) -> dict:
         cash_flow=cash_flow,
         valuation_ratios=valuation_ratios,
     )
+    
+    net_incomes = [
+        v.get("net_income_myr_m")
+        for v in quarterly_summary.values()
+        if isinstance(v.get("net_income_myr_m"), (int, float))
+    ]
+    
     valuation = calculate_dcf_valuation_result(
         current_price=stock.get("current_price"),
         pe_ratio=stock.get("pe_ratio"),
-        growth_rate=0.05,
+        forward_pe=stock.get("forward_pe"),
+        trailing_eps=stock.get("trailing_eps"),
+        book_value=stock.get("book_value"),
+        dividend_yield_pct=stock.get("dividend_yield"),
+        quarterly_net_income=net_incomes,
     )
+
     company = stock.get("company_name") or ticker_code_or_name
     market_context = build_fast_market_context(
         company_name=company,
@@ -141,106 +160,91 @@ def build_bursa_research_snapshot(ticker_code_or_name: str) -> dict:
     )
     sector_insight = _build_sector_insight(stock=stock, market_context=market_context)
     forecast_explanation = _build_forecast_explanation(stock=stock, valuation=valuation)
+
     return {
         "stock": stock,
-        "data_quality": _build_data_quality_check(
-            stock=stock,
-            quarterly_summary=quarterly_summary,
-            balance_sheet=balance_sheet,
-            cash_flow=cash_flow,
-            valuation_ratios=valuation_ratios,
-        ),
-        "income_statement": quarterly_summary,
-        "quarterly_financial_summary": quarterly_summary,
-        "balance_sheet": balance_sheet,
-        "cash_flow": cash_flow,
-        "valuation_ratios": valuation_ratios,
-        "missing_quarter_retry": missing_quarter_retry,
         "financial_statement_table_markdown": financial_table_markdown,
-        "quarters": quarterly_summary,
         "valuation": {
             "target_price_myr": valuation.get("estimated_fair_value_myr"),
             "upside_downside_pct": valuation.get("upside_downside_pct"),
             "growth_rate": valuation.get("growth_rate"),
+            "derived_growth_rate_pct": valuation.get("derived_growth_rate_pct"),
+            "growth_source": valuation.get("growth_source"),
             "wacc": valuation.get("wacc"),
             "terminal_pe": valuation.get("terminal_pe"),
             "eps_input": valuation.get("eps_input"),
         },
-        "forecast_explanation": forecast_explanation,
+        "trade_levels": {
+            "support_level": technicals.get("support_level"),
+            "resistance_level": technicals.get("resistance_level"),
+            "buy_range": f"RM {technicals.get('buy_range_min')} - RM {technicals.get('buy_range_max')}",
+            "sell_range": f"RM {technicals.get('sell_range_min')} - RM {technicals.get('sell_range_max')}",
+            "rsi": technicals.get("rsi"),
+            "rsi_signal": technicals.get("rsi_signal"),
+            "ema_trend": technicals.get("ema_trend"),
+        },
         "sector_insight": sector_insight,
-        "recent_developments": market_context.get("market_news", {}).get("items", []),
-        "market_context": market_context,
+        "recent_developments": market_context.get("market_news", {}).get("items", [])[:2],
     }
-
-
-def _build_sector_insight(stock: dict, market_context: dict) -> dict:
-    sector = stock.get("sector") or "N/A"
-    industry = stock.get("industry") or "N/A"
-    market_items = market_context.get("market_news", {}).get("items", [])
-    macro_items = market_context.get("macro_news", {}).get("items", [])
-    return {
-        "sector": sector,
-        "industry": industry,
-        "business_exposure": (stock.get("summary") or "")[:120],
-        "demand_drivers": [
-            "consumer health spending",
-            "store network productivity",
-            "pricing and procurement discipline",
-        ],
-        "watch_items": [
-            "consumer discretionary slowdown",
-            "imported lens or equipment cost pressure",
-            "retail competition and rental/labour costs",
-        ],
-        "retrieved_signals": [*market_items[:1], *macro_items[:1]],
-    }
-
+    
+@tool
+def calculate_valuation_multiples(price: float, eps: float, bvps: float) -> dict:
+    """Calculate key valuation metrics (P/E Ratio and P/B Ratio) for financial analysis."""
+    return calculate_valuation_multiples_result(price=price, eps=eps, bvps=bvps)
 
 def _build_forecast_explanation(stock: dict, valuation: dict) -> dict:
+    growth = valuation.get("growth_rate")
+    growth_pct = (growth * 100) if growth is not None else 6.0
+    wacc = valuation.get("wacc") or 0.08
+
     return {
-        "method": "earnings-proxy DCF using current price, trailing P/E, assumed EPS growth, WACC, and terminal P/E",
+        "method": valuation.get("valuation_method", "5-year earnings-proxy DCF"),
         "base_eps_myr": valuation.get("eps_input") or stock.get("trailing_eps"),
-        "growth_rate": valuation.get("growth_rate"),
-        "wacc": valuation.get("wacc"),
-        "terminal_pe": valuation.get("terminal_pe"),
-        "target_price_myr": valuation.get("estimated_fair_value_myr"),
-        "upside_downside_pct": valuation.get("upside_downside_pct"),
-        "forecast_message": (
-            "Target price rises when earnings growth or terminal multiple improves, and falls when WACC rises or "
-            "earnings momentum weakens."
-        ),
+        "assumed_growth_rate_pct": round(growth_pct, 2),
+        "wacc_pct": round(wacc * 100, 2),
+        "terminal_pe_multiple": valuation.get("terminal_pe"),
+        "intrinsic_fair_value_myr": valuation.get("estimated_fair_value_myr"),
+        "implied_upside_pct": valuation.get("upside_downside_pct"),
+        "growth_source": valuation.get("growth_source", "Macro Benchmark"),
     }
+    
 
 
 def _build_last_4q_financial_table(
-    quarterly_summary: dict,
-    balance_sheet: dict,
-    cash_flow: dict,
-    valuation_ratios: dict,
+    quarterly_summary: dict | None,
+    balance_sheet: dict | None,
+    cash_flow: dict | None,
+    valuation_ratios: dict | None,
 ) -> str:
-    periods = list(dict.fromkeys([*quarterly_summary.keys(), *balance_sheet.keys(), *cash_flow.keys()]))[:4]
+    # Safely convert any None inputs to empty dictionaries
+    qs = quarterly_summary or {}
+    bs = balance_sheet or {}
+    cf = cash_flow or {}
+    vr = valuation_ratios or {}
+
+    periods = list(dict.fromkeys([*qs.keys(), *bs.keys(), *cf.keys()]))[:4]
     while len(periods) < 4:
         periods.append(f"Q-{len(periods)}")
 
     rows = [
-        ("Revenue (RMm)", quarterly_summary, "revenue_myr_m"),
-        ("Net Income (RMm)", quarterly_summary, "net_income_myr_m"),
-        ("Diluted EPS (RM)", quarterly_summary, "diluted_eps"),
-        ("Cash (RMm)", balance_sheet, "cash_myr_m"),
-        ("Total Assets (RMm)", balance_sheet, "total_assets_myr_m"),
-        ("Total Debt (RMm)", balance_sheet, "total_debt_myr_m"),
-        ("Shareholders' Equity (RMm)", balance_sheet, "shareholders_equity_myr_m"),
-        ("Operating Cash Flow (RMm)", cash_flow, "operating_cash_flow_myr_m"),
-        ("Free Cash Flow (RMm)", cash_flow, "free_cash_flow_myr_m"),
+        ("Revenue (RMm)", qs, "revenue_myr_m"),
+        ("Net Income (RMm)", qs, "net_income_myr_m"),
+        ("Diluted EPS (RM)", qs, "diluted_eps"),
+        ("Cash (RMm)", bs, "cash_myr_m"),
+        ("Total Assets (RMm)", bs, "total_assets_myr_m"),
+        ("Total Debt (RMm)", bs, "total_debt_myr_m"),
+        ("Shareholders' Equity (RMm)", bs, "shareholders_equity_myr_m"),
+        ("Operating Cash Flow (RMm)", cf, "operating_cash_flow_myr_m"),
+        ("Free Cash Flow (RMm)", cf, "free_cash_flow_myr_m"),
     ]
     ratio_rows = [
-        ("P/E (trailing)", valuation_ratios.get("pe"), "x"),
-        ("Forward P/E", valuation_ratios.get("forward_pe"), "x"),
-        ("Price-to-Book", valuation_ratios.get("price_to_book"), "x"),
-        ("Price-to-Sales", valuation_ratios.get("price_to_sales"), "x"),
-        ("Dividend Yield", valuation_ratios.get("dividend_yield_pct"), "%"),
-        ("Market Capitalisation", valuation_ratios.get("market_cap_myr_m"), "RMm"),
-        ("Enterprise Value", valuation_ratios.get("enterprise_value_myr_m"), "RMm"),
+        ("P/E (trailing)", vr.get("pe"), "x"),
+        ("Forward P/E", vr.get("forward_pe"), "x"),
+        ("Price-to-Book", vr.get("price_to_book"), "x"),
+        ("Price-to-Sales", vr.get("price_to_sales"), "x"),
+        ("Dividend Yield", vr.get("dividend_yield_pct"), "%"),
+        ("Market Capitalisation", vr.get("market_cap_myr_m"), "RMm"),
+        ("Enterprise Value", vr.get("enterprise_value_myr_m"), "RMm"),
     ]
 
     quarterly_table = [
@@ -262,14 +266,21 @@ def _build_last_4q_financial_table(
     return "\n\n".join(("\n".join(quarterly_table), "\n".join(latest_ratio_table)))
 
 
-def _complete_statement_periods(quarterly_summary: dict, balance_sheet: dict, cash_flow: dict) -> list[str]:
-    periods = list(dict.fromkeys([*quarterly_summary.keys(), *balance_sheet.keys(), *cash_flow.keys()]))[:4]
+def _complete_statement_periods(
+    quarterly_summary: dict | None,
+    balance_sheet: dict | None,
+    cash_flow: dict | None,
+) -> list[str]:
+    qs = quarterly_summary or {}
+    bs = balance_sheet or {}
+    cf = cash_flow or {}
+
+    periods = list(dict.fromkeys([*qs.keys(), *bs.keys(), *cf.keys()]))[:4]
     complete_periods = []
     for period in periods:
-        if period in quarterly_summary and period in balance_sheet and period in cash_flow:
+        if period in qs and period in bs and period in cf:
             complete_periods.append(period)
     return complete_periods
-
 
 def _format_table_value(value: Any) -> str:
     if value in (None, ""):
@@ -278,6 +289,43 @@ def _format_table_value(value: Any) -> str:
         return f"{value:.4f}".rstrip("0").rstrip(".")
     return str(value)
 
+def _clean_headline(title: str) -> str:
+    """Strip website domain names and generic stock quote suffixes."""
+    ignore_phrases = ["Stock Price", "Quote & History", "Live - Investing.com", "KLSE Screener"]
+    for phrase in ignore_phrases:
+        if phrase in title:
+            return ""
+    return title.strip()
+
+def _build_sector_insight(stock: dict, market_context: dict) -> dict:
+    sector = stock.get("sector") or "N/A"
+    industry = stock.get("industry") or "N/A"
+    
+    market_items = market_context.get("market_news", {}).get("items", [])
+    macro_items = market_context.get("macro_news", {}).get("items", [])
+    
+    raw_titles = [item.get("title", "") for item in [*market_items, *macro_items]]
+    cleaned_watch_items = [t for t in (_clean_headline(t) for t in raw_titles) if t]
+    
+    if not cleaned_watch_items:
+        cleaned_watch_items = [
+            f"Regulatory & tariff outlook in {sector}",
+            f"Capital expenditure & leverage management in {industry}",
+            "Input cost volatility and interest rate movements"
+        ]
+
+    return {
+        "sector": sector,
+        "industry": industry,
+        "business_exposure": (stock.get("summary") or "")[:150],
+        "demand_drivers": [
+            f"Secular demand trends across {sector}",
+            f"Competitive positioning in {industry}",
+            "Operational efficiency and pricing power"
+        ],
+        "watch_items": cleaned_watch_items[:3],
+        "retrieved_signals": market_items[:2],
+    }
 
 def _format_latest_ratio_value(value: Any, unit: str) -> str:
     formatted = _format_table_value(value)
@@ -289,18 +337,85 @@ def _format_latest_ratio_value(value: Any, unit: str) -> str:
         return f"RM {formatted}m"
     return formatted
 
-
 @tool
-def search_official_bursa_filings(company_name_or_ticker: str = "", company_name_or_tticker: str = "") -> dict:
+def fetch_bursa_technical_indicators(symbol: str) -> dict:
+    """Fetch historical price data and calculate technical indicators (RSI, Bollinger Bands, ATR, Support/Resistance)."""
+    ticker_code = resolve_bursa_ticker(symbol)
+    try:
+        df = yf.Ticker(ticker_code).history(period="6mo", interval="1d")
+        if df.empty or len(df) < 20:
+            return {"error": f"Insufficient historical data for {symbol}"}
+
+        close = df["Close"]
+        high = df["High"]
+        low = df["Low"]
+
+        current_price = round(float(close.iloc[-1]), 3)
+
+        # 1. Moving Averages & Bands
+        ema_20 = round(float(close.ewm(span=20).mean().iloc[-1]), 3)
+        ema_50 = round(float(close.ewm(span=50).mean().iloc[-1]), 3)
+        sma_20 = close.rolling(window=20).mean().iloc[-1]
+        std_20 = close.rolling(window=20).std().iloc[-1]
+        bb_upper = round(float(sma_20 + (2 * std_20)), 3)
+        bb_lower = round(float(sma_20 - (2 * std_20)), 3)
+
+        # 2. Average True Range (ATR)
+        tr1 = high - low
+        tr2 = (high - close.shift(1)).abs()
+        tr3 = (low - close.shift(1)).abs()
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        atr = round(float(tr.rolling(14).mean().iloc[-1]), 3)
+
+        # 3. Relative Strength Index (RSI 14)
+        delta = close.diff()
+        gain = delta.where(delta > 0, 0.0).rolling(14).mean()
+        loss = (-delta.where(delta < 0, 0.0)).rolling(14).mean()
+        rs = gain / loss
+        rsi_series = 100 - (100 / (1 + rs))
+        rsi = round(float(rsi_series.iloc[-1]), 2)
+
+        # 4. Support & Resistance
+        support_level = round(float(low.tail(30).min()), 3)
+        resistance_level = round(float(high.tail(30).max()), 3)
+
+        # 5. Buy and Sell Price Ranges (Sanitized)
+        buy_min = max(0.01, round(min(support_level, bb_lower), 3))
+        buy_max = round(min(current_price, ema_20), 3)
+        if buy_max < buy_min:
+            buy_max = round(buy_min + atr, 3)
+
+        sell_min = round(max(current_price * 1.03, bb_upper), 3)
+        sell_max = round(max(resistance_level + atr, sell_min + (2 * atr)), 3)
+
+        # Signals
+        rsi_signal = "overbought" if current_price > bb_upper else ("oversold" if current_price < bb_lower else "neutral")
+        ema_trend = "bullish" if ema_20 > ema_50 else "bearish"
+
+        return TradeLevelsResult(
+            symbol=ticker_code,
+            current_price=current_price,
+            support_level=support_level,
+            resistance_level=resistance_level,
+            buy_range_min=buy_min,
+            buy_range_max=buy_max,
+            sell_range_min=sell_min,
+            sell_range_max=sell_max,
+            rsi=rsi,
+            rsi_signal=rsi_signal,
+            ema_trend=ema_trend,
+            atr=atr,
+        ).model_dump()
+
+    except Exception as exc:
+        return {"error": f"Failed to compute technical levels for {symbol}: {str(exc)}"}
+    
+@tool
+def search_official_bursa_filings(company_name_or_ticker: str = "" ) -> dict:
     """Search official Bursa Malaysia announcements and company investor-relations pages before generic sources."""
-    query = company_name_or_ticker or company_name_or_tticker
+    query = company_name_or_ticker 
     return _cached_official_bursa_filings(query)
 
-
-@tool
-def calculate_valuation_multiples(price: float, eps: float, bvps: float) -> dict:
-    """Calculate key valuation metrics (P/E Ratio and P/B Ratio) for financial analysis."""
-    return calculate_valuation_multiples_result(price=price, eps=eps, bvps=bvps)
 
 
 @tool(args_schema=DCFValuationRequest)
@@ -316,8 +431,7 @@ def calculate_dcf_valuation(
         current_price=current_price,
         pe_ratio=pe_ratio,
         growth_rate=growth_rate,
-        wacc=wacc,
-        terminal_growth_rate=terminal_growth_rate,
+      
     )
 
 
@@ -329,3 +443,4 @@ def format_equity_report(title: str, body_markdown: str) -> dict:
     if not report.startswith("#"):
         report = f"# {title.strip()}\n\n{report}"
     return ReportFormatResult(report_markdown=report, disclaimer=disclaimer, status="SUCCESS").model_dump()
+
