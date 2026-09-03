@@ -5,7 +5,6 @@ from research_agent.prompts import (
     RISK_DEBATE_PROMPT,
     WRITER_PROMPT,
 )
-
 from research_agent.tools import (
     YFinanceUtils,
     build_bursa_research_snapshot,
@@ -13,7 +12,6 @@ from research_agent.tools import (
     calculate_valuation_multiples,
     fetch_bursa_quarterly_reports,
     fetch_bursa_stock_data,
-    fetch_bursa_technical_indicators,
     format_equity_report,
     normalize_bursa_ticker,
     resolve_bursa_ticker,
@@ -21,7 +19,6 @@ from research_agent.tools import (
     search_bursa_stock,
     search_market_context,
     search_official_bursa_filings,
-    
 )
 
 __all__ = [
@@ -36,7 +33,6 @@ __all__ = [
     "calculate_valuation_multiples",
     "fetch_bursa_quarterly_reports",
     "fetch_bursa_stock_data",
-    "fetch_bursa_technical_indicators",
     "format_equity_report",
     "normalize_bursa_ticker",
     "resolve_bursa_ticker",
