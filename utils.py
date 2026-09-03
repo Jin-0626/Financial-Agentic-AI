@@ -27,7 +27,6 @@ def get_ollama_cloud_model(model_name: str | None = None, base_url: str | None =
         model=selected_model,
         base_url=raw_url.rstrip("/"),
         temperature=0.2,
-        streaming=True,
         timeout=settings.MODEL_TIMEOUT_SECONDS,
         max_retries=settings.MODEL_MAX_RETRIES,
         client_kwargs={"headers": headers} if headers else {},

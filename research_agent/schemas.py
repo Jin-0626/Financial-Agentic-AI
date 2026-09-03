@@ -40,7 +40,7 @@ class BursaTickerRequest(BaseModel):
 class SourceRecord(BaseModel):
     title: str
     url: str
-    provider: str ="bursa_official"
+    provider: str
     retrieved_at: str = Field(default_factory=utc_now_iso)
     confidence: Literal["high", "medium", "low"] = "medium"
     published_date: str | None = None
@@ -157,26 +157,3 @@ class ReportFormatResult(BaseModel):
     retrieved_at: str = Field(default_factory=utc_now_iso)
     report_markdown: str
     disclaimer: str
-
-class StockAnalysisReport(BaseModel):
-    ticker: str
-    current_price: float
-    pe_ratio: float = Field(description="Trailing P/E ratio")
-    recommendation: str = Field(description="BUY, HOLD, or SELL with justification")
-    buy_price_range: str = Field(description="Suggested entry price range (e.g., RM 0.48 - RM 0.51)")
-    sell_price_range: str = Field(description="Suggested target exit range (e.g., RM 0.58 - RM 0.64)")
-    key_risks: list[str]
-    
-class TradeLevelsResult(BaseModel):
-    symbol: str
-    current_price: float
-    support_level: float
-    resistance_level: float
-    buy_range_min: float
-    buy_range_max: float
-    sell_range_min: float
-    sell_range_max: float
-    rsi: float
-    rsi_signal: str
-    ema_trend: str
-    atr: float
