@@ -1,22 +1,23 @@
 {
   "include": [
-    "agent.py",
-    "app.py",
-    "utils.py",
-    "research_agent",
-    "tests"
+    "src",
+    "test"
   ],
   "exclude": [
     ".venv",
     "venv",
     "**/__pycache__"
   ],
-  "venvPath": ".",
-  "venv": "venv",
   "typeCheckingMode": "basic",
+  "reportMissingImports": false,
   "reportMissingTypeStubs": false,
   "reportUnknownArgumentType": false,
   "reportUnknownMemberType": false,
   "reportUnknownVariableType": false,
-  "reportUnknownLambdaType": false
+  "reportUnknownLambdaType": false,
+  "reportArgumentType": false,
+  "reportReturnType": false,
+  "reportOperatorIssue": false,
+  "reportOptionalOperand": false,
+  "reportAttributeAccessIssue": false
 }

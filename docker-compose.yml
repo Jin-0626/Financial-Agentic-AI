@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  bursa-db:
+    image: pgvector/pgvector:pg16
+    container_name: bursa_pgvector
+    restart: always
+    environment:
+      POSTGRES_DB: bursa_db
+      POSTGRES_USER: bursa_user
+      POSTGRES_PASSWORD: bursa_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./data/migrations:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:

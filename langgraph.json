@@ -1,7 +1,10 @@
 {
-  "dependencies": ["."],
+  "python_version": "3.11",
+  "dependencies": [
+    "."
+  ],
   "graphs": {
-    "financial_researcher": "./agent.py:graph"
+    "bursa_deepagent": "./src/studio_graph.py:deep_agent_graph"
   },
   "env": ".env"
 }
