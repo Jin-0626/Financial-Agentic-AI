@@ -1,53 +1,59 @@
-# Malaysia Financial Research Agent
+# Bursa Financial Analyst Agent
 
-A Bursa Malaysia equity research app powered by LangGraph DeepAgents, Ollama Cloud, yfinance, Tavily search, and Streamlit.
+A Bursa Malaysia equity research agent built with LangGraph DeepAgents, FastAPI,
+Ollama, pgvector-backed Bursa filing retrieval, and compact live-market
+intelligence.
 
-The app is designed for educational financial research. It does not provide personal financial advice.
+This project is for educational research only. It does not provide personal
+financial advice.
 
 ## What It Does
 
-- Resolves Bursa Malaysia tickers such as `5275` to `5275.KL`.
-- Builds a compact research snapshot with stock price, quarterly financials, balance sheet, cash flow, valuation ratios, sector context, and market news.
-- Runs a DeepAgent analyst workflow using an Ollama Cloud model.
-- Produces a clean Markdown report with four consistent sections:
-  - Executive Summary
-  - Financial Statements, Key Ratios, Historical Performance
-  - Sector Insight, Forecast Explanation, Valuation, Risks
-  - Final Investment View
-- Keeps the financial section deterministic:
-  - Revenue through Free Cash Flow appears in a Last 4Q table.
-  - P/E through Enterprise Value appears in a separate latest-only table.
-- Provides a Streamlit dashboard with ticker search, price chart, research run controls, stop-run behavior, report display, and Markdown download.
+- Resolves Bursa stock codes and company names.
+- Retrieves indexed Bursa quarterly filing excerpts from PostgreSQL/pgvector.
+- Uses a hybrid semantic and lexical RAG path so tabular balance-sheet data such
+  as total assets, liabilities, borrowings, cash, and lease liabilities is not
+  missed.
+- Runs DeepAgents specialists for fundamentals, bull/bear debate, and evidence
+  validation.
+- Produces an investment-committee style Markdown briefing without raw RAG chunk
+  IDs or messy source clutter in the final report.
+- Defaults to `HOLD` when evidence is incomplete, conflicting, or insufficient.
 
 ## Project Structure
 
 ```text
 .
-+-- agent.py                    # DeepAgent graph exported as graph
-+-- app.py                      # Streamlit dashboard
-+-- langgraph.json              # LangGraph Studio/API graph config
-+-- pyproject.toml              # Dependencies and Ruff config
-+-- research_agent/
-|   +-- market_data.py          # yfinance data extraction and compact financial statements
-|   +-- prompts.py              # Agent and subagent prompts
-|   +-- reporting.py            # Report cleanup and deterministic table enforcement
-|   +-- schemas.py              # Pydantic contracts
-|   +-- search.py               # Tavily, official filing, market context, missing-quarter search
-|   +-- settings.py             # Environment-backed settings
-|   +-- tickers.py              # Bursa ticker normalization
-|   +-- tools.py                # LangChain tools used by the DeepAgent
-|   +-- valuation.py            # Valuation calculations
-+-- tests/                      # Unit, agent, UI smoke, prompt, and reporting tests
+|-- langgraph.json         # LangGraph Studio graph config
+|-- pyproject.toml         # Package metadata and dependencies
+|-- docker-compose.yml     # Local PostgreSQL/pgvector service
+|-- data/
+|   `-- 001_init_schema.sql
+|-- src/
+|   |-- main.py            # FastAPI app
+|   |-- studio_graph.py    # LangGraph DeepAgents graph export
+|   |-- config.py          # Environment-backed config
+|   |-- ingest_report.py   # Bursa PDF ingestion CLI
+|   |-- ollama_runtime.py  # Ollama chat/embedding builders
+|   |-- db/
+|   |   `-- session.py
+|   |-- orchestrator/
+|   |   `-- graph.py       # API research pipeline
+|   |-- schemas/
+|   |   `-- report.py      # Pydantic contracts
+|   `-- tools/
+|       |-- bursa_rag.py
+|       |-- klse_market_data.py
+|       `-- tavily_search.py
+`-- test/                  # Unit and architecture tests
 ```
 
 ## Setup
 
-Use Python 3.10 or newer.
+Use Python 3.11 or newer.
 
 ```powershell
-python -m venv venv
-venv\Scripts\activate
-pip install -e .
+uv sync --dev --extra dev
 ```
 
 Create your local environment file:
@@ -56,93 +62,70 @@ Create your local environment file:
 Copy-Item .env.example .env
 ```
 
-Then fill in the keys you use:
+Then fill in the keys you use. `TAVILY_API_KEY` is optional, but live news and
+market-intelligence coverage improve when it is configured.
 
-```env
-OLLAMA_BASE_URL=https://ollama.com
-OLLAMA_API_KEY=
-PRIMARY_MODEL=gpt-oss:120b
-FAST_MODEL=minimax-m3:cloud
-TAVILY_API_KEY=
-LANGSMITH_TRACING=true
-LANGSMITH_API_KEY=
-LANGSMITH_PROJECT=Financial Analyst
-MAX_DEBATE_ROUNDS=1
-MODEL_TIMEOUT_SECONDS=120
-MODEL_MAX_RETRIES=3
-```
+## Database
 
-`TAVILY_API_KEY` is optional, but market news, macro news, competitor context, official filing search, and missing-quarter retry work best when it is configured.
-
-## Run The Streamlit App
+Start PostgreSQL/pgvector:
 
 ```powershell
-streamlit run app.py
+docker compose up -d
 ```
 
-In the UI:
+Apply the schema in `data/001_init_schema.sql`, then ingest quarterly PDFs:
 
-1. Search a Bursa stock name or code.
-2. Select the ticker.
-3. Review price chart and basic metrics.
-4. Click `Run research`.
-5. Use `Stop run` if you want the UI to ignore a long-running response.
-6. Download the generated Markdown report.
+```powershell
+.\.venv\Scripts\python.exe -m src.ingest_report <pdf_path> <stock_code> <company_name> <fiscal_quarter> <YYYY-MM-DD>
+```
 
 ## Run With LangGraph
 
-The graph is exposed as `financial_researcher` in `langgraph.json`:
+`langgraph.json` exposes:
 
 ```json
 {
   "graphs": {
-    "financial_researcher": "./agent.py:graph"
+    "bursa_deepagent": "./src/studio_graph.py:deep_agent_graph"
   }
 }
 ```
 
-This allows LangGraph Studio/API to load the same DeepAgent graph used by the Streamlit app.
+Start Studio locally:
 
-## Main Tools
-
-- `build_bursa_research_snapshot`: one-call report-ready data snapshot.
-- `fetch_bursa_stock_data`: price, company profile, valuation ratios, dividend, sector, and industry.
-- `fetch_bursa_quarterly_reports`: compact quarterly income statement values.
-- `search_official_bursa_filings`: official-first Bursa/company filing retrieval.
-- `search_market_context`: market, macro, micro-industry, and competitor search.
-- `calculate_dcf_valuation`: conservative earnings-proxy valuation.
-
-The agent prompt asks the model to call `build_bursa_research_snapshot` once for full reports, then only call additional tools when snapshot fields are missing.
-
-## Report Rules
-
-Visible reports intentionally hide source tables, data-quality sections, tool names, and confidence metadata. The final report should include only a short disclaimer at the end:
-
-```text
-This research is for education only and is not personal financial advice.
+```powershell
+$env:PYTHONUTF8 = "1"
+.\.venv\Scripts\langgraph.exe dev
 ```
 
-The financial statement section is enforced from tool output to avoid malformed Markdown tables. If a quarter is missing after the retry search, the app displays `N/A` instead of inventing a number.
+If LangGraph dev reports a blocking-call warning during local experimentation,
+use `--allow-blocking` only as a development override while keeping production
+paths async-safe.
+
+## Run The API
+
+```powershell
+.\.venv\Scripts\uvicorn.exe src.main:app --reload
+```
+
+Key endpoint:
+
+```text
+POST /analyze
+```
+
+Example body:
+
+```json
+{"stock_code": "0157", "company_name": "Focus Point Holdings Berhad"}
+```
 
 ## Quality Checks
 
-Run all checks before committing:
+Run before committing:
 
 ```powershell
-venv\Scripts\python.exe -m ruff format .
-venv\Scripts\python.exe -m ruff check .
-npx pyright
-venv\Scripts\python.exe -m pytest -q -p no:cacheprovider
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\ruff.exe check --no-cache src test
+.\.venv\Scripts\python.exe -m compileall src test
 ```
-
-Expected current result:
-
-```text
-36 passed
-```
-
-## Notes
-
-- yfinance is a market-data fallback/aggregator, not an official filing source.
-- Tavily search is used for official-source discovery, market news, macro/micro context, competitor signals, and missing-quarter retry.
-- The report is for research and education only, not regulated financial advice.
