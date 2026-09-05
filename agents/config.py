@@ -45,6 +45,7 @@ _ENV_OVERRIDES = {
     "BURSA_OUTPUT_LANGUAGE": "output_language",
     # LangSmith Telemetry
     "LANGCHAIN_TRACING_V2": "langchain_tracing_v2",
+    "LANGSMITH_TRACING_V2": "langchain_tracing_v2",
     "LANGCHAIN_ENDPOINT": "langchain_endpoint",
     "LANGSMITH_PROJECT": "langsmith_project",
     "LANGCHAIN_PROJECT": "langsmith_project",
@@ -90,79 +91,93 @@ def _apply_env_overrides(config: dict) -> dict:
     if config.get("langchain_tracing_v2"):
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGSMITH_TRACING_V2"] = "true"
-        os.environ["LANGCHAIN_PROJECT"] = config.get("langsmith_project", "Financial Analyst")
-        os.environ["LANGSMITH_PROJECT"] = config.get("langsmith_project", "Financial Analyst")
+        os.environ["LANGCHAIN_ENDPOINT"] = config.get(
+            "langchain_endpoint", "https://api.smith.langchain.com"
+        )
+        os.environ["LANGSMITH_ENDPOINT"] = config.get(
+            "langchain_endpoint", "https://api.smith.langchain.com"
+        )
+        os.environ["LANGCHAIN_PROJECT"] = config.get(
+            "langsmith_project", "Financial Analyst"
+        )
+        os.environ["LANGSMITH_PROJECT"] = config.get(
+            "langsmith_project", "Financial Analyst"
+        )
         if config.get("langsmith_api_key"):
             os.environ["LANGCHAIN_API_KEY"] = config["langsmith_api_key"]
             os.environ["LANGSMITH_API_KEY"] = config["langsmith_api_key"]
+    else:
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+        os.environ["LANGSMITH_TRACING_V2"] = "false"
 
     return config
 
 
-default_config = _apply_env_overrides({
-    # File & Directory Paths
-    "project_dir": str(_PROJECT_ROOT),
-    "results_dir": os.getenv("BURSA_RESULTS_DIR", os.path.join(_SYSTEM_HOME, "reports")),
-    "data_cache_dir": os.getenv("BURSA_CACHE_DIR", os.path.join(_SYSTEM_HOME, "cache")),
-    "memory_log_path": os.getenv("BURSA_MEMORY_PATH", os.path.join(_SYSTEM_HOME, "bursa_memory.md")),
-    
-    # LLM & Embedding Defaults
-    "llm_provider": "ollama",
-    "primary_model": "gpt-oss:120b-cloud",
-    "fast_model": "minimax-m3:cloud",
-    "embed_model": "embeddinggemma",
-    "ollama_base_url": "http://localhost:11434",
-    "ollama_api_key": "",
-    "temperature": 0.1,
-    "model_timeout_seconds": 120,
-    "model_max_retries": 3,
-    "max_tokens": None,
-
-    # PostgreSQL / pgvector RAG Parameters
-    "database_url": "postgresql://bursa_user:bursa_pass@localhost:5432/bursa_db",
-    "db_pool_size": 5,
-    "db_max_overflow": 10,
-    "rag_chunk_limit": 4,
-
-    # External APIs & Live Web Intel
-    "tavily_api_key": "",
-    "news_article_limit": 5,
-    "macro_lookback_days": 7,
-    "macro_news_queries": [
-        "Bank Negara Malaysia OPR monetary policy statement",
-        "Bursa Malaysia market turnover consumer retail footfall",
-        "Ringgit MYR forex USD exchange rate impact",
-        "SST expansion Malaysia retail sales tax consumer sentiment",
-    ],
-
-    # Agent Debate & Execution Controls
-    "max_debate_rounds": 1,
-    "max_risk_discuss_rounds": 1,
-    "max_recur_limit": 100,
-    "checkpoint_enabled": False,
-    "output_language": "English",
-
-    # Regional Benchmark Alignment for Alpha Calculations
-    "benchmark_ticker": None,  # Set e.g. "^KLSE" to force single benchmark
-    "benchmark_map": {
-        ".KL": "^KLSE",        # Bursa Malaysia (FTSE Bursa Malaysia KLCI)
-        ".SI": "^STI",         # Singapore Exchange (Straits Times Index)
-        ".JK": "^JKSE",        # Indonesia Stock Exchange (IDX Composite)
-        ".BK": "^SET.BK",      # Stock Exchange of Thailand (SET Index)
-        "":    "^KLSE",        # Default fallback for 4-digit Bursa tickers (e.g. 0157, 5275)
-    },
-
-    # Data Vendor Strategy
-    "data_vendors": {
-        "core_stock_apis": "bursa_scraper,yfinance",
-        "filing_rag": "pgvector",
-        "technical_indicators": "yfinance",
-        "news_data": "tavily",
-        "macro_data": "bnm_portal",
-    },
-
-    # LangSmith Telemetry
-    "langchain_tracing_v2": True,
-    "langsmith_project": "Financial Analyst",
-    "langsmith_api_key": "",
-})
+default_config = _apply_env_overrides(
+    {
+        # File & Directory Paths
+        "project_dir": str(_PROJECT_ROOT),
+        "results_dir": os.getenv(
+            "BURSA_RESULTS_DIR", os.path.join(_SYSTEM_HOME, "reports")
+        ),
+        "data_cache_dir": os.getenv(
+            "BURSA_CACHE_DIR", os.path.join(_SYSTEM_HOME, "cache")
+        ),
+        "memory_log_path": os.getenv(
+            "BURSA_MEMORY_PATH", os.path.join(_SYSTEM_HOME, "bursa_memory.md")
+        ),
+        # LLM & Embedding Defaults
+        "llm_provider": "ollama",
+        "primary_model": "gpt-oss:120b-cloud",
+        "fast_model": "minimax-m3:cloud",
+        "embed_model": "embeddinggemma",
+        "ollama_base_url": "http://localhost:11434",
+        "ollama_api_key": "",
+        "temperature": 0.1,
+        "model_timeout_seconds": 120,
+        "model_max_retries": 3,
+        "max_tokens": None,
+        # PostgreSQL / pgvector RAG Parameters
+        "database_url": "postgresql://bursa_user:bursa_pass@localhost:5432/bursa_db",
+        "db_pool_size": 5,
+        "db_max_overflow": 10,
+        "rag_chunk_limit": 4,
+        # External APIs & Live Web Intel
+        "tavily_api_key": "",
+        "news_article_limit": 5,
+        "macro_lookback_days": 7,
+        "macro_news_queries": [
+            "Bank Negara Malaysia OPR monetary policy statement",
+            "Bursa Malaysia market turnover consumer retail footfall",
+            "Ringgit MYR forex USD exchange rate impact",
+            "SST expansion Malaysia retail sales tax consumer sentiment",
+        ],
+        # Agent Debate & Execution Controls
+        "max_debate_rounds": 1,
+        "max_risk_discuss_rounds": 1,
+        "max_recur_limit": 100,
+        "checkpoint_enabled": False,
+        "output_language": "English",
+        # Regional Benchmark Alignment for Alpha Calculations
+        "benchmark_ticker": None,  # Set e.g. "^KLSE" to force single benchmark
+        "benchmark_map": {
+            ".KL": "^KLSE",  # Bursa Malaysia (FTSE Bursa Malaysia KLCI)
+            ".SI": "^STI",  # Singapore Exchange (Straits Times Index)
+            ".JK": "^JKSE",  # Indonesia Stock Exchange (IDX Composite)
+            ".BK": "^SET.BK",  # Stock Exchange of Thailand (SET Index)
+            "": "^KLSE",  # Default fallback for 4-digit Bursa tickers (e.g. 0157, 5275)
+        },
+        # Data Vendor Strategy
+        "data_vendors": {
+            "core_stock_apis": "bursa_scraper,yfinance",
+            "filing_rag": "pgvector",
+            "technical_indicators": "yfinance",
+            "news_data": "tavily",
+            "macro_data": "bnm_portal",
+        },
+        # LangSmith Telemetry
+        "langchain_tracing_v2": False,
+        "langsmith_project": "Financial Analyst",
+        "langsmith_api_key": "",
+    }
+)

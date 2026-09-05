@@ -1,6 +1,6 @@
 {
   "include": [
-    "src",
+    "agents",
     "test"
   ],
   "exclude": [

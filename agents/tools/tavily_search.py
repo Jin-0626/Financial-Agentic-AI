@@ -2,12 +2,33 @@ import json
 import logging
 import os
 
+import httpx
 from tavily import AsyncTavilyClient
+
+from agents.config import default_config
 
 logger = logging.getLogger(__name__)
 
-tavily_api_key = os.getenv("TAVILY_API_KEY")
-tavily_client = AsyncTavilyClient(api_key=tavily_api_key) if tavily_api_key else None
+tavily_client: AsyncTavilyClient | None = None
+
+
+def _get_tavily_client() -> AsyncTavilyClient | None:
+    """Build Tavily lazily so tests/env changes are respected and dead proxies are ignored."""
+    global tavily_client
+    if tavily_client is not None:
+        return tavily_client
+
+    tavily_api_key = os.getenv("TAVILY_API_KEY") or str(
+        default_config.get("tavily_api_key", "")
+    )
+    if not tavily_api_key:
+        return None
+
+    tavily_client = AsyncTavilyClient(
+        api_key=tavily_api_key,
+        client=httpx.AsyncClient(timeout=20.0, trust_env=False),
+    )
+    return tavily_client
 
 
 def _clip(text: object, limit: int = 700) -> str:
@@ -19,22 +40,49 @@ def _clip(text: object, limit: int = 700) -> str:
 
 async def search_bursa_intelligence(stock_code: str, company_name: str) -> str:
     """Fetch recent news, corporate announcements, and retail chatter via Tavily."""
-    if not tavily_client:
-        return f"Tavily API key not configured. Skipping live web search for {company_name} ({stock_code})."
+    client = _get_tavily_client()
+    if not client:
+        return json.dumps(
+            {
+                "ok": False,
+                "source": "tavily",
+                "company_name": company_name,
+                "stock_code": stock_code,
+                "error_type": "missing_api_key",
+                "message": "Tavily API key not configured.",
+                "results": [],
+            },
+            ensure_ascii=False,
+        )
 
-    query = f"{company_name} {stock_code} Bursa Malaysia financial news quarterly results"
+    query = (
+        f"{company_name} {stock_code} Bursa Malaysia financial news quarterly results"
+    )
     try:
-        # Tavily search call
-        response = await tavily_client.search(
+        response = await client.search(
             query=query,
             search_depth="basic",
             max_results=3,
         )
         results = response.get("results", [])
         if not results:
-            return f"No recent online intelligence found for {company_name}."
+            return json.dumps(
+                {
+                    "ok": False,
+                    "source": "tavily",
+                    "company_name": company_name,
+                    "stock_code": stock_code,
+                    "query": query,
+                    "error_type": "no_results",
+                    "message": f"No recent online intelligence found for {company_name}.",
+                    "results": [],
+                },
+                ensure_ascii=False,
+            )
 
         formatted = {
+            "ok": True,
+            "source": "tavily",
             "company_name": company_name,
             "stock_code": stock_code,
             "query": query,
@@ -52,5 +100,22 @@ async def search_bursa_intelligence(stock_code: str, company_name: str) -> str:
         return json.dumps(formatted, ensure_ascii=False)
 
     except Exception as exc:  # noqa: BLE001 - external Tavily client exceptions vary by transport.
-        logger.error("Tavily search error: %s", exc)
-        return f"Error fetching live news intelligence: {exc}"
+        logger.warning(
+            "Tavily search failed for %s (%s): %s",
+            company_name,
+            stock_code,
+            type(exc).__name__,
+        )
+        return json.dumps(
+            {
+                "ok": False,
+                "source": "tavily",
+                "company_name": company_name,
+                "stock_code": stock_code,
+                "query": query,
+                "error_type": type(exc).__name__,
+                "message": "Tavily search failed; live news is unavailable for this run.",
+                "results": [],
+            },
+            ensure_ascii=False,
+        )

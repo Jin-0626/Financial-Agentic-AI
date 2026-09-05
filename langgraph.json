@@ -4,7 +4,7 @@
     "."
   ],
   "graphs": {
-    "bursa_deepagent": "./src/studio_graph.py:deep_agent_graph"
+    "bursa_deepagent": "./agents/orchestrator/graph.py:deep_agent_graph"
   },
   "env": ".env"
 }

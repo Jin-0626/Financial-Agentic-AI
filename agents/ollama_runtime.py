@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
-from src.config import default_config
+from agents.config import default_config
 
 
 @dataclass
@@ -21,9 +21,16 @@ class OllamaSettings:
 
 
 settings = OllamaSettings(
-    ollama_base_url=str(default_config.get("ollama_base_url", "http://localhost:11434")),
+    ollama_base_url=str(
+        default_config.get("ollama_base_url", "http://localhost:11434")
+    ),
     ollama_chat_base_url=default_config.get("ollama_chat_base_url"),
-    ollama_embed_base_url=str(default_config.get("ollama_embed_base_url", default_config.get("ollama_base_url", "http://localhost:11434"))),
+    ollama_embed_base_url=str(
+        default_config.get(
+            "ollama_embed_base_url",
+            default_config.get("ollama_base_url", "http://localhost:11434"),
+        )
+    ),
     primary_model=str(default_config.get("primary_model", "gpt-oss:120b")),
     ollama_embed_model=str(default_config.get("embed_model", "embeddinggemma")),
     ollama_api_key=str(default_config.get("ollama_api_key", "")),
