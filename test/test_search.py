@@ -1,6 +1,6 @@
 import asyncio
 
-from src.tools.bursa_rag import search_bursa_notes
+from agents.tools.bursa_rag import search_bursa_notes
 
 
 async def main():

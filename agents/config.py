@@ -45,6 +45,7 @@ _ENV_OVERRIDES = {
     "BURSA_OUTPUT_LANGUAGE": "output_language",
     # LangSmith Telemetry
     "LANGCHAIN_TRACING_V2": "langchain_tracing_v2",
+    "LANGSMITH_TRACING_V2": "langchain_tracing_v2",
     "LANGCHAIN_ENDPOINT": "langchain_endpoint",
     "LANGSMITH_PROJECT": "langsmith_project",
     "LANGCHAIN_PROJECT": "langsmith_project",
@@ -90,11 +91,20 @@ def _apply_env_overrides(config: dict) -> dict:
     if config.get("langchain_tracing_v2"):
         os.environ["LANGCHAIN_TRACING_V2"] = "true"
         os.environ["LANGSMITH_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_ENDPOINT"] = config.get(
+            "langchain_endpoint", "https://api.smith.langchain.com"
+        )
+        os.environ["LANGSMITH_ENDPOINT"] = config.get(
+            "langchain_endpoint", "https://api.smith.langchain.com"
+        )
         os.environ["LANGCHAIN_PROJECT"] = config.get("langsmith_project", "Financial Analyst")
         os.environ["LANGSMITH_PROJECT"] = config.get("langsmith_project", "Financial Analyst")
         if config.get("langsmith_api_key"):
             os.environ["LANGCHAIN_API_KEY"] = config["langsmith_api_key"]
             os.environ["LANGSMITH_API_KEY"] = config["langsmith_api_key"]
+    else:
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+        os.environ["LANGSMITH_TRACING_V2"] = "false"
 
     return config
 
@@ -162,7 +172,7 @@ default_config = _apply_env_overrides({
     },
 
     # LangSmith Telemetry
-    "langchain_tracing_v2": True,
+    "langchain_tracing_v2": False,
     "langsmith_project": "Financial Analyst",
     "langsmith_api_key": "",
 })

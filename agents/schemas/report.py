@@ -185,7 +185,7 @@ class AgentAnalysisOutput(BaseModel):
 
 class LiquidityProfile(BaseModel):
     current_price_myr: float
-    rsi_14: float
+    rsi_14: float | None
     adv_30d: int
     turnover_30d_myr: float
     liquidity_status: str
@@ -208,3 +208,25 @@ class InstitutionalReport(BaseModel):
     debate: DebateSynthesis
     risk_mitigations: list[str]
     executive_summary: str
+
+
+class ResearchSourceSummary(BaseModel):
+    """Compact runtime provenance for a company research response."""
+
+    filings_used: bool = False
+    live_news_used: bool = False
+    market_data_used: bool = False
+    filing_chunks_returned: int = 0
+    notes: list[str] = Field(default_factory=list)
+
+
+class CompanyResearchResponse(BaseModel):
+    """Flexible company research output for question-shaped API requests."""
+
+    target_ticker: str
+    target_company: str
+    question: str
+    intent: str
+    answer_markdown: str
+    source_summary: ResearchSourceSummary
+    structured_report: InstitutionalReport | None = None

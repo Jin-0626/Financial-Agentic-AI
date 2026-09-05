@@ -1,5 +1,5 @@
-from src import ollama_runtime
-from src.ollama_runtime import (
+from agents import ollama_runtime
+from agents.ollama_runtime import (
     _strip_cloud_suffix,
     build_chat_ollama,
     get_ollama_runtime_config,

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 
-from src.config import default_config
+from agents.config import default_config
 
 
 @dataclass

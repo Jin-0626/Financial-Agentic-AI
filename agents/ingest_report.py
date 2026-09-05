@@ -2,7 +2,7 @@ import asyncio
 import sys
 from datetime import date
 
-from src.tools.bursa_rag import ingest_bursa_pdf
+from agents.tools.bursa_rag import ingest_bursa_pdf
 
 
 async def main():

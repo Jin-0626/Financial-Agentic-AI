@@ -29,9 +29,8 @@ financial advice.
 |-- docker-compose.yml     # Local PostgreSQL/pgvector service
 |-- data/
 |   `-- 001_init_schema.sql
-|-- src/
+|-- agents/
 |   |-- main.py            # FastAPI app
-|   |-- studio_graph.py    # LangGraph DeepAgents graph export
 |   |-- config.py          # Environment-backed config
 |   |-- ingest_report.py   # Bursa PDF ingestion CLI
 |   |-- ollama_runtime.py  # Ollama chat/embedding builders
@@ -56,6 +55,15 @@ Use Python 3.11 or newer.
 uv sync --dev --extra dev
 ```
 
+This repo expects a single uv-managed environment at `.venv`. Check it with:
+
+```powershell
+.\scripts\doctor_venv.ps1
+```
+
+Use `.venv\Scripts\...` or `uv run ...` commands. Avoid creating a separate
+`venv` folder, because LangGraph and the project scripts are wired to `.venv`.
+
 Create your local environment file:
 
 ```powershell
@@ -76,7 +84,7 @@ docker compose up -d
 Apply the schema in `data/001_init_schema.sql`, then ingest quarterly PDFs:
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.ingest_report <pdf_path> <stock_code> <company_name> <fiscal_quarter> <YYYY-MM-DD>
+.\.venv\Scripts\python.exe -m agents.ingest_report <pdf_path> <stock_code> <company_name> <fiscal_quarter> <YYYY-MM-DD>
 ```
 
 ## Run With LangGraph
@@ -86,7 +94,7 @@ Apply the schema in `data/001_init_schema.sql`, then ingest quarterly PDFs:
 ```json
 {
   "graphs": {
-    "bursa_deepagent": "./src/studio_graph.py:deep_agent_graph"
+    "bursa_deepagent": "./agents/orchestrator/graph.py:deep_agent_graph"
   }
 }
 ```
@@ -94,30 +102,54 @@ Apply the schema in `data/001_init_schema.sql`, then ingest quarterly PDFs:
 Start Studio locally:
 
 ```powershell
-$env:PYTHONUTF8 = "1"
-.\.venv\Scripts\langgraph.exe dev
+.\scripts\start_langgraph.ps1
 ```
 
-If LangGraph dev reports a blocking-call warning during local experimentation,
-use `--allow-blocking` only as a development override while keeping production
-paths async-safe.
+The helper enables UTF-8 console output before launching LangGraph. On Windows,
+this avoids `UnicodeEncodeError` logging failures from the LangGraph CLI's emoji
+status messages. It also uses `--allow-blocking` for local development because
+some market-data dependencies still perform blocking I/O; keep production paths
+async-safe.
 
 ## Run The API
 
 ```powershell
-.\.venv\Scripts\uvicorn.exe src.main:app --reload
+.\.venv\Scripts\uvicorn.exe agents.main:app --reload
 ```
 
-Key endpoint:
+Flexible company-research endpoint:
+
+```text
+POST /research
+```
+
+Use this for question-shaped research. The API classifies the question, gathers
+only the relevant evidence classes, and returns Markdown plus compact provenance.
+
+```json
+{
+  "stock_code": "0157",
+  "company_name": "Focus Point Holdings Berhad",
+  "question": "What are the main recent developments investors should know about?"
+}
+```
+
+Structured committee-report endpoint:
 
 ```text
 POST /analyze
 ```
 
+Use this when the caller needs the legacy `InstitutionalReport` response shape.
+
 Example body:
 
 ```json
-{"stock_code": "0157", "company_name": "Focus Point Holdings Berhad"}
+{
+  "stock_code": "0157",
+  "company_name": "Focus Point Holdings Berhad",
+  "question": "Analyse the company for an investment committee."
+}
 ```
 
 ## Quality Checks
@@ -126,6 +158,6 @@ Run before committing:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\ruff.exe check --no-cache src test
-.\.venv\Scripts\python.exe -m compileall src test
+.\.venv\Scripts\ruff.exe check --no-cache agents test
+.\.venv\Scripts\python.exe -m compileall agents test
 ```
