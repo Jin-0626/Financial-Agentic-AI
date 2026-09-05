@@ -6,15 +6,25 @@ from pydantic import BaseModel, Field
 class EvidenceItem(BaseModel):
     """A compact, source-linked fact passed between DeepAgents."""
 
-    claim: str = Field(description="One factual claim extracted from a filing or news source.")
-    value: str | None = Field(default=None, description="Exact numeric/text value when present.")
-    period: str | None = Field(default=None, description="Reporting period or publication date.")
-    period_basis: Literal["current_quarter", "cumulative_period", "point_in_time", "unknown"] = Field(
+    claim: str = Field(
+        description="One factual claim extracted from a filing or news source."
+    )
+    value: str | None = Field(
+        default=None, description="Exact numeric/text value when present."
+    )
+    period: str | None = Field(
+        default=None, description="Reporting period or publication date."
+    )
+    period_basis: Literal[
+        "current_quarter", "cumulative_period", "point_in_time", "unknown"
+    ] = Field(
         default="unknown",
         description="Whether the value is current-quarter, cumulative interim period, point-in-time, or unclear.",
     )
     source: str = Field(description="Source label, URL, or RAG chunk reference.")
-    source_type: Literal["filing", "news", "company", "market", "derived", "unknown"] = Field(
+    source_type: Literal[
+        "filing", "news", "company", "market", "derived", "unknown"
+    ] = Field(
         default="unknown",
         description="Where the fact came from.",
     )
@@ -33,7 +43,9 @@ class FundamentalFindings(BaseModel):
     period_notes: list[str] = Field(default_factory=list)
     evidence: list[EvidenceItem] = Field(default_factory=list)
     missing_fields: list[str] = Field(default_factory=list)
-    summary: str = Field(description="Brief filing-backed summary without unsupported numbers.")
+    summary: str = Field(
+        description="Brief filing-backed summary without unsupported numbers."
+    )
 
 
 class BullBearAssessment(BaseModel):
@@ -41,7 +53,9 @@ class BullBearAssessment(BaseModel):
 
     bull_arguments: list[str] = Field(default_factory=list)
     bear_arguments: list[str] = Field(default_factory=list)
-    balanced_view: str = Field(description="Short synthesis of which side is better supported.")
+    balanced_view: str = Field(
+        description="Short synthesis of which side is better supported."
+    )
     unsupported_assumptions: list[str] = Field(default_factory=list)
 
 
@@ -70,7 +84,9 @@ class ReportSectionSpec(BaseModel):
 class InstitutionalBriefingFormat(BaseModel):
     """Readable markdown layout inspired by the preferred LangGraph run format."""
 
-    title_pattern: str = "{company_name} ({stock_code}) - Institutional Investment Committee Briefing"
+    title_pattern: str = (
+        "{company_name} ({stock_code}) - Institutional Investment Committee Briefing"
+    )
     sections: list[ReportSectionSpec]
     verdict_labels: list[Literal["STRONG BUY", "ACCUMULATE", "HOLD", "AVOID"]] = Field(
         default_factory=lambda: ["STRONG BUY", "ACCUMULATE", "HOLD", "AVOID"]
@@ -151,12 +167,10 @@ class AgentAnalysisOutput(BaseModel):
         description="Final investment recommendation based on fundamentals and liquidity."
     )
     intrinsic_low: float | None = Field(
-        default=None,
-        description="Lower bound of intrinsic valuation estimate in MYR."
+        default=None, description="Lower bound of intrinsic valuation estimate in MYR."
     )
     intrinsic_high: float | None = Field(
-        default=None,
-        description="Upper bound of intrinsic valuation estimate in MYR."
+        default=None, description="Upper bound of intrinsic valuation estimate in MYR."
     )
     valuation_basis: str = Field(
         default="No valuation basis provided.",

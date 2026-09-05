@@ -137,7 +137,10 @@ def classify_section(chunk_text: str) -> str:
         return "Comprehensive Income Statement"
     if "statement of changes in equity" in lower_chunk:
         return "Changes In Equity Statement"
-    if "statement of cash flows" in lower_chunk or "statements of cash flows" in lower_chunk:
+    if (
+        "statement of cash flows" in lower_chunk
+        or "statements of cash flows" in lower_chunk
+    ):
         return "Cash Flow Statement"
     if "prospects" in lower_chunk or "current year prospects" in lower_chunk:
         return "Part B - Prospects"
@@ -212,7 +215,9 @@ def chunk_bursa_report_text(
         if section_name in FINANCIAL_STATEMENT_SECTIONS:
             section_chunks.append((section_name, section_text))
         else:
-            for chunk in chunk_text(section_text, fallback_chunk_size, fallback_overlap):
+            for chunk in chunk_text(
+                section_text, fallback_chunk_size, fallback_overlap
+            ):
                 section_chunks.append((section_name, chunk))
 
     # Preserve preamble text if present, but avoid duplicating statement sections.
@@ -223,7 +228,9 @@ def chunk_bursa_report_text(
             narrative = _normalize_chunk(text[cursor:start])
             narrative_chunks.extend(
                 (classify_section(chunk), chunk)
-                for chunk in chunk_text(narrative, fallback_chunk_size, fallback_overlap)
+                for chunk in chunk_text(
+                    narrative, fallback_chunk_size, fallback_overlap
+                )
             )
         cursor = max(cursor, end)
     if cursor < len(text):
@@ -239,7 +246,9 @@ def chunk_bursa_report_text(
 def chunk_text(text: str, chunk_size: int = 900, overlap: int = 150) -> list[str]:
     """Split text into overlapping windows of at most ``chunk_size`` characters."""
     if chunk_size <= 0 or overlap < 0 or overlap >= chunk_size:
-        raise ValueError("chunk_size must be positive and overlap must be smaller than chunk_size")
+        raise ValueError(
+            "chunk_size must be positive and overlap must be smaller than chunk_size"
+        )
 
     normalized_text = re.sub(r"\s+", " ", text).strip()
     if not normalized_text:
@@ -277,7 +286,9 @@ async def ingest_bursa_pdf(
     vectors = await embeddings_client.aembed_documents(chunk_texts)
 
     # Ingest into PostgreSQL via asyncpg
-    conn = await asyncpg.connect(_asyncpg_database_url(str(default_config["database_url"])))
+    conn = await asyncpg.connect(
+        _asyncpg_database_url(str(default_config["database_url"]))
+    )
     try:
         await conn.execute(
             """
@@ -311,14 +322,22 @@ async def ingest_bursa_pdf(
         ]
 
         await conn.executemany(query, records)
-        logger.info("Successfully ingested %d chunks for %s (%s)", len(records), company_name, stock_code)
+        logger.info(
+            "Successfully ingested %d chunks for %s (%s)",
+            len(records),
+            company_name,
+            stock_code,
+        )
         return len(records)
     finally:
         await conn.close()
 
+
 class BursaQueryInput(BaseModel):
     stock_code: str = Field(description="4-digit Bursa stock code, e.g. '0157'")
-    query: str = Field(description="Semantic query focusing on prospects, debt, leases, or dividends")
+    query: str = Field(
+        description="Semantic query focusing on prospects, debt, leases, or dividends"
+    )
 
 
 @tool(args_schema=BursaQueryInput)
@@ -327,11 +346,12 @@ async def get_bursa_quarterly_notes(stock_code: str, query: str) -> str:
     results = await search_bursa_notes(stock_code=stock_code, query=query, limit=3)
     if not results:
         return f"No disclosures found for stock code {stock_code}."
-    
+
     formatted = []
     for r in results:
         formatted.append(f"[{r['section']} | {r['quarter']}]\n{r['chunk']}")
     return "\n\n---\n\n".join(formatted)
+
 
 async def search_bursa_notes(
     stock_code: str, query: str, limit: int = 4
@@ -344,7 +364,9 @@ async def search_bursa_notes(
     TOTAL ASSETS or lease liabilities that can rank poorly in embedding search.
     """
     query_embedding = await embeddings_client.aembed_query(query)
-    conn = await asyncpg.connect(_asyncpg_database_url(str(default_config["database_url"])))
+    conn = await asyncpg.connect(
+        _asyncpg_database_url(str(default_config["database_url"]))
+    )
     try:
         sql = """
             SELECT content_chunk, section_category, fiscal_quarter, quarter_ended,
@@ -391,12 +413,15 @@ async def search_bursa_notes(
                 ORDER BY quarter_ended DESC
                 LIMIT $3;
             """
-            rows = [*rows, *await conn.fetch(
-                lexical_sql,
-                stock_code,
-                list(BALANCE_SHEET_CONTENT_PATTERNS),
-                max(limit, 4),
-            )]
+            rows = [
+                *rows,
+                *await conn.fetch(
+                    lexical_sql,
+                    stock_code,
+                    list(BALANCE_SHEET_CONTENT_PATTERNS),
+                    max(limit, 4),
+                ),
+            ]
 
         seen_chunks = set()
         deduped_rows = []
@@ -417,8 +442,7 @@ async def search_bursa_notes(
             }
             for r in deduped_rows
         ]
-        
-        
+
     finally:
         await conn.close()
 
@@ -427,7 +451,9 @@ async def get_latest_financial_statement_sections(
     stock_code: str,
 ) -> list[BursaAnnouncementChunk]:
     """Fetch full financial-statement sections for the latest indexed quarter."""
-    conn = await asyncpg.connect(_asyncpg_database_url(str(default_config["database_url"])))
+    conn = await asyncpg.connect(
+        _asyncpg_database_url(str(default_config["database_url"]))
+    )
     try:
         rows = await conn.fetch(
             """
@@ -474,7 +500,9 @@ async def list_indexed_bursa_companies() -> list[CompanyRegistryEntry]:
     This is the most reliable local company universe available when no separate
     Bursa master list has been configured.
     """
-    conn = await asyncpg.connect(_asyncpg_database_url(str(default_config["database_url"])))
+    conn = await asyncpg.connect(
+        _asyncpg_database_url(str(default_config["database_url"]))
+    )
     try:
         rows = await conn.fetch(
             """

@@ -86,7 +86,9 @@ async def execute_analysis(request: ResearchRequest):
 async def execute_research(request: ResearchRequest):
     try:
         stock_code = _validate_request_identity(request)
-        research_question = request.question or f"Analyze {request.company_name} ({stock_code})."
+        research_question = (
+            request.question or f"Analyze {request.company_name} ({stock_code})."
+        )
         plan = build_research_plan(research_question)
         telemetry = fetch_klse_telemetry(stock_code) if plan.needs_market_data else None
         desk: BursaResearchDesk = app.state.research_desk

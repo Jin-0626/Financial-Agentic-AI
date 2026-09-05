@@ -60,7 +60,10 @@ class BursaMemorySkillBackend:
 
     def _file_data_map(self) -> dict[str, dict]:
         files: dict[str, dict] = {}
-        for virtual_path in [PurePosixPath("/memories/AGENTS.md"), *self._skill_files()]:
+        for virtual_path in [
+            PurePosixPath("/memories/AGENTS.md"),
+            *self._skill_files(),
+        ]:
             real_path = self._to_real_path(virtual_path)
             if real_path.is_file():
                 files[virtual_path.as_posix()] = create_file_data(
@@ -154,7 +157,9 @@ class BursaMemorySkillBackend:
         except ValueError as exc:
             return WriteResult(error=str(exc))
         if not self._is_writable(virtual_path):
-            return WriteResult(error=f"Error: permission denied for write on {file_path}")
+            return WriteResult(
+                error=f"Error: permission denied for write on {file_path}"
+            )
         real_path = self._to_real_path(virtual_path)
         real_path.parent.mkdir(parents=True, exist_ok=True)
         real_path.write_text(content, encoding="utf-8")

@@ -18,7 +18,9 @@ def _get_tavily_client() -> AsyncTavilyClient | None:
     if tavily_client is not None:
         return tavily_client
 
-    tavily_api_key = os.getenv("TAVILY_API_KEY") or str(default_config.get("tavily_api_key", ""))
+    tavily_api_key = os.getenv("TAVILY_API_KEY") or str(
+        default_config.get("tavily_api_key", "")
+    )
     if not tavily_api_key:
         return None
 
@@ -53,7 +55,9 @@ async def search_bursa_intelligence(stock_code: str, company_name: str) -> str:
             ensure_ascii=False,
         )
 
-    query = f"{company_name} {stock_code} Bursa Malaysia financial news quarterly results"
+    query = (
+        f"{company_name} {stock_code} Bursa Malaysia financial news quarterly results"
+    )
     try:
         response = await client.search(
             query=query,
@@ -96,7 +100,12 @@ async def search_bursa_intelligence(stock_code: str, company_name: str) -> str:
         return json.dumps(formatted, ensure_ascii=False)
 
     except Exception as exc:  # noqa: BLE001 - external Tavily client exceptions vary by transport.
-        logger.warning("Tavily search failed for %s (%s): %s", company_name, stock_code, type(exc).__name__)
+        logger.warning(
+            "Tavily search failed for %s (%s): %s",
+            company_name,
+            stock_code,
+            type(exc).__name__,
+        )
         return json.dumps(
             {
                 "ok": False,

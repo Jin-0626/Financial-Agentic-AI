@@ -94,7 +94,9 @@ def test_tavily_search_returns_compact_json(monkeypatch) -> None:
 
     monkeypatch.setattr(tavily_search, "tavily_client", FakeClient())
 
-    payload = asyncio.run(tavily_search.search_bursa_intelligence("0157", "Focus Point"))
+    payload = asyncio.run(
+        tavily_search.search_bursa_intelligence("0157", "Focus Point")
+    )
     data = json.loads(payload)
 
     assert data["ok"] is True
@@ -112,7 +114,9 @@ def test_tavily_search_returns_structured_failure(monkeypatch) -> None:
 
     monkeypatch.setattr(tavily_search, "tavily_client", FakeClient())
 
-    payload = asyncio.run(tavily_search.search_bursa_intelligence("0157", "Focus Point"))
+    payload = asyncio.run(
+        tavily_search.search_bursa_intelligence("0157", "Focus Point")
+    )
     data = json.loads(payload)
 
     assert data["ok"] is False
@@ -143,7 +147,9 @@ def test_klse_market_snapshot_returns_compact_json(monkeypatch) -> None:
     assert data["current_price_myr"] == 0.52
 
 
-def test_klse_telemetry_uses_latest_valid_close_when_latest_row_is_nan(monkeypatch) -> None:
+def test_klse_telemetry_uses_latest_valid_close_when_latest_row_is_nan(
+    monkeypatch,
+) -> None:
     frame = pd.DataFrame(
         {
             "Close": [0.50, 0.51, None],
@@ -223,12 +229,12 @@ def test_balance_sheet_search_adds_lexical_statement_matches(monkeypatch) -> Non
                     }
                 ]
             return [
-                    {
-                        "content_chunk": "TOTAL ASSETS 346,086 TOTAL LIABILITIES 185,062",
-                        "section_category": "Financial Position Statement",
-                        "fiscal_quarter": "Q2 2026",
-                        "quarter_ended": date(2026, 6, 30),
-                        "similarity_score": 1.0,
+                {
+                    "content_chunk": "TOTAL ASSETS 346,086 TOTAL LIABILITIES 185,062",
+                    "section_category": "Financial Position Statement",
+                    "fiscal_quarter": "Q2 2026",
+                    "quarter_ended": date(2026, 6, 30),
+                    "similarity_score": 1.0,
                 }
             ]
 
@@ -254,7 +260,9 @@ def test_balance_sheet_search_adds_lexical_statement_matches(monkeypatch) -> Non
 
     assert len(fake_connection.calls) == 3
     assert any("TOTAL ASSETS" in result["chunk"] for result in results)
-    assert any(result["section"] == "Financial Position Statement" for result in results)
+    assert any(
+        result["section"] == "Financial Position Statement" for result in results
+    )
 
 
 def test_orchestrator_graph_prompts_keep_filing_tool_and_evidence_discipline() -> None:
@@ -265,26 +273,61 @@ def test_orchestrator_graph_prompts_keep_filing_tool_and_evidence_discipline() -
     assert "get_klse_market_snapshot" in main_tool_names
     assert orchestrator_graph.MEMORY_PATHS == ["/memories/AGENTS.md"]
     assert orchestrator_graph.SKILL_PATHS == ["/skills/"]
-    assert "general-purpose Bursa Malaysia company research DeepAgent" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "Do not force every request through a fixed sequence" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    assert (
+        "general-purpose Bursa Malaysia company research DeepAgent"
+        in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
+    assert (
+        "Do not force every request through a fixed sequence"
+        in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
     assert "Company identity comes first" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
     assert "Choose sources by claim type" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "TradingAgents split between News Analyst and Market Analyst evidence" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    assert (
+        "TradingAgents split between News Analyst and Market Analyst evidence"
+        in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
     assert "compact KLSE market snapshot" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
     assert "Keep research proportional" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "Separate raw retrieved information, evidence, calculated facts" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "Default to HOLD when investment evidence is balanced" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "committee briefing format only for broad" in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "For every exact number" in orchestrator_graph.fundamental_analyst["system_prompt"]
+    assert (
+        "Separate raw retrieved information, evidence, calculated facts"
+        in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
+    assert (
+        "Default to HOLD when investment evidence is balanced"
+        in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
+    assert (
+        "committee briefing format only for broad"
+        in orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
+    assert (
+        "For every exact number"
+        in orchestrator_graph.fundamental_analyst["system_prompt"]
+    )
     assert "period_basis" in orchestrator_graph.fundamental_analyst["system_prompt"]
-    assert "exactly these top-level keys" in orchestrator_graph.fundamental_analyst["system_prompt"]
-    assert "unsupported_assumptions" in orchestrator_graph.market_debater["system_prompt"]
-    assert "mixes reporting periods" in orchestrator_graph.evidence_validator["system_prompt"]
+    assert (
+        "exactly these top-level keys"
+        in orchestrator_graph.fundamental_analyst["system_prompt"]
+    )
+    assert (
+        "unsupported_assumptions" in orchestrator_graph.market_debater["system_prompt"]
+    )
+    assert (
+        "mixes reporting periods"
+        in orchestrator_graph.evidence_validator["system_prompt"]
+    )
 
 
 def test_api_and_studio_use_same_adaptive_research_prompt() -> None:
-    assert orchestrator_graph.API_RESEARCH_SYSTEM_PROMPT == orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
-    assert "Investment Committee Lead for a Malaysian institutional asset manager" not in orchestrator_graph.API_RESEARCH_SYSTEM_PROMPT
+    assert (
+        orchestrator_graph.API_RESEARCH_SYSTEM_PROMPT
+        == orchestrator_graph.SUPERVISOR_SYSTEM_PROMPT
+    )
+    assert (
+        "Investment Committee Lead for a Malaysian institutional asset manager"
+        not in orchestrator_graph.API_RESEARCH_SYSTEM_PROMPT
+    )
 
 
 def test_memory_skill_backend_exposes_only_agent_memory_and_skills() -> None:
@@ -296,7 +339,10 @@ def test_memory_skill_backend_exposes_only_agent_memory_and_skills() -> None:
     denied_write = backend.write("/agents/orchestrator/graph.py", "x")
 
     assert memory.file_data["content"].startswith("# Bursa Analyst Agent Memory")
-    assert any(entry["path"].endswith("/SKILL.md") or entry["is_dir"] for entry in skills.entries)
+    assert any(
+        entry["path"].endswith("/SKILL.md") or entry["is_dir"]
+        for entry in skills.entries
+    )
     assert secret.error
     assert denied_write.error
 
@@ -316,7 +362,9 @@ def test_memory_skill_backend_supports_async_deepagents_protocol() -> None:
     asyncio.run(check_backend())
 
 
-def test_research_plan_classifies_latest_results_without_forcing_all_capabilities() -> None:
+def test_research_plan_classifies_latest_results_without_forcing_all_capabilities() -> (
+    None
+):
     plan = build_research_plan("Summarise the latest quarterly results for Focus Point")
 
     assert plan.intent == ResearchIntent.LATEST_RESULTS
@@ -332,7 +380,9 @@ def test_research_plan_keeps_full_statement_requests_filing_shaped() -> None:
     plan = build_research_plan(
         "Fetch the full latest quarterly financial statements and summarise cash flow."
     )
-    strength_plan = build_research_plan("Is the balance sheet stronger and is debt risky?")
+    strength_plan = build_research_plan(
+        "Is the balance sheet stronger and is debt risky?"
+    )
 
     assert plan.intent == ResearchIntent.FILING_REVIEW
     assert plan.needs_filings is True
@@ -345,7 +395,9 @@ def test_research_plan_keeps_full_statement_requests_filing_shaped() -> None:
 
 
 def test_market_news_research_plan_uses_tavily_and_klse_channels() -> None:
-    plan = build_research_plan("What changed recently in the market news for Focus Point?")
+    plan = build_research_plan(
+        "What changed recently in the market news for Focus Point?"
+    )
 
     assert plan.intent == ResearchIntent.RECENT_DEVELOPMENTS
     assert plan.needs_live_news is True
@@ -367,7 +419,9 @@ def test_company_resolution_flags_ambiguous_or_unknown_identity() -> None:
 def test_company_resolution_uses_registry_and_returns_ambiguity_candidates() -> None:
     registry = (
         CompanyRegistryEntry("1111", "Alpha Holdings Berhad", aliases=("Alpha",)),
-        CompanyRegistryEntry("2222", "Alpha Technologies Berhad", aliases=("Alpha Tech",)),
+        CompanyRegistryEntry(
+            "2222", "Alpha Technologies Berhad", aliases=("Alpha Tech",)
+        ),
         CompanyRegistryEntry("3333", "Beta Manufacturing Berhad", aliases=("Beta",)),
     )
 
@@ -430,7 +484,9 @@ def test_api_rejects_known_company_stock_code_mismatch(monkeypatch) -> None:
     assert "Company identity mismatch" in exc_info.value.detail
 
 
-def test_research_endpoint_skips_market_data_when_plan_does_not_need_it(monkeypatch) -> None:
+def test_research_endpoint_skips_market_data_when_plan_does_not_need_it(
+    monkeypatch,
+) -> None:
     class FakeDesk:
         async def run_research(self, *, stock_code, company_name, question, telemetry):
             assert stock_code == "0157"
@@ -515,7 +571,9 @@ def test_research_endpoint_uses_klse_for_market_news_requests(monkeypatch) -> No
 def test_structured_report_pipeline_reuses_flexible_research_path(monkeypatch) -> None:
     class FakeAgent:
         async def ainvoke(self, payload):
-            raise AssertionError("legacy run should call run_research instead of invoking agent directly")
+            raise AssertionError(
+                "legacy run should call run_research instead of invoking agent directly"
+            )
 
     class FakeStructuredLlm:
         async def ainvoke(self, prompt):
@@ -543,7 +601,9 @@ def test_structured_report_pipeline_reuses_flexible_research_path(monkeypatch) -
             source_summary=ResearchSourceSummary(),
         )
 
-    monkeypatch.setattr(orchestrator_graph.BursaResearchDesk, "run_research", fake_run_research)
+    monkeypatch.setattr(
+        orchestrator_graph.BursaResearchDesk, "run_research", fake_run_research
+    )
     monkeypatch.setattr(orchestrator_graph, "structured_llm", FakeStructuredLlm())
 
     desk = orchestrator_graph.BursaResearchDesk()
@@ -592,15 +652,17 @@ def test_filing_context_adds_period_basis_hints_for_cumulative_reports() -> None
 
 
 def test_live_news_availability_detects_failed_or_empty_searches() -> None:
-    assert orchestrator_graph._live_news_has_results(
-        "Error fetching live news intelligence: All connection attempts failed"
-    ) is False
-    assert orchestrator_graph._live_news_has_results(
-        '{"results": [{"title": "Result"}]}'
-    ) is True
-    assert orchestrator_graph._live_news_has_results(
-        '{"results": []}'
-    ) is False
+    assert (
+        orchestrator_graph._live_news_has_results(
+            "Error fetching live news intelligence: All connection attempts failed"
+        )
+        is False
+    )
+    assert (
+        orchestrator_graph._live_news_has_results('{"results": [{"title": "Result"}]}')
+        is True
+    )
+    assert orchestrator_graph._live_news_has_results('{"results": []}') is False
 
 
 def test_structured_report_fallback_is_conservative() -> None:
@@ -642,7 +704,9 @@ def test_rag_tool_uses_adaptive_queries_and_preserves_chunks(monkeypatch) -> Non
             }
         ]
 
-    monkeypatch.setattr(orchestrator_graph, "search_bursa_notes", fake_search_bursa_notes)
+    monkeypatch.setattr(
+        orchestrator_graph, "search_bursa_notes", fake_search_bursa_notes
+    )
 
     payload = asyncio.run(
         orchestrator_graph.query_bursa_quarterly_filings.ainvoke(
@@ -651,10 +715,14 @@ def test_rag_tool_uses_adaptive_queries_and_preserves_chunks(monkeypatch) -> Non
     )
     data = json.loads(payload)
 
-    assert len(calls) == len(orchestrator_graph._select_filing_queries("segment revenue"))
+    assert len(calls) == len(
+        orchestrator_graph._select_filing_queries("segment revenue")
+    )
     assert data["period_warning"]
     assert data["coverage"]["queries_run"] == len(calls)
-    assert data["coverage"]["unique_chunks_returned"] <= orchestrator_graph.MAX_RAG_CHUNKS
+    assert (
+        data["coverage"]["unique_chunks_returned"] <= orchestrator_graph.MAX_RAG_CHUNKS
+    )
     assert data["results"][0]["quarter_ended"] == "2026-06-30"
     assert data["results"][0]["chunk"] == " ".join(long_chunk.split())
     assert data["results_by_query"][0]["chunk_ids"]
@@ -664,7 +732,9 @@ def test_rag_tool_uses_adaptive_queries_and_preserves_chunks(monkeypatch) -> Non
 
 def test_adaptive_filing_queries_expand_for_financial_strength() -> None:
     narrow = orchestrator_graph._select_filing_queries("segment revenue")
-    strength = orchestrator_graph._select_filing_queries("Is the balance sheet stronger and is debt risky?")
+    strength = orchestrator_graph._select_filing_queries(
+        "Is the balance sheet stronger and is debt risky?"
+    )
 
     assert len(narrow) < len(strength)
     assert any("borrowings" in query for query in strength)
@@ -683,7 +753,9 @@ def test_committee_briefing_format_matches_preferred_result_shape() -> None:
         "Bull vs. Bear Debate Matrix",
         "Committee Verdict & Action Plan",
     ]
-    assert "Target range unavailable due to insufficient quantitative evidence" in prompt
+    assert (
+        "Target range unavailable due to insufficient quantitative evidence" in prompt
+    )
     assert report_format.unsupported_value_label == "Unavailable in supplied evidence"
     assert "Do not include columns named Source" in prompt
     assert "raw hashes" in prompt

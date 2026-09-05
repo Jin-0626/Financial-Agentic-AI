@@ -51,14 +51,22 @@ from agents.tools.tavily_search import search_bursa_intelligence
 logger = logging.getLogger(__name__)
 
 # Configure LangSmith telemetry in environment
-os.environ["LANGCHAIN_TRACING_V2"] = str(default_config.get("langchain_tracing_v2", False)).lower()
+os.environ["LANGCHAIN_TRACING_V2"] = str(
+    default_config.get("langchain_tracing_v2", False)
+).lower()
 os.environ["LANGCHAIN_ENDPOINT"] = str(default_config.get("langchain_endpoint", ""))
-os.environ["LANGSMITH_TRACING_V2"] = str(default_config.get("langchain_tracing_v2", False)).lower()
+os.environ["LANGSMITH_TRACING_V2"] = str(
+    default_config.get("langchain_tracing_v2", False)
+).lower()
 os.environ["LANGSMITH_ENDPOINT"] = str(default_config.get("langchain_endpoint", ""))
 os.environ["LANGCHAIN_API_KEY"] = str(default_config.get("langsmith_api_key", ""))
 os.environ["LANGSMITH_API_KEY"] = str(default_config.get("langsmith_api_key", ""))
-os.environ["LANGCHAIN_PROJECT"] = str(default_config.get("langsmith_project", "Financial Analyst"))
-os.environ["LANGSMITH_PROJECT"] = str(default_config.get("langsmith_project", "Financial Analyst"))
+os.environ["LANGCHAIN_PROJECT"] = str(
+    default_config.get("langsmith_project", "Financial Analyst")
+)
+os.environ["LANGSMITH_PROJECT"] = str(
+    default_config.get("langsmith_project", "Financial Analyst")
+)
 
 register_harness_profile(
     "ollama",
@@ -71,17 +79,24 @@ register_harness_profile(
 
 # Initialize Remote Ollama Instance
 base_llm = build_chat_ollama(temperature=0.1)
-structured_llm = base_llm.with_structured_output(AgentAnalysisOutput, method="json_schema")
+structured_llm = base_llm.with_structured_output(
+    AgentAnalysisOutput, method="json_schema"
+)
 REPORT_FORMAT_GUIDE = committee_briefing_format().as_prompt()
+
 
 class BursaRagInput(BaseModel):
     stock_code: str = Field(description="4-digit Bursa stock code, e.g. '0157'")
-    query: str = Field(description="Research question or evidence need for Bursa filing retrieval")
+    query: str = Field(
+        description="Research question or evidence need for Bursa filing retrieval"
+    )
 
 
 class TavilySearchInput(BaseModel):
     stock_code: str = Field(description="4-digit Bursa stock code, e.g. '0157'")
-    company_name: str = Field(description="Listed company name, e.g. 'Focus Point Holdings Berhad'")
+    company_name: str = Field(
+        description="Listed company name, e.g. 'Focus Point Holdings Berhad'"
+    )
 
 
 class KlseMarketInput(BaseModel):
@@ -89,21 +104,23 @@ class KlseMarketInput(BaseModel):
 
 
 class BursaCompanyInput(BaseModel):
-    company_query: str = Field(description="Bursa stock name, common name, or 4-digit code")
+    company_query: str = Field(
+        description="Bursa stock name, common name, or 4-digit code"
+    )
 
 
 RAG_QUERY_LIBRARY = {
     "performance": (
-    "segmental reporting revenue profit before tax profit after tax current quarter cumulative financial period",
-    "review of performance current quarter previous corresponding period revenue PBT PAT",
+        "segmental reporting revenue profit before tax profit after tax current quarter cumulative financial period",
+        "review of performance current quarter previous corresponding period revenue PBT PAT",
     ),
     "financial_position": (
-    "balance sheet statements of financial position total assets total liabilities equity current assets cash and cash equivalents",
-    "borrowings debt securities gearing bank borrowings lease liabilities MFRS 16",
+        "balance sheet statements of financial position total assets total liabilities equity current assets cash and cash equivalents",
+        "borrowings debt securities gearing bank borrowings lease liabilities MFRS 16",
     ),
     "cash_dividend": (
-    "cash flow operating investing financing cash and cash equivalents liquidity",
-    "dividend interim dividend entitlement date payout prospects Part B",
+        "cash flow operating investing financing cash and cash equivalents liquidity",
+        "dividend interim dividend entitlement date payout prospects Part B",
     ),
     "prospects_risks": (
         "prospects risks material uncertainty Part B",
@@ -157,11 +174,24 @@ def _select_filing_queries(query: str) -> list[str]:
     selected = list(plan.filing_queries)
     query_lower = query.lower()
 
-    if any(term in query_lower for term in ("balance sheet", "debt", "borrowings", "cash", "liabilit", "gearing")):
+    if any(
+        term in query_lower
+        for term in (
+            "balance sheet",
+            "debt",
+            "borrowings",
+            "cash",
+            "liabilit",
+            "gearing",
+        )
+    ):
         selected.extend(RAG_QUERY_LIBRARY["financial_position"])
     if any(term in query_lower for term in ("dividend", "cash flow", "liquidity")):
         selected.extend(RAG_QUERY_LIBRARY["cash_dividend"])
-    if any(term in query_lower for term in ("prospect", "risk", "subsequent", "corporate action")):
+    if any(
+        term in query_lower
+        for term in ("prospect", "risk", "subsequent", "corporate action")
+    ):
         selected.extend(RAG_QUERY_LIBRARY["prospects_risks"])
 
     deduped = []
@@ -183,7 +213,9 @@ async def query_bursa_quarterly_filings(stock_code: str, query: str) -> str:
     deduped = []
     seen_chunks = set()
     for retrieval_query in retrieval_queries:
-        query_results = await search_bursa_notes(stock_code=stock_code, query=retrieval_query, limit=3)
+        query_results = await search_bursa_notes(
+            stock_code=stock_code, query=retrieval_query, limit=3
+        )
         compact_results = []
         for result in query_results:
             chunk_key = _chunk_fingerprint(result["chunk"])
@@ -236,7 +268,9 @@ async def query_bursa_quarterly_filings(stock_code: str, query: str) -> str:
 @tool("search_live_bursa_intel", args_schema=TavilySearchInput)
 async def search_live_bursa_intel(stock_code: str, company_name: str) -> str:
     """Search live web intelligence for news, announcements, and sentiment on Bursa Malaysia counters."""
-    return await search_bursa_intelligence(stock_code=stock_code, company_name=company_name)
+    return await search_bursa_intelligence(
+        stock_code=stock_code, company_name=company_name
+    )
 
 
 @tool("get_klse_market_snapshot", args_schema=KlseMarketInput)
@@ -279,7 +313,9 @@ async def resolve_bursa_company(company_query: str) -> str:
     if identity.candidates:
         lines.append("candidates=" + "; ".join(identity.candidates))
     if identity.status is not CompanyResolutionStatus.RESOLVED:
-        lines.append("action=Do not proceed with expensive company-specific research until identity is clarified or externally verified.")
+        lines.append(
+            "action=Do not proceed with expensive company-specific research until identity is clarified or externally verified."
+        )
     return "\n".join(lines)
 
 
@@ -408,7 +444,7 @@ market_analyst = SubAgent(
         "Evaluate liquidity risk: if 30-day average daily turnover is below RM 200,000, flag it as 'Illiquid/Caution' "
         "and warn of slippage and multi-day execution windows. "
         "Conclude your report with a summary Markdown table of technical indicator readings."
-    )
+    ),
 )
 
 bursa_sentiment_analyst = SubAgent(
@@ -421,8 +457,9 @@ bursa_sentiment_analyst = SubAgent(
         "Identify cross-source divergences (e.g., retail chasing speculative runs while news flow is cautious). "
         "Output an overall_band (Bullish, Mildly Bullish, Neutral, Mixed, Mildly Bearish, Bearish), "
         "a confidence level (low, medium, high based on data density), and a markdown signal table."
-    )
+    ),
 )
+
 
 def _format_filing_context(filing_chunks: list[BursaAnnouncementChunk]) -> str:
     if not filing_chunks:
@@ -446,10 +483,17 @@ def _format_filing_context(filing_chunks: list[BursaAnnouncementChunk]) -> str:
 def _infer_period_basis_hint(chunk_text: str) -> str:
     normalized = " ".join(chunk_text.lower().split())
     if re.search(r"\b(6|six|9|nine|3|three|12|twelve)\s+months?\s+ended\b", normalized):
-        if re.search(r"\bfor\s+the\s+3\s+months?\s+ended\b|\bfor\s+the\s+three\s+months?\s+ended\b", normalized):
+        if re.search(
+            r"\bfor\s+the\s+3\s+months?\s+ended\b|\bfor\s+the\s+three\s+months?\s+ended\b",
+            normalized,
+        ):
             return "current_quarter_when_the_specific_value_appears_under_a_3_months_ended_heading; otherwise_check_heading"
         return "cumulative_period"
-    if "statement of financial position" in normalized or "total assets" in normalized or "total liabilities" in normalized:
+    if (
+        "statement of financial position" in normalized
+        or "total assets" in normalized
+        or "total liabilities" in normalized
+    ):
         return "point_in_time"
     if "cash flows" in normalized:
         return "cumulative_period_unless_current_quarter_heading_is_explicit"
@@ -500,8 +544,12 @@ def _fallback_analysis_from_deliberation(deliberation_text: str) -> AgentAnalysi
             "Structured extraction failed; detailed filing claims were not inferred."
         ],
         bull_arguments=[],
-        bear_arguments=["Structured extraction failed, so unsupported thesis details were not inferred."],
-        risk_mitigations=["Review the freeform deliberation and rerun structured extraction before publishing."],
+        bear_arguments=[
+            "Structured extraction failed, so unsupported thesis details were not inferred."
+        ],
+        risk_mitigations=[
+            "Review the freeform deliberation and rerun structured extraction before publishing."
+        ],
         executive_summary=fallback_summary,
     )
 
@@ -543,8 +591,14 @@ class BursaResearchDesk:
             try:
                 telemetry = await asyncio.to_thread(fetch_klse_telemetry, stock_code)
             except Exception as exc:  # noqa: BLE001 - yfinance transport/cache exceptions vary.
-                logger.warning("KLSE market snapshot failed for %s: %s", stock_code, type(exc).__name__)
-        filing_query = " ".join(plan.filing_queries) if plan.filing_queries else question
+                logger.warning(
+                    "KLSE market snapshot failed for %s: %s",
+                    stock_code,
+                    type(exc).__name__,
+                )
+        filing_query = (
+            " ".join(plan.filing_queries) if plan.filing_queries else question
+        )
         rag_task = (
             search_bursa_notes(
                 stock_code=stock_code,
@@ -556,7 +610,9 @@ class BursaResearchDesk:
         )
 
         news_intel, filing_chunks = await asyncio.gather(
-            _optional_value(news_task, "Live news was not required for this research question."),
+            _optional_value(
+                news_task, "Live news was not required for this research question."
+            ),
             _optional_value(rag_task, []),
         )
 
@@ -629,7 +685,8 @@ class BursaResearchDesk:
             answer_markdown=answer_markdown,
             source_summary=ResearchSourceSummary(
                 filings_used=plan.needs_filings,
-                live_news_used=plan.needs_live_news and _live_news_has_results(news_intel),
+                live_news_used=plan.needs_live_news
+                and _live_news_has_results(news_intel),
                 market_data_used=telemetry is not None,
                 filing_chunks_returned=len(filing_chunks),
                 notes=list(plan.notes),

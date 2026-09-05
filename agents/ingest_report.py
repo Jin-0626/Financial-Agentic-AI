@@ -7,7 +7,9 @@ from agents.tools.bursa_rag import ingest_bursa_pdf
 
 async def main():
     if len(sys.argv) < 6:
-        print("Usage: python ingest_report.py <pdf_path> <stock_code> <company_name> <fiscal_quarter> <YYYY-MM-DD>")
+        print(
+            "Usage: python ingest_report.py <pdf_path> <stock_code> <company_name> <fiscal_quarter> <YYYY-MM-DD>"
+        )
         sys.exit(1)
 
     pdf_path = sys.argv[1]
@@ -24,7 +26,10 @@ async def main():
         fiscal_quarter=fiscal_quarter,
         quarter_ended=quarter_ended,
     )
-    print(f"[+] Ingestion complete! Stored {chunks_stored} vectorized chunks in pgvector.")
+    print(
+        f"[+] Ingestion complete! Stored {chunks_stored} vectorized chunks in pgvector."
+    )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -140,7 +140,9 @@ def resolve_company_identity(
         entry
         for entry in entries
         if len(normalized) >= 4
-        and any(normalized in key or key in normalized for key in _entry_match_keys(entry))
+        and any(
+            normalized in key or key in normalized for key in _entry_match_keys(entry)
+        )
     ]
     if len(partial_matches) == 1:
         entry = partial_matches[0]
@@ -185,11 +187,26 @@ def resolve_company_identity(
 
 def infer_research_intent(question: str) -> ResearchIntent:
     text = question.lower()
-    if any(word in text for word in ("compare", "versus", " vs ", "stronger than", "weaker than")):
+    if any(
+        word in text
+        for word in ("compare", "versus", " vs ", "stronger than", "weaker than")
+    ):
         return ResearchIntent.COMPARISON
-    if any(word in text for word in ("latest result", "latest results", "quarterly result", "earnings", "decline")):
+    if any(
+        word in text
+        for word in (
+            "latest result",
+            "latest results",
+            "quarterly result",
+            "earnings",
+            "decline",
+        )
+    ):
         return ResearchIntent.LATEST_RESULTS
-    if any(word in text for word in ("recent", "changed", "development", "announcement", "news")):
+    if any(
+        word in text
+        for word in ("recent", "changed", "development", "announcement", "news")
+    ):
         return ResearchIntent.RECENT_DEVELOPMENTS
     if any(word in text for word in ("risk", "risks", "threat", "concern")):
         return ResearchIntent.RISK_REVIEW
@@ -206,9 +223,27 @@ def infer_research_intent(question: str) -> ResearchIntent:
         )
     ):
         return ResearchIntent.FILING_REVIEW
-    if any(word in text for word in ("several years", "historical", "over the years", "trend", "performed")):
+    if any(
+        word in text
+        for word in (
+            "several years",
+            "historical",
+            "over the years",
+            "trend",
+            "performed",
+        )
+    ):
         return ResearchIntent.HISTORICAL_PERFORMANCE
-    if any(word in text for word in ("financially stronger", "balance sheet", "cash flow", "debt", "gearing")):
+    if any(
+        word in text
+        for word in (
+            "financially stronger",
+            "balance sheet",
+            "cash flow",
+            "debt",
+            "gearing",
+        )
+    ):
         return ResearchIntent.FINANCIAL_STRENGTH
     return ResearchIntent.BROAD_ANALYSIS
 
@@ -216,7 +251,10 @@ def infer_research_intent(question: str) -> ResearchIntent:
 def build_research_plan(question: str) -> ResearchPlan:
     intent = infer_research_intent(question)
 
-    by_intent: dict[ResearchIntent, tuple[tuple[str, ...], tuple[str, ...], bool, bool, bool, bool, bool]] = {
+    by_intent: dict[
+        ResearchIntent,
+        tuple[tuple[str, ...], tuple[str, ...], bool, bool, bool, bool, bool],
+    ] = {
         ResearchIntent.LATEST_RESULTS: (
             (
                 "latest reporting period",
@@ -235,7 +273,12 @@ def build_research_plan(question: str) -> ResearchPlan:
             False,
         ),
         ResearchIntent.RECENT_DEVELOPMENTS: (
-            ("recent announcements", "publication dates", "event dates", "market/news context"),
+            (
+                "recent announcements",
+                "publication dates",
+                "event dates",
+                "market/news context",
+            ),
             ("material subsequent events prospects announcements corporate actions",),
             False,
             True,
@@ -244,7 +287,12 @@ def build_research_plan(question: str) -> ResearchPlan:
             False,
         ),
         ResearchIntent.RISK_REVIEW: (
-            ("risk factors", "balance sheet pressure", "cash generation", "industry/company developments"),
+            (
+                "risk factors",
+                "balance sheet pressure",
+                "cash generation",
+                "industry/company developments",
+            ),
             (
                 "borrowings debt securities gearing bank borrowings lease liabilities MFRS 16",
                 "cash flow operating investing financing cash and cash equivalents liquidity",
@@ -257,7 +305,12 @@ def build_research_plan(question: str) -> ResearchPlan:
             True,
         ),
         ResearchIntent.HISTORICAL_PERFORMANCE: (
-            ("multi-period filings", "operating trend", "profitability trend", "cash generation trend"),
+            (
+                "multi-period filings",
+                "operating trend",
+                "profitability trend",
+                "cash generation trend",
+            ),
             (
                 "historical revenue profit financial performance annual quarterly trend",
                 "cash flow operating cash generation balance sheet trend",
@@ -269,7 +322,12 @@ def build_research_plan(question: str) -> ResearchPlan:
             False,
         ),
         ResearchIntent.COMPARISON: (
-            ("correct identity for each company", "comparable periods", "financial strength", "business model differences"),
+            (
+                "correct identity for each company",
+                "comparable periods",
+                "financial strength",
+                "business model differences",
+            ),
             (
                 "revenue profit balance sheet cash borrowings comparable period",
                 "business segments prospects risks",
@@ -281,7 +339,13 @@ def build_research_plan(question: str) -> ResearchPlan:
             True,
         ),
         ResearchIntent.FILING_REVIEW: (
-            ("relevant filing", "reported facts", "period basis", "management commentary", "missing fields"),
+            (
+                "relevant filing",
+                "reported facts",
+                "period basis",
+                "management commentary",
+                "missing fields",
+            ),
             (
                 "latest filing financial statements notes prospects dividends borrowings cash flow",
                 "review of performance current quarter previous corresponding period revenue PBT PAT",
@@ -306,7 +370,13 @@ def build_research_plan(question: str) -> ResearchPlan:
             True,
         ),
         ResearchIntent.BROAD_ANALYSIS: (
-            ("company identity", "business model", "latest filings", "recent developments", "key risks"),
+            (
+                "company identity",
+                "business model",
+                "latest filings",
+                "recent developments",
+                "key risks",
+            ),
             (
                 "segmental reporting revenue profit before tax profit after tax current quarter cumulative financial period",
                 "balance sheet statements of financial position total assets total liabilities equity current assets cash and cash equivalents",
@@ -321,7 +391,15 @@ def build_research_plan(question: str) -> ResearchPlan:
         ),
     }
 
-    requirements, queries, needs_filings, needs_live_news, needs_market_data, needs_comparison, needs_debate = by_intent[intent]
+    (
+        requirements,
+        queries,
+        needs_filings,
+        needs_live_news,
+        needs_market_data,
+        needs_comparison,
+        needs_debate,
+    ) = by_intent[intent]
     return ResearchPlan(
         question=question,
         intent=intent,
