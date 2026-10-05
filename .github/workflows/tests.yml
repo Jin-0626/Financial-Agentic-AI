@@ -16,6 +16,8 @@ jobs:
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
       - run: uv sync --frozen
       - run: uv run --frozen python -B -m unittest discover -s tests -v
+        env:
+          PYTHON_DOTENV_DISABLED: "1"
       - run: uv pip check --python .venv/bin/python
       - run: docker compose config --quiet
         env:

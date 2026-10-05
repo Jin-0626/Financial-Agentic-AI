@@ -18,6 +18,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class VerifiedDefectTests(unittest.TestCase):
+    def setUp(self):
+        # Fake sandbox clients must not depend on a developer's private .env.
+        settings = patch.dict(os.environ, {
+            "OPEN_SANDBOX_API_KEY": "test-only-sandbox-key",
+            "OPEN_SANDBOX_CONFIG_FILE": "",
+            "OPEN_SANDBOX_DOMAIN": "localhost:8080",
+            "OPEN_SANDBOX_USE_SERVER_PROXY": "false",
+        })
+        settings.start()
+        self.addCleanup(settings.stop)
+
     def large_file(self):
         return SimpleNamespace(is_small=False, full_content=None, filename="prices.csv", file_type="csv", row_count=10000, columns=["price"], preview="price\n1")
 
