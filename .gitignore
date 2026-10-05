@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.idea/
+.vscode/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Local secrets, agent state and generated output
+.env.*
+!.env.example
+sandbox.toml
+.langgraph_api/
+.agents/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.log
+.coverage
+htmlcov/
+.DS_Store
+Thumbs.db
