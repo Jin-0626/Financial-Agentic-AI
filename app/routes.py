@@ -17,8 +17,11 @@ from .config import SANDBOX_IMAGE
 from .context_type import MemoryContext
 from .models import (
     ChatRequest, MessageItem, ChatHistoryResponse, ThreadInfo,
-    FileAnalysisResponse, ChatWithFileRequest,
+    FileAnalysisResponse, ChatWithFileRequest, FinancialResearchOutput, ChatResponse,
 )
+from .diagnostics import sanitize_error
+from .research_output import build_response_format, validated_report
+from langgraph.types import Command
 from .sandbox import (
     _set_current_org, _get_current_org, _is_sandbox_available,
     _get_org_backend, get_sandbox_manager,
@@ -67,13 +70,40 @@ def _extract_reasoning_and_content(message: Any) -> Tuple[str, Optional[str]]:
     return raw_content.strip(), reasoning
 
 
+def _request_schema(data):
+    schema = data.get("response_schema", "analysis_report")
+    try:
+        build_response_format({"response_schema": schema})
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+    return schema
+
+
+def _interruptions(state):
+    return [{"id": item.id, "value": item.value} for item in state.get("__interrupt__", [])]
+
+
+def _validated_research(state: Dict[str, Any]) -> FinancialResearchOutput:
+    return validated_report(state)
+
+
 def _get_messages_from_state(state: Dict[str, Any]) -> List[MessageItem]:
     messages = state.get("messages", [])
     result = []
-    for msg in messages:
+    turn_start = 0
+    for index, message in enumerate(messages):
+        if isinstance(message, HumanMessage) and not message.additional_kwargs.get("research_output_feedback"):
+            turn_start = index + 1
+    for index, msg in enumerate(messages):
         if isinstance(msg, BaseMessage):
+            if msg.additional_kwargs.get("research_output_feedback") or msg.additional_kwargs.get("research_draft"):
+                continue
             role = "assistant" if isinstance(msg, AIMessage) else "user" if isinstance(msg, HumanMessage) else "system"
             content, reasoning = _extract_reasoning_and_content(msg) if isinstance(msg, AIMessage) else (str(msg.content), None)
+            if isinstance(msg, ToolMessage) or (isinstance(msg, AIMessage) and msg.tool_calls):
+                continue
+            if isinstance(msg, AIMessage) and not msg.additional_kwargs.get("validated_research") and state.get("structured_response") is not None and index >= turn_start:
+                continue
             result.append(MessageItem(
                 role=role,
                 content=content,
@@ -85,6 +115,11 @@ def _get_messages_from_state(state: Dict[str, Any]) -> List[MessageItem]:
                 content=str(msg.get("content", "")),
                 reasoning=msg.get("reasoning"),
             ))
+    if state.get("structured_response") is not None:
+        report = _validated_research(state)
+        last_assistant = next((item for item in reversed(result) if item.role == "assistant"), None)
+        if last_assistant is None or last_assistant.content != report.answer:
+            result.append(MessageItem(role="assistant", content=report.answer))
     return result
 
 
@@ -103,28 +138,33 @@ def _build_env_footer(org_id: str) -> str:
     )
 
 
-def _sync_chat(message: str, thread_id: str, user_id: str, org_id: str) -> Dict[str, Any]:
+def _sync_chat(message: str, thread_id: str, user_id: str, org_id: str, response_schema="analysis_report", resume=None) -> Dict[str, Any]:
     try:
         _set_current_org(org_id)
         _ensure_user_habits(_store, user_id)
         logger.info(f"Processing chat: thread_id={thread_id}, org_id={org_id}, message={message[:50]}...")
         config = RunnableConfig(configurable={"thread_id": thread_id})
-        context = MemoryContext(user_id=user_id, org_id=org_id)
+        context = MemoryContext(user_id=user_id, org_id=org_id, response_schema=response_schema)
         full_message = message + _build_env_footer(org_id)
         res = _agent.invoke(
-            {"messages": [{"role": "user", "content": full_message}]},
+            Command(resume=resume) if resume is not None else {"messages": [{"role": "user", "content": full_message}]},
             context=context,
             config=config,
         )
+        if res.get("__interrupt__"):
+            return {"status": "interrupted", "thread_id": thread_id, "reply": "", "reasoning": None,
+                    "messages": [], "structured_response": None, "interruptions": _interruptions(res)}
+        report = _validated_research(res) if response_schema is not None else None
         messages = _get_messages_from_state(res)
-        last_message = messages[-1] if messages else None
-        reply = last_message.content if last_message else ""
+        last_message = next((item for item in reversed(messages) if item.role == "assistant"), None)
+        reply = report.answer if report else (last_message.content if last_message else "")
         reasoning = last_message.reasoning if last_message else None
         logger.info(f"Chat completed: thread_id={thread_id}, reply_length={len(reply)}")
         return {
             "status": "ok",
             "thread_id": thread_id,
             "reply": reply,
+            "structured_response": report.model_dump(mode="json") if report else None,
             "reasoning": reasoning,
             "messages": [m.model_dump() for m in messages],
         }
@@ -133,7 +173,7 @@ def _sync_chat(message: str, thread_id: str, user_id: str, org_id: str) -> Dict[
         return {
             "status": "error",
             "thread_id": thread_id,
-            "reply": f"Error: {str(e)}",
+            "reply": f"Error: {sanitize_error(e)}",
             "reasoning": None,
             "messages": [],
         }
@@ -321,7 +361,7 @@ def _prepare_message_context(message: str, file_id: Optional[str], org_id: str) 
     return message + file_context + _build_env_footer(execution_org), execution_org
 
 
-def _sync_chat_with_file(message: str, thread_id: str, user_id: str, org_id: str, file_id: Optional[str]) -> Dict[str, Any]:
+def _sync_chat_with_file(message: str, thread_id: str, user_id: str, org_id: str, file_id: Optional[str], response_schema="analysis_report", resume=None) -> Dict[str, Any]:
     try:
         _ensure_user_habits(_store, user_id)
         full_message, execution_org = _prepare_message_context(message, file_id, org_id)
@@ -333,21 +373,26 @@ def _sync_chat_with_file(message: str, thread_id: str, user_id: str, org_id: str
             f"file_id={file_id}, sandbox_org={effective_org}"
         )
         config = RunnableConfig(configurable={"thread_id": thread_id})
-        context = MemoryContext(user_id=user_id, org_id=org_id)
+        context = MemoryContext(user_id=user_id, org_id=org_id, response_schema=response_schema)
         res = _agent.invoke(
-            {"messages": [{"role": "user", "content": full_message}]},
+            Command(resume=resume) if resume is not None else {"messages": [{"role": "user", "content": full_message}]},
             context=context,
             config=config,
         )
+        if res.get("__interrupt__"):
+            return {"status": "interrupted", "thread_id": thread_id, "reply": "", "reasoning": None,
+                    "messages": [], "structured_response": None, "interruptions": _interruptions(res)}
+        report = _validated_research(res) if response_schema is not None else None
         messages = _get_messages_from_state(res)
-        last_message = messages[-1] if messages else None
-        reply = last_message.content if last_message else ""
+        last_message = next((item for item in reversed(messages) if item.role == "assistant"), None)
+        reply = report.answer if report else (last_message.content if last_message else "")
         reasoning = last_message.reasoning if last_message else None
         logger.info(f"Chat completed: thread_id={thread_id}, reply_length={len(reply)}")
         return {
             "status": "ok",
             "thread_id": thread_id,
             "reply": reply,
+            "structured_response": report.model_dump(mode="json") if report else None,
             "reasoning": reasoning,
             "messages": [m.model_dump() for m in messages],
         }
@@ -358,7 +403,7 @@ def _sync_chat_with_file(message: str, thread_id: str, user_id: str, org_id: str
         return {
             "status": "error",
             "thread_id": thread_id,
-            "reply": f"Error: {str(e)}",
+            "reply": f"Error: {sanitize_error(e)}",
             "reasoning": None,
             "messages": [],
         }
@@ -406,7 +451,7 @@ def _sync_download_sandbox_file(org_id: str, path: str) -> Optional[bytes]:
 
 
 # ---------------------------------------------------------------------------
-# Streaming (SSE) helpers — based on DeepAgents/LangGraph native graph.stream()
+# Streaming (SSE) helpers â€” based on DeepAgents/LangGraph native graph.stream()
 # ---------------------------------------------------------------------------
 
 THINK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL | re.IGNORECASE)
@@ -505,11 +550,13 @@ def _stream_sse(
     user_id: str,
     org_id: str,
     file_id: Optional[str] = None,
+    response_schema="analysis_report",
+    resume=None,
 ) -> Iterator[str]:
     """Synchronous generator: directly invokes DeepAgents/LangGraph native graph.stream(),
     yielding SSE event strings one by one. Iterated in the threadpool by Starlette's StreamingResponse."""
     reasoning_parts: List[str] = []
-    content_parts: List[str] = []
+    final_state: Dict[str, Any] = {}
     seen_tools = set()
     pending_events: List[str] = []
 
@@ -518,8 +565,8 @@ def _stream_sse(
         pending_events.append(_sse("reasoning_token", {"content": text}))
 
     def on_content(text: str):
-        content_parts.append(text)
-        pending_events.append(_sse("token", {"content": text}))
+        if response_schema is None:
+            pending_events.append(_sse("token", {"content": text}))
 
     splitter = _ThinkStreamSplitter(on_reasoning, on_content)
 
@@ -541,18 +588,21 @@ def _stream_sse(
             f"file_id={file_id}, sandbox_org={_get_current_org()}"
         )
         config = RunnableConfig(configurable={"thread_id": thread_id})
-        context = MemoryContext(user_id=user_id, org_id=org_id)
+        context = MemoryContext(user_id=user_id, org_id=org_id, response_schema=response_schema)
 
         for mode, data in _agent.stream(
-            {"messages": [{"role": "user", "content": full_message}]},
+            Command(resume=resume) if resume is not None else {"messages": [{"role": "user", "content": full_message}]},
             context=context,
             config=config,
-            stream_mode=["messages", "updates"],
+            stream_mode=["messages", "updates", "values"],
         ):
+            if mode == "values":
+                final_state = data
+                continue
             if mode == "updates":
                 # Complete update after node execution: identify tool calls
                 for name in _extract_tool_calls(data):
-                    if name and name not in seen_tools:
+                    if name and name not in {"AnalysisReport", "FinancialResearchOutput"} and name not in seen_tools:
                         seen_tools.add(name)
                         yield _sse("tool_call", {"name": name})
                 continue
@@ -560,8 +610,11 @@ def _stream_sse(
             # mode == "messages": (chunk, metadata)
             chunk, _meta = data
             if isinstance(chunk, ToolMessage):
+                if chunk.name in {"AnalysisReport", "FinancialResearchOutput"}:
+                    continue
                 output = _coerce_text(chunk.content).strip()
                 if output:
+                    output = sanitize_error(output)
                     short = output if len(output) <= 300 else output[:300] + "..."
                     yield _sse("tool_result", {"output": short})
                 continue
@@ -579,12 +632,17 @@ def _stream_sse(
             # Main content (extract <think> blocks to reasoning area, render body content in real-time)
             text = _coerce_text(chunk.content)
             if text:
+                # Buffer provisional model text until the final report passes validation.
                 splitter.push(text)
                 for ev in drain():
                     yield ev
+        if final_state.get("__interrupt__"):
+            yield _sse("interrupted", {"interruptions": _interruptions(final_state)})
+            return
+        report = _validated_research(final_state) if response_schema is not None else None
     except Exception as e:
         logger.error(f"Streaming chat error: thread_id={thread_id}: {e}", exc_info=True)
-        yield _sse("error", {"message": str(e)})
+        yield _sse("error", {"message": sanitize_error(e)})
         return
     finally:
         _set_current_org(None)
@@ -593,15 +651,19 @@ def _stream_sse(
     for ev in drain():
         yield ev
 
-    full_content = "".join(content_parts).strip()
+    messages = _get_messages_from_state(final_state)
+    ordinary = next((m.content for m in reversed(messages) if m.role == "assistant"), "")
+    full_content = report.answer if report else ordinary
     full_reasoning = "\n\n".join(p for p in reasoning_parts if p.strip()).strip() or None
     logger.info(
         f"Streaming chat completed: thread_id={thread_id}, reply_length={len(full_content)}"
     )
+    if report is not None:
+        yield _sse("report", {"structured_response": report.model_dump(mode="json"), "reply": full_content})
     yield _sse("done", {"reply": full_content, "reasoning": full_reasoning})
 
 
-@router.post("/chat")
+@router.post("/chat", response_model=ChatResponse)
 async def chat(request: Request):
     if not _agent:
         raise HTTPException(status_code=500, detail="Agent not initialized")
@@ -612,9 +674,10 @@ async def chat(request: Request):
         thread_id = data.get("thread_id", "default-thread")
         user_id = data.get("user_id", "local-user")
         org_id = data.get("org_id", "default-org")
+        response_schema = _request_schema(data)
 
         result = await asyncio.wait_for(
-            asyncio.to_thread(_sync_chat, message, thread_id, user_id, org_id),
+            asyncio.to_thread(_sync_chat, message, thread_id, user_id, org_id, response_schema, data.get("resume")),
             timeout=120.0
         )
 
@@ -655,7 +718,7 @@ async def upload_file(file: UploadFile = File(...), org_id: str = Form("default-
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/chat-with-file")
+@router.post("/chat-with-file", response_model=ChatResponse)
 async def chat_with_file(request: Request):
     if not _agent:
         raise HTTPException(status_code=500, detail="Agent not initialized")
@@ -666,10 +729,11 @@ async def chat_with_file(request: Request):
         thread_id = data.get("thread_id", "default-thread")
         user_id = data.get("user_id", "local-user")
         org_id = data.get("org_id", "default-org")
+        response_schema = _request_schema(data)
         file_id = data.get("file_id")
 
         result = await asyncio.wait_for(
-            asyncio.to_thread(_sync_chat_with_file, message, thread_id, user_id, org_id, file_id),
+            asyncio.to_thread(_sync_chat_with_file, message, thread_id, user_id, org_id, file_id, response_schema, data.get("resume")),
             timeout=180.0
         )
 
@@ -705,14 +769,15 @@ async def chat_stream(request: Request):
     thread_id = data.get("thread_id", "default-thread")
     user_id = data.get("user_id", "local-user")
     org_id = data.get("org_id", "default-org")
-    if not message.strip():
+    response_schema = _request_schema(data)
+    if not message.strip() and data.get("resume") is None:
         raise HTTPException(status_code=400, detail="Message content cannot be empty")
 
     # Set org in endpoint context: When Starlette iterates the synchronous generator in a threadpool,
     # anyio copies the contextvars of this task into each worker thread to guarantee correct tool routing.
     _set_current_org(org_id)
     return StreamingResponse(
-        _stream_sse(message, thread_id, user_id, org_id),
+        _stream_sse(message, thread_id, user_id, org_id, response_schema=response_schema, resume=data.get("resume")),
         media_type="text/event-stream",
         headers=_stream_headers(),
     )
@@ -728,15 +793,16 @@ async def chat_with_file_stream(request: Request):
     thread_id = data.get("thread_id", "default-thread")
     user_id = data.get("user_id", "local-user")
     org_id = data.get("org_id", "default-org")
+    response_schema = _request_schema(data)
     file_id = data.get("file_id")
-    if not message.strip():
+    if not message.strip() and data.get("resume") is None:
         raise HTTPException(status_code=400, detail="Message content cannot be empty")
 
     if file_id in _uploaded_files and _file_org_map.get(file_id, org_id) != org_id:
         raise HTTPException(status_code=403, detail="Access denied: You do not have permission to access this file.")
     _set_current_org(org_id)
     return StreamingResponse(
-        _stream_sse(message, thread_id, user_id, org_id, file_id),
+        _stream_sse(message, thread_id, user_id, org_id, file_id, response_schema=response_schema, resume=data.get("resume")),
         media_type="text/event-stream",
         headers=_stream_headers(),
     )

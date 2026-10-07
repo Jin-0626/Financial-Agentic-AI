@@ -11,6 +11,7 @@ from .config import MODEL_NAME, LOCAL_SKILLS_DIR
 from .context_type import MemoryContext
 from .namespace_router import user_namespace
 from .sandbox import _OrgScopedSandboxBackendProxy, get_sandbox_manager
+from .research_output import build_response_format, RequireResearchOutput, research_schema_feedback
 from .financial_tools import build_financial_tools 
 logger = logging.getLogger(__name__)
 
@@ -216,7 +217,8 @@ _- [Specific habit description] (Source: YYYY-MM-DD dialogue)_
 
 subagents = get_subagents_for_type("general") 
 
-def create_agent(checkpointer: PostgresSaver, store: PostgresStore) -> Any:
+def create_agent(checkpointer: PostgresSaver, store: PostgresStore, config=None) -> Any:
+    response_format = build_response_format(config)
     manager = get_sandbox_manager()
     if manager and manager.available:
         default_backend = _OrgScopedSandboxBackendProxy(manager)
@@ -226,7 +228,9 @@ def create_agent(checkpointer: PostgresSaver, store: PostgresStore) -> Any:
         logger.warning("Sandbox unavailable, running in degraded mode (no code execution).")
 
     agent = create_deep_agent(
-        system_prompt=RESEARCH_INTEGRITY,
+        system_prompt=RESEARCH_INTEGRITY + ("\n\n" + research_schema_feedback() if response_format else ""),
+        response_format=response_format,
+        middleware=[RequireResearchOutput((config or {}).get("response_schema", "analysis_report"))],
         model=MODEL_NAME,
         context_schema=MemoryContext,
         memory=["/memories/AGENTS.md", "/memories/habits.md"],

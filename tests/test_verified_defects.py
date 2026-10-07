@@ -263,7 +263,10 @@ class VerifiedDefectTests(unittest.TestCase):
         events = []
         store, saver, manager = Mock(), Mock(), Mock()
         agent = Mock()
-        agent.invoke.return_value = {"messages": [AIMessage(content="Diagnostic request succeeded")]}
+        agent.invoke.return_value = {"messages": [AIMessage(content="Diagnostic request succeeded")], "structured_response": {
+            "status": "success", "confidence": "medium", "risks": [], "recommendations": [], "executive_summary": "Diagnostic request succeeded", "subject": None,
+            "metrics": [], "key_findings": [], "sources": [], "data_gaps": [], "tool_errors": [],
+        }}
         @contextmanager
         def store_context(*args, **kwargs):
             events.append("store-open")
@@ -279,7 +282,8 @@ class VerifiedDefectTests(unittest.TestCase):
             with TestClient(application) as client:
                 response = client.post("/api/chat", json={"message": "diagnostic", "thread_id": "test", "org_id": "org-a", "user_id": "test-user"})
                 self.assertEqual(response.status_code, 200)
-                self.assertEqual(response.json()["reply"], "Diagnostic request succeeded")
+                self.assertIn("Diagnostic request succeeded", response.json()["reply"])
+                self.assertIn("### Executive Summary", response.json()["reply"])
         with patch.object(PostgresStore, "from_conn_string", side_effect=store_context), patch.object(PostgresSaver, "from_conn_string", side_effect=saver_context), patch.object(backend, "init_sandbox_manager", return_value=manager), patch.object(backend, "get_sandbox_manager", return_value=manager), patch.object(backend, "create_agent", return_value=agent) as build, patch.object(backend, "_ensure_agents_memory"), patch.object(backend, "_remove_per_user_agents_memory"), patch.object(routes, "_ensure_user_habits"), patch.object(routes, "get_sandbox_manager", return_value=None):
             run(backend.app)
             build.assert_called_once_with(saver, store)

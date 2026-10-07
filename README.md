@@ -4,8 +4,8 @@ A financial research assistant with a Streamlit chat interface, a FastAPI backen
 PostgreSQL conversation persistence, and organization-scoped Python execution through
 OpenSandbox. Built with Deep Agents, LangGraph, and LangChain.
 
-[Quick start](#quick-start) · [Configuration](#configuration) · [Usage](#usage) ·
-[Architecture](#architecture) · [Tests](#tests) · [Troubleshooting](#troubleshooting)
+[Quick start](#quick-start) Ãƒâ€šÃ‚Â· [Configuration](#configuration) Ãƒâ€šÃ‚Â· [Usage](#usage) Ãƒâ€šÃ‚Â·
+[Architecture](#architecture) Ãƒâ€šÃ‚Â· [Tests](#tests) Ãƒâ€šÃ‚Â· [Troubleshooting](#troubleshooting)
 
 ## Features
 
@@ -155,6 +155,25 @@ health response. Host-side market tools remain independent of sandbox availabili
 Treasury results report `success`, `partial_success`, or `error`, preserve valid quotes,
 and separate direct yields from Yahoo yield-index proxies.
 
+## Structured financial research output
+
+The main DeepAgent returns a validated Pydantic `AnalysisReport` using LangChain
+ToolStrategy. Reports contain Executive Summary, Key Findings, Risks, Recommendations,
+Confidence, typed metrics, evidence sources, missing-data notices and sanitized tool errors.
+Readable text derives from that report. JSON-looking model text is never accepted as a
+replacement for the final graph structured_response.
+
+Chat requests default to `"response_schema": "analysis_report"`. Set it to null for ordinary
+chat, or use the Streamlit checkbox. Unsupported schema names fail explicitly. Invalid
+completion gets at most two correction retries before an exposed error.
+
+JSON endpoints return readable `reply` and typed `structured_response`. SSE emits progress,
+then one validated `report` event, then `done`. The structured_response field now lives in
+`report`, while done retains readable reply. Interrupted, failed and incomplete runs are
+not saved as completed reports. Restart both application processes after updating.
+
+See [the complete contract, examples, reference findings and migration notes](docs/structured-output.md).
+
 ## Architecture
 
 ```mermaid
@@ -205,7 +224,7 @@ uv pip check --python .venv/bin/python
 docker compose --env-file .env config --quiet
 ```
 
-The 38 regression tests cover sandbox failures and retries, concurrent provisioning,
+The 64 regression tests cover sandbox failures and retries, concurrent provisioning,
 cleanup races, provider outcomes, organization file ownership, specialist tools, backend
 initialization, persistence cleanup, and UI backend configuration. GitHub Actions installs
 frozen dependencies and runs fake-client tests plus Compose validation without live

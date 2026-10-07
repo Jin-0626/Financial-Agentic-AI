@@ -1,3 +1,12 @@
+import sys
+from pathlib import Path
+
+# Streamlit adds the script directory, so expose the shared project modules too.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from research_schema import AnalysisReport, render_report
 import json
 import os
 import time
@@ -200,6 +209,7 @@ for msg in st.session_state.messages:
         st.markdown(msg.get("content", ""))
 
 # ----------------- Chat Input & Streaming -----------------
+research_mode = st.checkbox("Structured financial research", value=True)
 prompt = st.chat_input("Enter your message...")
 
 if prompt:
@@ -222,12 +232,16 @@ if prompt:
 
         full_reply = ""
         full_reasoning = ""
+        completed = False
+        stream_failed = False
+        validated_report = None
 
         # Prepare request
         has_file = st.session_state.uploaded_file_info is not None
         endpoint = "/api/chat-with-file/stream" if has_file else "/api/chat/stream"
         payload = {
             "message": prompt,
+            "response_schema": "analysis_report" if research_mode else None,
             "thread_id": st.session_state.current_thread_id,
             "user_id": st.session_state.user_id,
             "org_id": st.session_state.org_id,
@@ -260,7 +274,7 @@ if prompt:
                     continue
 
                 ev_type = ev.get("type")
-                if ev_type == "token":
+                if ev_type == "token" and not research_mode:
                     full_reply += ev.get("content", "")
                     answer_placeholder.markdown(full_reply + "▌")
                 elif ev_type == "reasoning_token":
@@ -273,25 +287,41 @@ if prompt:
                     status_container.caption(f"🔧 Calling tool: `{ev.get('name')}`...")
                 elif ev_type == "tool_result":
                     status_container.caption("✅ Tool execution completed")
+                elif ev_type == "report":
+                    validated_report = AnalysisReport.model_validate(ev.get("structured_response"))
+                    full_reply = render_report(validated_report)
                 elif ev_type == "done":
-                    if ev.get("reply"):
-                        full_reply = ev.get("reply")
+                    if research_mode and validated_report is None:
+                        stream_failed = True
+                        st.error("Response completed without a validated research report.")
+                        break
+                    if not research_mode:
+                        full_reply = ev.get("reply", full_reply)
+                    completed = True
                     if ev.get("reasoning"):
                         full_reasoning = ev.get("reasoning")
+                elif ev_type == "interrupted":
+                    stream_failed = True
+                    st.info("Research paused for a decision. No completed report was saved.")
+                    break
                 elif ev_type == "error":
+                    stream_failed = True
                     st.error(ev.get("message", "Stream execution error"))
+                    break
 
             status_container.empty()
-            answer_placeholder.markdown(full_reply or "(No response)")
-
-            # Record turn in state
-            st.session_state.messages.append(
-                {"role": "assistant", "content": full_reply, "reasoning": full_reasoning}
-            )
-
-            # Auto-clear uploaded file after sending
-            if has_file:
-                remove_uploaded_file()
+            if completed and not stream_failed:
+                answer_placeholder.markdown(full_reply)
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": full_reply, "reasoning": full_reasoning}
+                )
+                if has_file:
+                    remove_uploaded_file()
+            else:
+                answer_placeholder.empty()
+                if not stream_failed:
+                    st.error("Response ended before a validated research report was received. Please retry.")
 
         except Exception as e:
+            answer_placeholder.empty()
             st.error(f"Error during response generation: {e}")

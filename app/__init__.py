@@ -30,6 +30,8 @@ async def lifespan(app: FastAPI):
     
     from langgraph.store.postgres import PostgresStore
     from langgraph.checkpoint.postgres import PostgresSaver
+    from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
+    from research_schema import AnalysisReport
     
     stack = ExitStack()
     manager = None
@@ -39,6 +41,7 @@ async def lifespan(app: FastAPI):
         _checkpointer = stack.enter_context(PostgresSaver.from_conn_string(DB_URL))
         
         _store.setup()
+        _checkpointer.serde = JsonPlusSerializer(allowed_msgpack_modules=[AnalysisReport])
         _checkpointer.setup()
         
         manager = init_sandbox_manager(SANDBOX_IMAGE)
