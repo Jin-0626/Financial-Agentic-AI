@@ -40,6 +40,7 @@ class FMPRateLimitError(FMPError):
 class FMPClient:
     """Client for querying Financial Modeling Prep API endpoints."""
 
+    BASE_URL_STABLE = "https://financialmodelingprep.com/stable"
     BASE_URL_V3 = "https://financialmodelingprep.com/api/v3"
     BASE_URL_V4 = "https://financialmodelingprep.com/api/v4"
 
@@ -67,7 +68,10 @@ class FMPClient:
 
     def _request(self, endpoint: str, params: Optional[Dict[str, Any]] = None, version: str = "v3") -> Any:
         """Internal dispatcher executing authenticated HTTP requests."""
-        base = self.BASE_URL_V4 if version == "v4" else self.BASE_URL_V3
+        bases = {"v3": self.BASE_URL_V3, "v4": self.BASE_URL_V4, "stable": self.BASE_URL_STABLE}
+        if version not in bases:
+            raise ValueError(f"Unsupported FMP API version: {version}")
+        base = bases[version]
         url = f"{base}/{endpoint.lstrip('/')}"
 
         query_params = {"apikey": self.api_key}

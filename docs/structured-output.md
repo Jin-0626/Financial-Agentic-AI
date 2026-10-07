@@ -65,7 +65,7 @@ The following is an illustrative unavailable response, not a live provider quote
 {
   "status": "ok",
   "thread_id": "example-thread",
-  "reply": "## 0157.KL\n### Executive Summary\nThe quote could not be retrieved; current valuation is unavailable.\n### Key Findings\nNo verified items available.\n### Risks\nNo verified items available.\n### Recommendations\nNo verified items available.\n### Confidence\nLow\n### Data Gaps and Retrieval Failures\n- Current share price and valuation\n- market_data (provider): HTTP 429",
+  "reply": "## 0157.KL\n\n**Data coverage:** Unavailable | **Confidence:** Low\n\n### Executive Summary\n\nThe quote could not be retrieved; current valuation is unavailable.\n\n### Key Findings\n\nNo additional verified findings available.\n\n### Risks and Counter-Thesis\n\nRisks could not be established from the supplied evidence; this does not imply low risk.\n\n### Recommendations\n\nNo evidence-backed recommendation established.\n\n### Confidence\n\nLow. Confidence describes evidence coverage, not investment certainty.\n\n### Data Gaps and Retrieval Failures\n\n- Current share price and valuation\n- **market_data (provider):** HTTP 429\n\n### Informational Caveat\n\nThis analysis is for educational and informational purposes only and is not individualized investment advice. Data may be delayed or incomplete; verify sources and assumptions independently. Hypothetical scenarios are not forecasts or guarantees.",
   "reasoning": null,
   "messages": [],
   "structured_response": {
@@ -133,9 +133,9 @@ providers, dependency upgrades, Compose changes, or authentication changes are r
 Installed versions inspected: Deep Agents 0.7.21, LangChain 1.4.3, LangGraph 1.2.11,
 Pydantic 2.13.5 and Streamlit 1.64.0. No dependency versions were changed.
 
-- Full unittest suite: 85 tests passed, including the 14 original tests, ownership HTTP
+- Full unittest suite: 96 tests passed, including the 14 original tests, ownership HTTP
   403 checks, ordinary-chat UI checks, bounded retries, interrupt/resume and startup.
-- AST syntax check: 20 Python files passed. git diff --check passed.
+- AST syntax check: 22 Python files passed. git diff --check passed.
 - uv pip check: 131 installed packages compatible. docker compose config --quiet passed.
 - Ruff: blocked by `No module named ruff`. Mypy: blocked by `No module named mypy`.
   Neither is installed or configured in this repository; no lint/type success is claimed.
@@ -174,3 +174,41 @@ reading done.structured_response must migrate to report.structured_response.
 The frontend resolves shared imports from its own file location. An isolated subprocess
 regression verifies Streamlit startup from outside the repository with no project root
 on the initial import path, without loading the FastAPI package.
+
+## Analyst prompt and readable report
+
+The supplied senior financial analyst mandate is implemented in app/prompts.py and used
+by the parent and all eight configured specialists. The main application explicitly adds
+TodoListMiddleware: installed Deep Agents 0.7.21 does not add write_todos automatically.
+The [Deep Agents planning docs](https://docs.langchain.com/oss/python/deepagents/overview#task-planning)
+and [structured-output docs](https://docs.langchain.com/oss/python/langchain/structured-output)
+were checked through the LangChain docs MCP and against installed source.
+
+For multi-step research the prompt specifies acquisition, hygiene, executed computations,
+risk/sensitivity and synthesis milestones. It requires regulatory/audited accounting evidence,
+labels provider/user inputs, saves actual workpapers, supplies isolated specialists with bounded
+context, and withholds targets or scenarios when evidence or execution is absent. The global
+AGENTS.md seed now contains compact workspace/memory conventions instead of competing analytic
+instructions. Restarting FastAPI refreshes that global seed; user habits are preserved.
+
+The JSON schema keys remain compatible. Existing key_findings categories group supported
+financial/accounting analysis and valuation/scenario analysis into distinct readable sections.
+Simple quotes do not generate a fabricated DCF or five-stage research narrative. Numeric metrics
+with a calculation description require an execute source reference. That schema requirement is
+an audit reference, not independent proof that a supplied source or execution claim is true.
+
+The shared renderer uses blank lines between Markdown blocks, exact decimal formatting with
+thousands separators, actual source dates when a metric has no separate period, and a clearly
+labeled coverage/confidence line. Missing risks do not imply low risk. Raw JSON source references
+are retained in structured data but omitted from readable text. Every structured report ends
+with an educational/informational, non-individualized-advice caveat. Ordinary chat remains
+conversational and does not receive a research-template disclaimer by default.
+
+Additional changed files: app/prompts.py, app/subagents.py and tests/test_analyst_prompt.py.
+The latter covers actual planning-tool execution, shared specialist standards, exact formatting,
+source dates, readable grouping, missing evidence, the caveat and derived-code evidence rules.
+
+The current saved report is rerendered in place when history is loaded, so formatting
+changes do not append a duplicate assistant answer or overwrite earlier turns. Live
+FastAPI startup and a hypothetical, explicitly user-supplied quote returned HTTP 200
+with the revised sections and informational caveat after the prompt update.

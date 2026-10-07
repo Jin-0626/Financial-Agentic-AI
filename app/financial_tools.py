@@ -6,6 +6,9 @@ Wires native market data, portfolio analytics, financial news, and macro indicat
 from __future__ import annotations
 from pathlib import Path
 import sys
+import os
+import requests
+from urllib.parse import urlsplit
 import json
 import logging
 import math
@@ -168,30 +171,85 @@ def _make_portfolio_tool() -> BaseTool:
 # Tool 3: Financial News & Corporate Disclosures
 # -----------------------------------------------------------------------------
 
+def _search_tavily_news(query: str, count: int, api_key: str) -> list[dict[str, Any]]:
+    """Search article evidence; do not use a generated answer as a news source."""
+    response = requests.post(
+        "https://api.tavily.com/search",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={"query": query, "topic": "news", "search_depth": "basic",
+              "max_results": count, "include_answer": False, "include_raw_content": False},
+        timeout=30,
+    )
+    try:
+        response.raise_for_status()
+        payload = response.json()
+    finally:
+        response.close()
+    if not isinstance(payload, dict) or payload.get("error") or not isinstance(payload.get("results"), list):
+        raise ValueError("Tavily returned an invalid news response")
+    articles = []
+    for item in payload["results"][:count]:
+        if not isinstance(item, dict):
+            raise ValueError("Tavily returned an invalid article")
+        title, url = item.get("title"), item.get("url")
+        if not isinstance(title, str) or not title.strip() or not isinstance(url, str):
+            raise ValueError("Tavily article is missing a title or source URL")
+        parsed = urlsplit(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            raise ValueError("Tavily article has an invalid source URL")
+        articles.append({"title": title, "summary": item.get("content") or "",
+                         "pub_date": item.get("published_date"), "provider": parsed.hostname,
+                         "search_provider": "Tavily", "url": url})
+    return articles
+
+
 def _make_news_tool() -> BaseTool:
     @tool
-    def financial_news(symbol: Optional[str] = None, count: int = 10) -> str:
+    def financial_news(symbol: Optional[str] = None, count: int = 10, query: Optional[str] = None) -> str:
         """
-        Fetch recent financial headlines, summaries, and SEC filing news.
+        Search financial news with Tavily, falling back to FMP and Yahoo.
+        Cite article URLs and dates; search snippets are not audited financial statements.
 
         Args:
             symbol: Ticker symbol (e.g. 'AAPL', 'TSLA'). If omitted, general market news is returned.
-            count: Number of news items to retrieve (default: 10).
+            count: Number of news items to retrieve, from 1 to 20 (default: 10).
+            query: Optional search text using a verified company name and relevant event.
+                   The symbol is included when supplied; do not invent a company identity.
 
         Returns:
             JSON string with headlines, publishers, timestamps, and summaries.
         """
+        if not 1 <= count <= 20:
+            return _to_json({"status": "error", "category": "validation", "error": "count must be between 1 and 20", "articles": []})
         attempts = []
+        tavily_key = os.getenv("TAVILY_API_KEY", "").strip()
+        if tavily_key:
+            search_query = " ".join(part for part in [symbol, query or "latest financial business news"] if part)
+            try:
+                articles = _search_tavily_news(search_query, count, tavily_key)
+                if articles:
+                    return _to_json(articles)
+                attempts.append({"provider": "Tavily", "status": "empty"})
+            except Exception as e:
+                attempts.append({"provider": "Tavily", "status": "error", "error": sanitize_error(e, secrets=(tavily_key,))})
+
+        def success(articles):
+            # Keep failed primary searches visible when a fallback supplies evidence.
+            if any(attempt["provider"] == "Tavily" and attempt["status"] == "error" for attempt in attempts):
+                return _to_json({"articles": articles, "status": "partial_success", "attempts": attempts})
+            return _to_json(articles)
+
         if _fmp_client and getattr(_fmp_client, "api_key", None):
             try:
                 params = {"limit": count}
                 if symbol:
-                    params["tickers"] = symbol.upper()
-                news = _fmp_client._request("stock_news", params)
+                    params["symbols"] = symbol.upper()
+                endpoint = "news/stock" if symbol else "news/stock-latest"
+                news = _fmp_client._request(endpoint, params, version="stable")
                 if not isinstance(news, list):
                     raise ValueError("FMP returned a non-list news response")
                 if news:
-                    return _to_json(news)
+                    return success(news)
                 attempts.append({"provider": "FMP", "status": "empty"})
             except Exception as e:
                 attempts.append({"provider": "FMP", "status": "error", "error": sanitize_error(e)})
@@ -213,11 +271,13 @@ def _make_news_tool() -> BaseTool:
                         "url": (content.get("canonicalUrl") or {}).get("url", content.get("link", "")),
                     })
                 if cleaned:
-                    return _to_json(cleaned)
+                    return success(cleaned)
                 attempts.append({"provider": "Yahoo", "status": "empty"})
             except Exception as e:
                 attempts.append({"provider": "Yahoo", "status": "error", "error": sanitize_error(e)})
-        status = "error" if any(a["status"] == "error" for a in attempts) else "empty" if attempts else "unavailable"
+        if not tavily_key:
+            attempts.append({"provider": "Tavily", "status": "unavailable", "detail": "TAVILY_API_KEY is not configured"})
+        status = "error" if any(a["status"] == "error" for a in attempts) else "empty" if any(a["status"] == "empty" for a in attempts) else "unavailable"
         result = {"articles": [], "status": status, "attempts": attempts}
         if status != "empty":
             result["error"] = "News retrieval failed" if attempts else "No news provider configured for this request"

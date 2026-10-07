@@ -90,6 +90,7 @@ def _validated_research(state: Dict[str, Any]) -> FinancialResearchOutput:
 def _get_messages_from_state(state: Dict[str, Any]) -> List[MessageItem]:
     messages = state.get("messages", [])
     result = []
+    current_report_message = None
     turn_start = 0
     for index, message in enumerate(messages):
         if isinstance(message, HumanMessage) and not message.additional_kwargs.get("research_output_feedback"):
@@ -109,6 +110,8 @@ def _get_messages_from_state(state: Dict[str, Any]) -> List[MessageItem]:
                 content=content,
                 reasoning=reasoning,
             ))
+            if isinstance(msg, AIMessage) and msg.additional_kwargs.get("validated_research") and index >= turn_start:
+                current_report_message = result[-1]
         elif isinstance(msg, dict):
             result.append(MessageItem(
                 role=msg.get("role", "unknown"),
@@ -117,8 +120,9 @@ def _get_messages_from_state(state: Dict[str, Any]) -> List[MessageItem]:
             ))
     if state.get("structured_response") is not None:
         report = _validated_research(state)
-        last_assistant = next((item for item in reversed(result) if item.role == "assistant"), None)
-        if last_assistant is None or last_assistant.content != report.answer:
+        if current_report_message is not None:
+            current_report_message.content = report.answer
+        else:
             result.append(MessageItem(role="assistant", content=report.answer))
     return result
 

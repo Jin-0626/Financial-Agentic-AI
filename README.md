@@ -4,8 +4,8 @@ A financial research assistant with a Streamlit chat interface, a FastAPI backen
 PostgreSQL conversation persistence, and organization-scoped Python execution through
 OpenSandbox. Built with Deep Agents, LangGraph, and LangChain.
 
-[Quick start](#quick-start) Ãƒâ€šÃ‚Â· [Configuration](#configuration) Ãƒâ€šÃ‚Â· [Usage](#usage) Ãƒâ€šÃ‚Â·
-[Architecture](#architecture) Ãƒâ€šÃ‚Â· [Tests](#tests) Ãƒâ€šÃ‚Â· [Troubleshooting](#troubleshooting)
+[Quick start](#quick-start) · [Configuration](#configuration)· [Usage](#usage) ·
+[Architecture](#architecture) · [Tests](#tests) · [Troubleshooting](#troubleshooting)
 
 ## Features
 
@@ -160,6 +160,9 @@ and separate direct yields from Yahoo yield-index proxies.
 The main DeepAgent returns a validated Pydantic `AnalysisReport` using LangChain
 ToolStrategy. Reports contain Executive Summary, Key Findings, Risks, Recommendations,
 Confidence, typed metrics, evidence sources, missing-data notices and sanitized tool errors.
+Multi-step research uses explicit planning and executed quantitative workpapers. Supported
+accounting and valuation findings appear in dedicated sections, values retain their supplied
+precision, and every structured report ends with an informational caveat.
 Readable text derives from that report. JSON-looking model text is never accepted as a
 replacement for the final graph structured_response.
 
@@ -271,3 +274,14 @@ git branch -M main
 git remote add origin <YOUR_GITHUB_REPOSITORY_URL>
 git push -u origin main
 ```
+
+### News search
+
+Set `TAVILY_API_KEY` in your local `.env` and restart FastAPI to enable Tavily as
+`financial_news`'s primary source. The existing tool accepts `symbol`, `count`
+(1-20), and optional `query` with a verified company name or event. Searches use
+Tavily's news topic and return article URLs, snippets and available publication
+dates; generated search answers are disabled. FMP and Yahoo remain fallbacks.
+Missing credentials, empty searches and provider failures are reported separately.
+A failed Tavily request remains visible when a fallback returns articles.
+The search runs in the application process and does not require a sandbox.

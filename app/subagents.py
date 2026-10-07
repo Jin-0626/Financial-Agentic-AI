@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 from .research_integrity import RESEARCH_INTEGRITY
+from .prompts import SPECIALIST_RESEARCH_PROMPT
 
 # Subagents def
 skills = ["/skills/"]
@@ -231,7 +232,7 @@ def get_subagents_for_type(agent_type: str) -> list[dict[str, Any]]:
         "- Label every current value with its as-of date and report unavailable evidence explicitly."
     )
     return [
-        {**_ALL_AGENTS[name], "system_prompt": _ALL_AGENTS[name]["system_prompt"] + integrity_rules + "\n\n" + RESEARCH_INTEGRITY}
+        {**_ALL_AGENTS[name], "system_prompt": _ALL_AGENTS[name]["system_prompt"] + integrity_rules + "\n\n" + SPECIALIST_RESEARCH_PROMPT + "\n\n" + RESEARCH_INTEGRITY}
         for name in names
         if name in _ALL_AGENTS
     ]

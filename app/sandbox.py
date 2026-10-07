@@ -1,6 +1,7 @@
 import contextvars
 import logging
 import os
+import shlex
 import threading
 import time
 from pathlib import Path
@@ -106,27 +107,43 @@ def _provision_sandbox(backend: OpensandboxBackend) -> Tuple[bool, str]:
 
     install_res = None
     deps_ok = False
+    failure_detail = ""
     try:
         backend.execute("chmod +x /scripts/*.py /scripts/*.sh /skills/**/*.py 2>/dev/null || true")
-        backend.execute(
-            "python3 -m pip --version >/dev/null 2>&1 || python3 -m ensurepip --upgrade 2>/dev/null || true",
+        # The code-interpreter image has a minimal system Python and a separate
+        # bundled Python 3.12. Select the latter when the shell runtime lacks pip,
+        # and expose it to subsequent execute/filesystem commands in this container.
+        bootstrap = backend.execute(
+            "if python3 -m pip --version >/dev/null 2>&1; then :; "
+            "elif /root/.local/bin/python3.12 -m pip --version >/dev/null 2>&1; then "
+            "runtime=$(readlink -f /root/.local/bin/python3.12) && "
+            "ln -sf \"$runtime\" /usr/local/bin/python3 && "
+            "ln -sf \"$runtime\" /usr/local/bin/python && hash -r; "
+            "else python3 -m ensurepip --upgrade; fi && python3 -m pip --version",
             timeout=60,
         )
+        if bootstrap.exit_code != 0:
+            detail = sanitize_error(bootstrap.output or "No command output returned")
+            return False, f"Python/pip bootstrap failed (exit_code={bootstrap.exit_code}): {detail}"
         install_cmd = (
             "python3 -m pip install --quiet --disable-pip-version-check --break-system-packages "
-            + " ".join(FINANCIAL_CORE_DEPS)
+            + " ".join(shlex.quote(requirement) for requirement in FINANCIAL_CORE_DEPS)
             + " 2>&1"
         )
         install_res = backend.execute(install_cmd, timeout=300)
         deps_ok = (install_res.exit_code == 0)
     except Exception as e:
-        logger.warning("Provisioning: financial package install error: %s", sanitize_error(e))
+        failure_detail = sanitize_error(e)
+        logger.warning("Provisioning: financial package install error: %s", failure_detail)
         deps_ok = False
 
     deps_tail = ""
     if install_res is not None and not deps_ok:
         output = getattr(install_res, "output", "") or ""
-        deps_tail = " | pip error: " + sanitize_error(output[-300:])
+        failure_detail = sanitize_error(output[-300:]) or "No command output returned"
+        failure_detail = f"exit_code={install_res.exit_code}; {failure_detail}"
+    if not deps_ok:
+        deps_tail = " | pip error: " + failure_detail
 
     status_message = (
         f"uploaded {len(upload_pairs)} file(s); packages {'ok' if deps_ok else 'failed'}{deps_tail}"
