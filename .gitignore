@@ -24,3 +24,9 @@ sandbox.toml
 htmlcov/
 .DS_Store
 Thumbs.db
+
+# Rust fixture and local observability artifacts
+**/target/
+
+# Organization-scoped native engine data
+.engine-data/

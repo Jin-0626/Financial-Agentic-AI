@@ -1,5 +1,6 @@
 """Bounded enforcement for models that ignore structured-output tool choice."""
 import json
+from orchestrator.telemetry import traced, get_runtime
 from datetime import datetime, timezone
 from typing import Annotated, Any, NotRequired
 
@@ -101,6 +102,9 @@ class RequireResearchOutput(AgentMiddleware):
             return None
         count = state.get("research_output_retries", 0)
         if count >= 2:
+            runtime = get_runtime()
+            if runtime:
+                runtime.budget_errors.add(1, {"budget.kind": "schema_retries"})
             raise ValueError("Model failed to return validated AnalysisReport after two completion retries")
         if evidence_error:
             return {"research_output_retries": count + 1, "structured_response": None,
@@ -133,6 +137,7 @@ def build_response_format(config=None):
     return ToolStrategy(AnalysisReport, handle_errors=research_schema_feedback)
 
 
+@traced("report.validate")
 def validated_report(state):
     """Read only graph structured_response; preserve observed current-turn failures."""
     raw = state.get("structured_response")

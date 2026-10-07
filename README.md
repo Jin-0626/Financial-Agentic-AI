@@ -285,3 +285,10 @@ dates; generated search answers are disabled. FMP and Yahoo remain fallbacks.
 Missing credentials, empty searches and provider failures are reported separately.
 A failed Tavily request remains visible when a fallback returns articles.
 The search runs in the application process and does not require a sandbox.
+
+## Observability
+
+Phase 1 adds privacy-safe OpenTelemetry request, model, specialist, tool, and report spans.
+See [local Collector setup, metrics, propagation fixture, and verification](docs/observability.md).
+
+Native engine implementation and local ingestion: [Phase 2 native engine](docs/native-engine.md).

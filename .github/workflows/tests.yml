@@ -5,7 +5,7 @@ permissions:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -14,10 +14,19 @@ jobs:
         with:
           python-version: '3.12'
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff # v6
+      - run: rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+      - run: cargo +1.99.0 build --locked --manifest-path fixtures/trace-context/Cargo.toml
+      - run: cargo +1.99.0 build --locked -j 2
+      - run: cargo +1.99.0 test --locked -j 2
+      - run: cargo +1.99.0 fmt --all --check
+      - run: cargo +1.99.0 clippy --locked --workspace --all-targets -- -D warnings
       - run: uv sync --frozen
       - run: uv run --frozen python -B -m unittest discover -s tests -v
         env:
+          ENGINE_TEST_COMMAND: '["target/debug/financial-engine"]'
+          TRACE_FIXTURE_COMMAND: '["fixtures/trace-context/target/debug/trace-context-fixture"]'
           PYTHON_DOTENV_DISABLED: "1"
+          OTEL_ENABLED: "false"
       - run: uv pip check --python .venv/bin/python
       - run: docker compose config --quiet
         env:

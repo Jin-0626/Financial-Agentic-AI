@@ -20,6 +20,7 @@ from .models import (
     FileAnalysisResponse, ChatWithFileRequest, FinancialResearchOutput, ChatResponse,
 )
 from .diagnostics import sanitize_error
+from orchestrator.telemetry import traced, traced_stream
 from .research_output import build_response_format, validated_report
 from langgraph.types import Command
 from .sandbox import (
@@ -87,6 +88,7 @@ def _validated_research(state: Dict[str, Any]) -> FinancialResearchOutput:
     return validated_report(state)
 
 
+@traced("result.deserialize")
 def _get_messages_from_state(state: Dict[str, Any]) -> List[MessageItem]:
     messages = state.get("messages", [])
     result = []
@@ -142,6 +144,7 @@ def _build_env_footer(org_id: str) -> str:
     )
 
 
+@traced("research.run")
 def _sync_chat(message: str, thread_id: str, user_id: str, org_id: str, response_schema="analysis_report", resume=None) -> Dict[str, Any]:
     try:
         _set_current_org(org_id)
@@ -365,6 +368,7 @@ def _prepare_message_context(message: str, file_id: Optional[str], org_id: str) 
     return message + file_context + _build_env_footer(execution_org), execution_org
 
 
+@traced("research.run")
 def _sync_chat_with_file(message: str, thread_id: str, user_id: str, org_id: str, file_id: Optional[str], response_schema="analysis_report", resume=None) -> Dict[str, Any]:
     try:
         _ensure_user_habits(_store, user_id)
@@ -548,6 +552,7 @@ def _extract_tool_calls(update: Any) -> List[str]:
     return names
 
 
+@traced_stream("research.run")
 def _stream_sse(
     message: str,
     thread_id: str,

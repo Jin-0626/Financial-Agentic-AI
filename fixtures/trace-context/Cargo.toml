@@ -1,0 +1,15 @@
+[package]
+name = "trace-context-fixture"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+opentelemetry = "0.33"
+opentelemetry_sdk = "0.33"
+opentelemetry-otlp = { version = "0.33", default-features = false, features = ["grpc-tonic", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json"] }
+tracing-opentelemetry = "0.34"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+serde_json = "1"

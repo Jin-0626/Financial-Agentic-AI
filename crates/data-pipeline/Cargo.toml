@@ -1,0 +1,24 @@
+[package]
+name = "data-pipeline"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[dependencies]
+tracing.workspace = true
+quant-engine = { path = "../quant-engine" }
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+rust_decimal.workspace = true
+polars.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+quick-xml.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+rand.workspace = true
+[lints]
+workspace = true

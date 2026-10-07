@@ -1,0 +1,46 @@
+[workspace]
+members = ["crates/quant-engine", "crates/data-pipeline", "crates/mcp-server"]
+exclude = ["fixtures/trace-context"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+schemars = "1"
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "=1.43.0", features = ["serde-str", "maths"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "time", "process", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+polars = { version = "=0.55.2", default-features = false, features = ["lazy", "parquet"] }
+sha2 = "0.10"
+tempfile = "3"
+rand = "0.9"
+rand_chacha = "0.9"
+statrs = { version = "0.18", default-features = false }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+quick-xml = "0.38"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json"] }
+tracing-opentelemetry = "=0.34.0"
+opentelemetry = "0.33"
+opentelemetry_sdk = "0.33"
+opentelemetry-otlp = { version = "=0.33.0", default-features = false, features = ["grpc-tonic", "trace", "metrics"] }
+jsonschema = { version = "0.33", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.dev]
+debug = 0
+[profile.test]
+debug = 0

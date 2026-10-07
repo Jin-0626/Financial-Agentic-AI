@@ -1,0 +1,26 @@
+name: financial-observability
+services:
+  collector:
+    image: otel/opentelemetry-collector-contrib:0.153.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "127.0.0.1:14317:4317"
+      - "127.0.0.1:14318:4318"
+      - "127.0.0.1:18889:8889"
+    mem_limit: 256m
+    depends_on: [trace-backend]
+  trace-backend:
+    image: jaegertracing/jaeger:2.16.0
+    ports:
+      - "127.0.0.1:16686:16686"
+    mem_limit: 256m
+  prometheus:
+    image: prom/prometheus:v3.10.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=24h"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:19090:9090"
+    mem_limit: 256m

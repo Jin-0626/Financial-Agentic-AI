@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from deepagents import create_deep_agent
+from deepagents import create_deep_agent, HarnessProfile, register_harness_profile
 from deepagents.backends import CompositeBackend, StoreBackend, StateBackend, FilesystemBackend
 from langgraph.store.postgres import PostgresStore
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -13,7 +13,8 @@ from .context_type import MemoryContext
 from .namespace_router import user_namespace
 from .sandbox import _OrgScopedSandboxBackendProxy, get_sandbox_manager
 from .research_output import build_response_format, RequireResearchOutput, research_schema_feedback
-from .financial_tools import build_financial_tools 
+from .financial_tools import build_financial_tools
+from orchestrator.telemetry.middleware import ResearchTelemetry
 logger = logging.getLogger(__name__)
 
 
@@ -155,6 +156,10 @@ _- [Specific habit description] (Source: YYYY-MM-DD dialogue)_
 subagents = get_subagents_for_type("general") 
 
 def create_agent(checkpointer: PostgresSaver, store: PostgresStore, config=None) -> Any:
+    # The public harness profile also instruments the automatically supplied specialist.
+    # This application owns its exact model profile; provider defaults still merge beneath it.
+    if isinstance(MODEL_NAME, str):
+        register_harness_profile(MODEL_NAME, HarnessProfile(extra_middleware=lambda: [ResearchTelemetry()]))
     response_format = build_response_format(config)
     manager = get_sandbox_manager()
     if manager and manager.available:
@@ -167,13 +172,16 @@ def create_agent(checkpointer: PostgresSaver, store: PostgresStore, config=None)
     agent = create_deep_agent(
         system_prompt=FINANCIAL_ANALYST_PROMPT + ("\n\n" + research_schema_feedback() if response_format else ""),
         response_format=response_format,
-        middleware=[TodoListMiddleware(), RequireResearchOutput((config or {}).get("response_schema", "analysis_report"))],
+        middleware=[TodoListMiddleware(), ResearchTelemetry(), RequireResearchOutput((config or {}).get("response_schema", "analysis_report"))],
         model=MODEL_NAME,
         context_schema=MemoryContext,
         memory=["/memories/AGENTS.md", "/memories/habits.md"],
         skills=["/skills/"],
         tools=tools,
-        subagents=subagents,
+        subagents=[
+            {**spec, "middleware": [*spec.get("middleware", []), ResearchTelemetry()]}
+            for spec in subagents
+        ],
         checkpointer=checkpointer,
         backend=CompositeBackend(
             default=default_backend,
