@@ -5100,7 +5100,7 @@
     },
     {
       "file": "yf_data.py",
-      "sha256": "16141d7ca528c5d92fdcd242b23da9d24f0fc500614d6d917530a17b5016a2b7",
+      "sha256": "f8526ac6d3545c0570b67968cb1816e7ef942e22b1f62719fc4d194917c42bdf",
       "status": "active local adapter",
       "agent_registered": false,
       "provenance": "local implementation; preserves migrated fixes",
@@ -5108,7 +5108,7 @@
     },
     {
       "file": "yh_market.py",
-      "sha256": "d48eb41aa68ae6db04cb9ee78536812541c528cd150c2ad375be3ce49a7ca895",
+      "sha256": "a54d85a0a416c2d859574192f5fe41d317c5f31912c2c38e1005c209e8d3df53",
       "status": "active local adapter",
       "agent_registered": false,
       "provenance": "local implementation; preserves migrated fixes",
@@ -5116,7 +5116,7 @@
     },
     {
       "file": "fmp_client.py",
-      "sha256": "c7d81a2b2bebe80e8ff6a57c547ef9ba74cf522c9b88db73e4acbd0747b57551",
+      "sha256": "996f908b349d9193c28ab3161ff3d3f2dffe60e27144a35a86a98181c662fc32",
       "status": "active local adapter",
       "agent_registered": false,
       "provenance": "local implementation; preserves migrated fixes",
@@ -5124,7 +5124,7 @@
     },
     {
       "file": "alpha_vantage_client.py",
-      "sha256": "90a0f6d1c257f5132802ba96a742cfa65ce3e0c0c49f58503321eda051689002",
+      "sha256": "4e88b75419b376faa9e7ffcec3db0d70249d52f164e98be877dfb2a7c2e7c688",
       "status": "active local adapter",
       "agent_registered": false,
       "provenance": "local implementation; preserves migrated fixes",
