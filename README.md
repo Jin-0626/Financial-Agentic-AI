@@ -6,12 +6,13 @@ previously selected or first saved portfolio for the current organization/user.
 
 ## Run locally
 
-Python 3.12+, Node 20.19+/22.12+, Rust 1.99 and PostgreSQL are required.
+Python 3.12+, uv, Node 24 (matching CI), Rust 1.99 and PostgreSQL are required.
 Copy `.env.example` to `.env` and configure DB_URL and the model/provider settings.
 
 ```powershell
 uv sync --frozen
-cargo build --locked
+rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+cargo +1.99.0 build --locked
 npm --prefix frontend ci
 npm --prefix frontend run build
 uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11
@@ -20,7 +21,7 @@ uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h1
 The explicit `--http h11` uses Uvicorn's supported Python HTTP parser and avoids
 automatic selection of an incomplete optional `httptools` installation.
 
-Open http://127.0.0.1:8000. For development, run `npm --prefix frontend run dev`;
+Open [the local terminal](http://127.0.0.1:8000). For development, run `npm --prefix frontend run dev`;
 Vite proxies `/api` to port 8000. The backend serves the built React SPA and returns
 404 for unknown API routes. Streamlit and the retired sandbox are removed.
 
@@ -81,40 +82,75 @@ currency comparisons fail rather than returning misleading totals.
 
 Portfolio APIs are under `/api/portfolio`: list, create, load/update/delete, symbols,
 transactions, summary, export, import/preview and import/commit. `revision` protects
-concurrent edits. Production portfolio access stays disabled until server-authenticated
-organization/user identity is implemented.
+concurrent edits. Production access requires configured OIDC identity and a verified
+bearer access token;
+organization/user scope comes from token claims rather than request fields. Configure
+`APP_ENV=production`, `OIDC_ISSUER`, `OIDC_JWKS_URL`, `OIDC_AUDIENCE`, `OIDC_CLIENT_ID`
+and the organization claim through `.env.example`. OIDC endpoints must use HTTPS.
+Set `PORTFOLIO_ENABLED=true` to enable portfolio routes.
 
 ## Research contract
 
+`response_schema` defaults to `financial`; `analysis_report` is a compatibility alias.
 `/api/chat` returns `{success,result,todos,files,thread_id,error}`. `result` is readable
 Markdown. SSE `/api/chat/stream` emits progress, tool activity, financial_statements and
 one final `done` envelope. A missing final answer or truncated stream is not success.
 Internal evidence receipts stay in message artifacts; provider/native receipt integrity,
 role restrictions and token/tool limits remain enforced. No AnalysisReport model or
-schema completion tool is used. The old request selector `analysis_report` remains a
-transport compatibility alias; saved legacy JSON is rendered as readable text.
+schema completion tool is used. Saved legacy JSON is rendered as readable text.
 
 DCF uses explicit registered forecast assumptions and validated historical snapshots.
 Risk/ratio tools fetch exact-symbol normalized snapshots or reuse supplied snapshot IDs.
-Curated scripts and attribution are documented in `scripts/data_sources/README.md`
-and `NOTICE.md`. Standalone financialanalysis/report-generator CLIs remain available;
+Curated commands and limits are documented in [scripts/AGENTS.md](scripts/AGENTS.md)
+and [curated-providers.md](scripts/data_sources/curated-providers.md).
+[manifest.json](scripts/data_sources/manifest.json) records provider hashes and upstream
+attribution, including the upstream license link. Provider scripts use LF line endings
+through `.gitattributes` so hash verification agrees across Windows and Linux. When
+changing a provider, update its manifest SHA-256 to match the resulting file bytes.
+Standalone financialanalysis/report-generator CLIs remain available;
 they are not a second live calculation path for the web application.
+
+## Windows desktop
+
+The Tauri shell connects to a managed backend. Configure `frontend/.env.production`
+with `VITE_BACKEND_URL` pointing to the trusted HTTPS backend and
+`VITE_OIDC_REDIRECT_URI` matching the callback registered with your identity provider.
+Configure `OIDC_CLIENT_ORIGINS` on the backend for the permitted frontend origins.
+
+```powershell
+npm --prefix frontend run desktop:dev
+npm --prefix frontend run desktop:check
+npm --prefix frontend run desktop:build
+```
+
+Desktop compilation requires the Windows C++ build tools. The desktop build produces
+an NSIS installer; the backend and PostgreSQL run separately.
 
 ## Verification
 
 ```powershell
-cargo test --locked
-cargo fmt --all --check
-cargo clippy --locked --workspace --all-targets -- -D warnings
+cargo +1.99.0 test --locked
+cargo +1.99.0 fmt --all --check
+cargo +1.99.0 clippy --locked --workspace --all-targets -- -D warnings
 uv run --frozen python -B -m unittest discover -s tests -v
 npm --prefix frontend run build
 cd frontend
 npx playwright install chromium
 npm test
+# Requires TEST_DB_URL and ENGINE_COMMAND for the production-build fixture.
+npm run test:production
 ```
 
 Set ENGINE_TEST_COMMAND to a JSON executable argument array for Rust integration tests,
 TEST_DB_URL for isolated PostgreSQL tests, and TRACE_FIXTURE_COMMAND for the optional
-native telemetry fixture. PLAYWRIGHT_CHANNEL=chrome uses installed Chrome locally.
+native telemetry fixture. Build the fixture with
+`cargo +1.99.0 build --locked --manifest-path fixtures/trace-context/Cargo.toml`.
+On Windows, executable paths end in `.exe`; on Linux, they do not. Set
+`PYTHON_DOTENV_DISABLED=1` and `OTEL_ENABLED=false` for isolated test runs.
+Tests requiring unconfigured integration services are skipped.
+`PLAYWRIGHT_CHANNEL=chrome` uses installed Chrome locally.
 CI runs Rust checks on Linux and Windows, database integration on Linux, and React browser
-tests. It no longer references the removed sandbox deployment.
+tests against both mocked APIs and the production build. The production fixture uses
+real PostgreSQL/Rust with deterministic model/provider responses. CI also checks
+Python dependency consistency and runs Tauri tests, formatting and strict Clippy
+on Windows. These checks do not verify live model or financial-provider availability.
