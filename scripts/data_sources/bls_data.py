@@ -99,7 +99,7 @@ class BLSDataAPI:
         self.api_key = api_key or os.getenv("BLS_API_KEY")
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'Fincept-Terminal/1.0',
+            'User-Agent': 'Financial-Terminal/1.0',
             'Content-Type': 'application/json'
         })
 

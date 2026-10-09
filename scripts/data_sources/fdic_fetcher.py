@@ -1,6 +1,6 @@
 """
 FDIC Bank Data Fetcher
-Location: fincept-cpp/scripts/
+Integration: Financial Deep Agents provider library
 Description: Robust, auto-paginated wrapper for the FDIC Bank Data API.
 """
 
@@ -31,7 +31,7 @@ class FDICWrapper:
         self.base_url = FDIC_BASE_URL
         self.api_key = api_key
         self.session = requests.Session()
-        self.session.headers.update({'User-Agent': 'Fincept-Desktop/4.0'})
+        self.session.headers.update({'User-Agent': 'Financial-Desktop/4.0'})
 
     def _fetch_all(self, endpoint: str, filters: str = "", fields: str = "", max_records: int = 5000) -> Dict[str, Any]:
         """

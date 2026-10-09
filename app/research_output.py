@@ -1,7 +1,7 @@
-"""Plain JSON output compatible with Fincept Deep Agents cli._format_result.
+"""Financial Deep Agents response formatting for JSON, streaming, and history.
 
-Reference: sample/FinceptTerminal-main/fincept-qt/scripts/agents/deepagents/cli.py.
-The application wraps assistant text; no report schema or completion tool is used.
+The application wraps readable assistant text with status, todos, files, and
+thread identity. Evidence receipts remain in artifacts rather than report text.
 """
 import json
 import re
@@ -89,8 +89,8 @@ def error_result(error, thread_id):
 
 
 def request_mode(data):
-    mode = data.get("response_schema", "fincept")
+    mode = data.get("response_schema", "financial")
     # Accept the previous request selector for existing callers, without enabling a schema.
-    if mode not in {None, "fincept", "analysis_report"}:
-        raise ValueError("Unsupported response_schema; expected fincept or null")
-    return "fincept" if mode is not None else None
+    if mode not in {None, "financial", "analysis_report"}:
+        raise ValueError("Unsupported response_schema; expected financial or null")
+    return "financial" if mode is not None else None

@@ -1,7 +1,7 @@
 """
 AKShare Bonds Data Wrapper
 Wrapper for bond market data (treasury, corporate, convertible bonds)
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 
 NOTE: Cleaned to contain only VALID akshare bond functions (33 total).
 """

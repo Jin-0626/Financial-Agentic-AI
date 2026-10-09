@@ -1,7 +1,7 @@
 """
 EconDB Data Fetcher
 Fetches global economic indicators from EconDB (econdb.com)
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 Based on OpenBB EconDB provider
 """
 

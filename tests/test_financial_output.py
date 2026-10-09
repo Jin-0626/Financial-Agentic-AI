@@ -26,7 +26,7 @@ async def events():
     ]
 
 
-class FinceptOutputTests(unittest.IsolatedAsyncioTestCase):
+class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
     async def test_json_and_stream_same_final_result(self):
         state = {
             "messages": [
@@ -116,7 +116,7 @@ class FinceptOutputTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_selectors_and_thread_isolation(self):
         self.assertEqual(
-            routes._request_schema({"response_schema": "analysis_report"}), "fincept"
+            routes._request_schema({"response_schema": "analysis_report"}), "financial"
         )
         self.assertEqual(routes._owned_thread("t", "org", "user"), "org__user__t")
         from fastapi import HTTPException

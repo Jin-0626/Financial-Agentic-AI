@@ -11,7 +11,7 @@ Input precedence (most to least secure):
                       because the caller must also close the write channel;
                       reading stdin unconditionally would hang whenever the
                       parent leaves the pipe open (which PythonRunner does).
-  2. FINCEPT_TOTP_SECRET environment variable.
+  2. FINANCIAL_TOTP_SECRET environment variable.
   3. sys.argv[1]    — DEPRECATED, kept only so an older caller keeps working.
                       Emits a warning on stderr when used.
 
@@ -41,7 +41,7 @@ def read_secret():
         return line.strip()
 
     # 2. Environment.
-    env_secret = os.environ.get("FINCEPT_TOTP_SECRET", "").strip()
+    env_secret = os.environ.get("FINANCIAL_TOTP_SECRET", "").strip()
     if env_secret:
         return env_secret
 

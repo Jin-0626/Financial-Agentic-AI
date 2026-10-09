@@ -209,7 +209,7 @@ def _make_portfolio_tool() -> BaseTool:
     ) -> str:
         """Use Rust for weighted-average transaction replay or explicitly labelled fixed-holdings projection.
 
-        replay_transactions accepts Fincept transactions (date,symbol,type,quantity,price).
+        replay_transactions accepts Financial transactions (date,symbol,type,quantity,price).
         current_holdings_nav accepts {positions:[{symbol,quantity,average_cost?}],period,benchmark?}.
         Results are calculations, not stored user portfolios. No cash, fees, taxes or FX.
         """

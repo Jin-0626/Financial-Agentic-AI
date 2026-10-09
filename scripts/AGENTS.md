@@ -1,9 +1,10 @@
 # Financial research scripts
 
-Use ls(path="/scripts/data_sources/") to discover providers. Read their README.md
-or manifest.json with read_file(offset=0, limit=200). All script files are read-only.
-Call run_script(script="NAME.py", arguments=["command", "arg", ...]) to run a curated
-provider. Do not call execute or construct shell commands. Current allowed commands:
+This is the Financial Deep Agents read-only provider workspace. Discover files with
+ls(path="/scripts/data_sources/") and read curated-providers.md or manifest.json in
+bounded windows using read_file(offset=0, limit=200). Only the curated commands below
+are executable through run_script(script="NAME.py", arguments=["command", ...]).
+Do not construct shell commands or modify provider files.
 
 - bnm_data.py: available, currencies, currency USD, fx, major, asean, opr, interest, base_rate, gold.
 - fred_data.py: series CPIAUCSL [start_date] [end_date], search inflation, categories, category_series, releases.
@@ -11,17 +12,17 @@ provider. Do not call execute or construct shell commands. Current allowed comma
 - treasury_data.py: debt [start_date] [end_date], interest_rates [security_type] [start_date] [end_date], exchange_rates, avg_rates, record_debt.
 - sec_data.py: cik_map AAPL, symbol_map 320193, company_filings [symbol] [cik] [form_type] [start_date] [end_date] [limit], available_form_types, company_facts 320193.
 
-FRED requires FRED_API_KEY. SEC requires SEC_USER_AGENT (your application/contact email).
-BNM runs with default certificate verification and TLS settings; TLS failures are reported.
-Each invocation has a 60-second limit and 64 KiB per output stream. Use small date windows,
-series counts and filing limits. Broad company facts may exceed the limit; use existing
-market_data financials if a bounded result cannot be obtained.
+FRED requires FRED_API_KEY. SEC requires SEC_USER_AGENT with your application name
+and contact email. Preserve certificate verification; report TLS and provider errors.
+The worker verifies each provider against the current manifest before execution.
 
-Script data is nested under data. Check its error/status and disclose failures. Preserve
-provider record dates, currencies, units and source URLs. A successful process is not proof
-of financial accuracy. US SEC filings do not cover Bursa companies. FiscalData interest
-rates are not live Treasury yield quotes. Never invent missing data or calculation receipts.
+Each call has a 60-second deadline and a 64 KiB limit per output stream. Request
+small date windows and bounded results. Inspect nested data for error/status fields;
+a successful process alone does not verify financial accuracy. Preserve currencies,
+units, fiscal periods, provider record dates, and returned source URLs.
 
-Analytics workspace: `/scripts/analytics/`. Read its README.md for calculation ownership and adapter registration requirements. Files in this folder are not automatically executable.
+SEC covers US filings rather than Bursa companies. Treasury FiscalData rates are
+not live Treasury yield quotes. Disclose missing evidence instead of inventing it.
 
-Additional local source library: /scripts/data_sources/. Read README.md and manifest.json. These copied providers and exchange adapters are not registered for execution; use only curated run_script commands.
+The /scripts/analytics/ library contains supporting financial analysis code. Files
+there and unregistered providers are not automatically executable by agents.

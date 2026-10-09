@@ -1,5 +1,5 @@
 """
-optimize_portfolio_weights.py — Portfolio optimization for Fincept Terminal.
+optimize_portfolio_weights.py — Portfolio optimization for Financial Terminal.
 
 Input (stdin JSON):
   {

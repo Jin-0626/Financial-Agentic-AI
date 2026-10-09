@@ -16,7 +16,7 @@ class ReportReadabilityTests(unittest.TestCase):
         self.assertEqual(routes._get_messages_from_state(state)[-1].content, "Evidence-backed findings.")
         self.assertIn("INTERNAL_RECEIPT", state["messages"][-1].content)
 
-    def test_fincept_wrapper_and_legacy_report_become_readable(self):
+    def test_financial_wrapper_and_legacy_report_become_readable(self):
         self.assertEqual(readable_text(json.dumps({"success": True, "result": "## Analysis\n\nFindings", "todos": []})), "## Analysis\n\nFindings")
         result = readable_text(json.dumps({"executive_summary": "Summary", "key_findings": [{"statement": "Finding"}], "risks": ["Risk"], "recommendations": ["Conditional action"]}))
         for section in ("Executive Summary", "Analysis", "Key Risks", "Recommendations"):

@@ -1,7 +1,7 @@
 """
 AKShare Alternative Data Wrapper
 Wrapper for alternative and specialized data sources
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 
 NOTE: This file has been cleaned to contain only VALID akshare functions.
 Many placeholder functions were removed as they don't exist in akshare 1.18.20.

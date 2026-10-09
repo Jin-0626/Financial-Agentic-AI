@@ -150,7 +150,7 @@ export function ResearchPage({ identity }: { identity: Identity }) {
           thread_id: thread,
           user_id: identity.user,
           org_id: identity.org,
-          response_schema: "fincept",
+          response_schema: "financial",
           ...(resume ? { resume } : {}),
         },
         (event) => {

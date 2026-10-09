@@ -10,8 +10,7 @@ handles the cookie dance via requests.Session and prints a single JSON
 array on stdout — one row per category for "today" (NSE only returns one
 day per call).
 
-Output schema (single line on stdout, the C++ caller parses with
-QJsonDocument::fromJson):
+Output schema (single-line JSON consumed by Financial Deep Agents):
 
     [
       {

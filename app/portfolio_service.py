@@ -1,4 +1,4 @@
-"""Fincept transaction workflow. Python retrieves/persists; Rust calculates."""
+"""Financial Deep Agents portfolio workflow: Python persists; Rust calculates."""
 
 import asyncio
 import hashlib
@@ -425,7 +425,7 @@ def import_trades(data):
         or not data["transactions"]
     ):
         raise ValueError(
-            "Expected Fincept transaction JSON with portfolio_name and transactions; holdings-only imports are unsupported"
+            "Expected Financial transaction JSON with portfolio_name and transactions; holdings-only imports are unsupported"
         )
     if len(data["transactions"]) > 2000:
         raise ValueError("Portfolio transaction limit reached")

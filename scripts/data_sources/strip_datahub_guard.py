@@ -1,18 +1,18 @@
-"""Strip FINCEPT_DATAHUB_ENABLED preprocessor guards.
+"""Strip FINANCIAL_DATAHUB_ENABLED preprocessor guards.
 
 Phase 10 task: the hub is now the only supported data path; the compile-time
 flag is being removed. This tool rewrites source files to:
 
-  - `#ifdef FINCEPT_DATAHUB_ENABLED` ... `#endif`               -> keep body, drop guard lines
-  - `#ifdef FINCEPT_DATAHUB_ENABLED` ... `#else` ... `#endif`   -> keep "if" branch, drop else branch + guard lines
-  - `#ifndef FINCEPT_DATAHUB_ENABLED` ... `#endif`              -> drop whole block (legacy-only)
-  - `#ifndef FINCEPT_DATAHUB_ENABLED` ... `#else` ... `#endif`  -> keep "else" branch, drop legacy + guard lines
+  - `#ifdef FINANCIAL_DATAHUB_ENABLED` ... `#endif`               -> keep body, drop guard lines
+  - `#ifdef FINANCIAL_DATAHUB_ENABLED` ... `#else` ... `#endif`   -> keep "if" branch, drop else branch + guard lines
+  - `#ifndef FINANCIAL_DATAHUB_ENABLED` ... `#endif`              -> drop whole block (legacy-only)
+  - `#ifndef FINANCIAL_DATAHUB_ENABLED` ... `#else` ... `#endif`  -> keep "else" branch, drop legacy + guard lines
 
 Handles nested `#if` / `#ifdef` / `#ifndef` / `#endif` for unrelated macros by
-tracking depth only when inside a matching FINCEPT block. Preserves indentation
+tracking depth only when inside a matching FINANCIAL block. Preserves indentation
 (only strips the preprocessor directive lines themselves).
 
-Does NOT handle `#if defined(FINCEPT_DATAHUB_ENABLED)` / `#elif` variants; the
+Does NOT handle `#if defined(FINANCIAL_DATAHUB_ENABLED)` / `#elif` variants; the
 current codebase uses only `#ifdef`/`#ifndef` (verified by grep).
 
 Usage:
@@ -29,7 +29,7 @@ import re
 import sys
 from pathlib import Path
 
-MACRO = "FINCEPT_DATAHUB_ENABLED"
+MACRO = "FINANCIAL_DATAHUB_ENABLED"
 
 # Preprocessor directive regexes — tolerate leading whitespace and whitespace
 # between `#` and the keyword.
@@ -47,7 +47,7 @@ class StripError(RuntimeError):
 def _strip_file(text: str, filename: str) -> str:
     """Return the rewritten text.
 
-    Walk line-by-line. When we hit a matching `#ifdef FINCEPT` / `#ifndef FINCEPT`,
+    Walk line-by-line. When we hit a matching `#ifdef FINANCIAL` / `#ifndef FINANCIAL`,
     enter "tracking" state and collect the two branches (if / else). Nested
     unrelated `#if*` directives bump a depth counter so we only match the
     #else/#endif that closes the outer guard. On #endif at depth 0, emit the
@@ -89,14 +89,14 @@ def _strip_file(text: str, filename: str) -> str:
             if depth == 0 and RE_ELSE.match(cur):
                 if in_else:
                     raise StripError(
-                        f"{filename}:{i+1}: duplicate #else inside FINCEPT guard at line {guard_start+1}"
+                        f"{filename}:{i+1}: duplicate #else inside FINANCIAL guard at line {guard_start+1}"
                     )
                 in_else = True
                 i += 1
                 continue
             if RE_ENDIF.match(cur):
                 if depth == 0:
-                    # End of our FINCEPT guard.
+                    # End of our FINANCIAL guard.
                     i += 1
                     break
                 depth -= 1
@@ -107,7 +107,7 @@ def _strip_file(text: str, filename: str) -> str:
             i += 1
         else:
             raise StripError(
-                f"{filename}:{guard_start+1}: unterminated FINCEPT guard"
+                f"{filename}:{guard_start+1}: unterminated FINANCIAL guard"
             )
 
         # Select which branch to keep.

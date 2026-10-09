@@ -5,7 +5,7 @@ When the apply script wrote plural translations, it set the <translation>
 element's `.text` directly. Qt's lrelease rejects that for `numerus="yes"`
 messages — it needs the text inside <numerusform> children.
 
-This script scans every fincept_<locale>.ts, finds messages whose parent has
+This script scans every financial_<locale>.ts, finds messages whose parent has
 `numerus="yes"`, and:
   1. captures the misplaced text from <translation>.text
   2. moves it into each <numerusform> child (replicating across forms)
@@ -32,7 +32,7 @@ LOCALES = ["zh_CN", "zh_HK", "id_ID", "vi_VN", "tr_TR",
 
 
 def fix_locale(locale: str) -> tuple[int, int]:
-    ts_path = TS_DIR / f"fincept_{locale}.ts"
+    ts_path = TS_DIR / f"financial_{locale}.ts"
     if not ts_path.exists():
         return (0, 0)
 

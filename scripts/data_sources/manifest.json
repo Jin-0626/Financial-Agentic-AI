@@ -1,6 +1,6 @@
 {
   "upstream": "https://github.com/Fincept-Corporation/FinceptTerminal",
-  "license": "See LICENSE; preserve upstream headers and notices",
+  "license": "AGPL-3.0-or-later; upstream license: https://github.com/Fincept-Corporation/FinceptTerminal/blob/main/LICENSE",
   "runtime_source": "local files only; external sample folder not required",
   "scripts": [
     {
@@ -31,7 +31,7 @@
     },
     {
       "file": "adb_data.py",
-      "sha256": "1b497f48f857810573f7227d1a0456feb248140c348576104e0c528fe3dcc717",
+      "sha256": "d5d09b74f2ba93202cfd1eb3871d1632d9c52ef40b9234b7bbe799ddf9db9911",
       "imports": [
         "datetime",
         "json",
@@ -44,7 +44,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "1b497f48f857810573f7227d1a0456feb248140c348576104e0c528fe3dcc717",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "adb_data_extended.py",
@@ -87,7 +89,7 @@
     },
     {
       "file": "akshare_alternative.py",
-      "sha256": "6899c22d434c007a07fd49055d6354a34f04bbe4da9e5270ae3a96314d5e8b01",
+      "sha256": "1e25d3c5ecf24f3b5c9df15b4f53e8ddb668350496dcdd4e182632f385659b04",
       "imports": [
         "akshare",
         "datetime",
@@ -98,11 +100,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "6899c22d434c007a07fd49055d6354a34f04bbe4da9e5270ae3a96314d5e8b01",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_analysis.py",
-      "sha256": "5d19c63bf9c359de56b6ce317e8a0196e5c8ff921b60db5bd4ea3d211d0f1c9d",
+      "sha256": "ebd0941b518f91c8a796fbe656506278514ddf3e8bf776d663dba401b7f6fb4e",
       "imports": [
         "akshare",
         "datetime",
@@ -114,11 +118,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "5d19c63bf9c359de56b6ce317e8a0196e5c8ff921b60db5bd4ea3d211d0f1c9d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_bonds.py",
-      "sha256": "fe7be18906916b6666ad42a9096c695e3acf4ea5f366d4f9768a7b01d80c8ffa",
+      "sha256": "71f24a5daa746c15134bc1dbbb7411918a192243b5643f4075bb948b22f2ef6e",
       "imports": [
         "akshare",
         "datetime",
@@ -129,7 +135,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "fe7be18906916b6666ad42a9096c695e3acf4ea5f366d4f9768a7b01d80c8ffa",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_company_info.py",
@@ -177,7 +185,7 @@
     },
     {
       "file": "akshare_data.py",
-      "sha256": "e4fea97200d1a01fa95e7d1c51ac63c0e67f9f167dba78977206c1a89e915831",
+      "sha256": "1fc6046546f9c437063079870ec8412f05c7e01d764fe805a7e13bbc4cd001b7",
       "imports": [
         "akshare",
         "akshare_alternative",
@@ -194,11 +202,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "e4fea97200d1a01fa95e7d1c51ac63c0e67f9f167dba78977206c1a89e915831",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_derivatives.py",
-      "sha256": "613104fe5acff5f723721c4f96f9d79723fafdd0e6aa47157253fc17cd309289",
+      "sha256": "cdf8744ae5a8308c1c576a024ffcaf8c8b58e81391691ecb25a458f4b24c34bf",
       "imports": [
         "akshare",
         "datetime",
@@ -209,11 +219,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "613104fe5acff5f723721c4f96f9d79723fafdd0e6aa47157253fc17cd309289",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_economics_china.py",
-      "sha256": "9e1694a77ff61344f4ef326a8c950888801d4e128fa6dc7ca37e48e3f5efbe9c",
+      "sha256": "ae7d319fda5a0b972e0650073d8afe7a77b3950707061ca7821959e220aca9c7",
       "imports": [
         "akshare",
         "datetime",
@@ -224,18 +236,22 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "9e1694a77ff61344f4ef326a8c950888801d4e128fa6dc7ca37e48e3f5efbe9c",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_economics_global.py",
-      "sha256": "8d68e3f7ffab8764e81a24e06557c72fb9255c061773849a45b1aa2d1b560245",
+      "sha256": "844a7b1c29bc044dc9960c6e35b05f143f473677b40d8f0ef2810154ded5710b",
       "imports": [
         "datetime",
         "json",
         "sys"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "8d68e3f7ffab8764e81a24e06557c72fb9255c061773849a45b1aa2d1b560245",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_energy.py",
@@ -254,7 +270,7 @@
     },
     {
       "file": "akshare_funds_expanded.py",
-      "sha256": "564d8e465595ad003812220886a8a5b30a2622237fc00213be0004601dae04a9",
+      "sha256": "f11da88899b0653d441cdd4fc2ed07a7b45df6c5c253064ffce12aab7484a347",
       "imports": [
         "akshare",
         "datetime",
@@ -266,7 +282,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "564d8e465595ad003812220886a8a5b30a2622237fc00213be0004601dae04a9",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "akshare_futures.py",
@@ -505,7 +523,7 @@
     },
     {
       "file": "alphavantage_data.py",
-      "sha256": "c65d42cc6f93bde0db5bde5fd53d069b813760496a28fb3ec2c9dd4c1fe4d2a2",
+      "sha256": "5fa84485c92974dd6e49f0378b0de34202abb51a4d163efb0f83f165989b160e",
       "imports": [
         "json",
         "os",
@@ -514,7 +532,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "c65d42cc6f93bde0db5bde5fd53d069b813760496a28fb3ec2c9dd4c1fe4d2a2",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "alternative_me_data.py",
@@ -531,7 +551,7 @@
     },
     {
       "file": "apply_portfolio_translations.py",
-      "sha256": "6fa6b294f237cccad9b215f1f6491e1282240ddc9e17c2d65c26a1b34e73db2c",
+      "sha256": "a49cf3f4f9752777c06d9e0791764e36e999106405c5aeda3347c913766f1caf",
       "imports": [
         "__future__",
         "io",
@@ -541,7 +561,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "6fa6b294f237cccad9b215f1f6491e1282240ddc9e17c2d65c26a1b34e73db2c",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "arxiv_data.py",
@@ -592,7 +614,7 @@
     },
     {
       "file": "baostock_data.py",
-      "sha256": "27bcf0d7650d4a42f4607defd8ad67f8f88ac654999aa68235e20c2e2c44c7c8",
+      "sha256": "ab5294f4d398af9d7c310474b7a0de7f757d931f5a13f1e9d540d8501d0f8968",
       "imports": [
         "baostock",
         "datetime",
@@ -604,7 +626,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "27bcf0d7650d4a42f4607defd8ad67f8f88ac654999aa68235e20c2e2c44c7c8",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "baostock_fundamentals_quarterly.py",
@@ -624,7 +648,7 @@
     },
     {
       "file": "bcb_data.py",
-      "sha256": "dfebb73d1e12a48ced2189bb38a53a120bf5e59d7d1a481bae75a8f3b4d58e27",
+      "sha256": "ffe4fd7bc1b57a308eaf7cbe2f683e602d3a82f37202077e4604e80b87d533d3",
       "imports": [
         "datetime",
         "json",
@@ -634,11 +658,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "dfebb73d1e12a48ced2189bb38a53a120bf5e59d7d1a481bae75a8f3b4d58e27",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "bea_data.py",
-      "sha256": "1c65e4e08225e77b45bd58485b329b4e534e9cf7f184cbe90c24cd38f0539ed4",
+      "sha256": "a4b3cd87d02173a60746996a76a3b1efdc198bab3cbe35a93e03e8f8d34bfca1",
       "imports": [
         "datetime",
         "json",
@@ -649,11 +675,13 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "1c65e4e08225e77b45bd58485b329b4e534e9cf7f184cbe90c24cd38f0539ed4",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "bis_data.py",
-      "sha256": "aaccd1507a3b092a3c34a7e4fe2676ec0ee90d976a2eebd8ca923a031ac33f15",
+      "sha256": "03f4acc555de590fd8c9369261880e489e10aa7761156be663948771f9c57717",
       "imports": [
         "aiohttp",
         "asyncio",
@@ -670,7 +698,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "aaccd1507a3b092a3c34a7e4fe2676ec0ee90d976a2eebd8ca923a031ac33f15",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "bis_data_extended.py",
@@ -713,7 +743,7 @@
     },
     {
       "file": "bls_data.py",
-      "sha256": "14ae107ca698c80641ceb3b34465034685eb55d9ee7af9ffde5d6af0ef9d67a2",
+      "sha256": "8eff4d268fb026299bc94c31adfe90cba966ff042302c14b59d39786b4d7d860",
       "imports": [
         "aiohttp",
         "asyncio",
@@ -727,11 +757,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "14ae107ca698c80641ceb3b34465034685eb55d9ee7af9ffde5d6af0ef9d67a2",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "bnm_data.py",
-      "sha256": "9a18fefb259ea2168bf0114ddae1c2402abe57d0fbc9480518a06b79ce3834cf",
+      "sha256": "c9012fbe7b8f3262475f9bfaa12dd39285e481483e57b97caca24d9a41cd933f",
       "imports": [
         "datetime",
         "json",
@@ -754,11 +786,13 @@
         "BNMWrapper.get_opr",
         "BNMWrapper.get_interest_rates"
       ],
-      "integration_notes": "Review _BnmTlsAdapter: upstream reduces TLS security level. Preserve reported unit multipliers; do not confuse per-100-unit quotes with per-unit quotes."
+      "integration_notes": "Review _BnmTlsAdapter: upstream reduces TLS security level. Preserve reported unit multipliers; do not confuse per-100-unit quotes with per-unit quotes.",
+      "upstream_sha256": "9a18fefb259ea2168bf0114ddae1c2402abe57d0fbc9480518a06b79ce3834cf",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "bnr_data.py",
-      "sha256": "2e7e88445156036ec60882711039df690f85952e2a8f1da00f32235fb54af0fc",
+      "sha256": "946bfd33414887d6f052357058ea75b8518ee5d937f412b2fb8db8432bce517c",
       "imports": [
         "datetime",
         "json",
@@ -769,11 +803,13 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "2e7e88445156036ec60882711039df690f85952e2a8f1da00f32235fb54af0fc",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "boc_data.py",
-      "sha256": "5302a8c2a8456a1fafa2113d3e7c4850964c0b975d8956db363937468f39c620",
+      "sha256": "be93aa0dce3a21511bc18617807f91d01c99c3b4847dd957315342833b9c5780",
       "imports": [
         "datetime",
         "json",
@@ -783,7 +819,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "5302a8c2a8456a1fafa2113d3e7c4850964c0b975d8956db363937468f39c620",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "boe_data.py",
@@ -802,7 +840,7 @@
     },
     {
       "file": "boi_data.py",
-      "sha256": "4ae0c0ff5757e1af383396c88b9c845566ac4789978711de27b51c5a4ecd8892",
+      "sha256": "7c46caddb4556ce09c89d79cda9b9be9ea0693f465f85c70ed144f65cce5d8a0",
       "imports": [
         "csv",
         "datetime",
@@ -814,7 +852,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "4ae0c0ff5757e1af383396c88b9c845566ac4789978711de27b51c5a4ecd8892",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "boj_fetcher.py",
@@ -835,7 +875,7 @@
     },
     {
       "file": "build_akshare_symbols_db.py",
-      "sha256": "26404be3d4e3002e6599d1dfb1821ddf580443e51d82292f4f8c1d647ba8c872",
+      "sha256": "87151c9b2911640f5d56a650a0b80b527dcc47b5fa551c6a3f68c9a61730c9ef",
       "imports": [
         "akshare",
         "datetime",
@@ -846,11 +886,13 @@
         "traceback"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "26404be3d4e3002e6599d1dfb1821ddf580443e51d82292f4f8c1d647ba8c872",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "canada_gov_api.py",
-      "sha256": "a71b3d28245ab32ae7c0b6675ac72071e2c6539b056895932bd6d8ad739d1de0",
+      "sha256": "2ebd141c0da92c77f37e80b8e538e668c9769259ac710dbef4be4ea1fa3e1e1a",
       "imports": [
         "csv",
         "datetime",
@@ -863,7 +905,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "a71b3d28245ab32ae7c0b6675ac72071e2c6539b056895932bd6d8ad739d1de0",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "carbon_price_data.py",
@@ -880,7 +924,7 @@
     },
     {
       "file": "cboe_data.py",
-      "sha256": "f10528b66f22ae7b3844c0752a7938270a3590ae0e86f456d9b1cedcbbdfc1d7",
+      "sha256": "ebe7929cae1173c00ed2efd051af3d5deef0d2d7d7ea29c47b62ac5ab6c7e814",
       "imports": [
         "datetime",
         "io",
@@ -892,7 +936,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "f10528b66f22ae7b3844c0752a7938270a3590ae0e86f456d9b1cedcbbdfc1d7",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "cboe_vix_data.py",
@@ -937,7 +983,7 @@
     },
     {
       "file": "cftc_data.py",
-      "sha256": "b21c0c03ed2c07543a858f4f13a838adb96d7b494d08a8a537b4676fb43be74d",
+      "sha256": "0fed8a8e4bfe243551f8bb6ed7dbd5692b37ed900cee7669e16db8bc7878ea18",
       "imports": [
         "datetime",
         "json",
@@ -950,7 +996,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "b21c0c03ed2c07543a858f4f13a838adb96d7b494d08a8a537b4676fb43be74d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "china_data_quality_checks.py",
@@ -1035,7 +1083,7 @@
     },
     {
       "file": "cnb_data.py",
-      "sha256": "b60280c5e3b9136dc551cd2be573d838e2da2eb6d7a34682dbef31f5d3b929b4",
+      "sha256": "ce15efe71363188571d4626a6fe28bfd708ded333a4cf104f9a50a0938de695b",
       "imports": [
         "datetime",
         "json",
@@ -1045,7 +1093,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "b60280c5e3b9136dc551cd2be573d838e2da2eb6d7a34682dbef31f5d3b929b4",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "cninfo_announcements_incremental.py",
@@ -1140,7 +1190,7 @@
     },
     {
       "file": "cnstats_data.py",
-      "sha256": "41acb9081d9447d20e025e73ab806458280956f9aa9086f5e328a48bd5b2a124",
+      "sha256": "9e548539cd8fc9693e55dcb2d9c4e333d6bc52e9ad3a76b5165357ac2ebf93a0",
       "imports": [
         "argparse",
         "datetime",
@@ -1152,7 +1202,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "41acb9081d9447d20e025e73ab806458280956f9aa9086f5e328a48bd5b2a124",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "coincap_data.py",
@@ -1247,7 +1299,7 @@
     },
     {
       "file": "congress_gov_data.py",
-      "sha256": "c5e878240d2445745175a6862544869fe6fda539dbcc7c8d34d4dd56def6c9f7",
+      "sha256": "8a120f8c9ab50060b309102a9f1cb23083d795c57ca0f296eb0d297004dff292",
       "imports": [
         "asyncio",
         "base64",
@@ -1262,7 +1314,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "c5e878240d2445745175a6862544869fe6fda539dbcc7c8d34d4dd56def6c9f7",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "copernicus_data.py",
@@ -1279,7 +1333,7 @@
     },
     {
       "file": "crossref_data.py",
-      "sha256": "b7154a222f76a1a71643527934603d6ba564303b7d43d055f74367c46b3f0d09",
+      "sha256": "30136eb4ca300881b9bd8669aff071622e43434cf8b7a8d31152de0b746d16e3",
       "imports": [
         "json",
         "os",
@@ -1288,7 +1342,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "b7154a222f76a1a71643527934603d6ba564303b7d43d055f74367c46b3f0d09",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "cryptocompare_data.py",
@@ -1305,7 +1361,7 @@
     },
     {
       "file": "data_gov_hk_api.py",
-      "sha256": "a9592ac0e24134c1955816305f2666fe0504b8be30e9e9e23cec0cb993e3d0dd",
+      "sha256": "86363b08e337b7a67eaf21a58ab58145b0c3e391a2f92cac27f53e20fab41645",
       "imports": [
         "datetime",
         "json",
@@ -1316,7 +1372,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "a9592ac0e24134c1955816305f2666fe0504b8be30e9e9e23cec0cb993e3d0dd",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "data_world_data.py",
@@ -1364,7 +1422,7 @@
     },
     {
       "file": "databento_provider.py",
-      "sha256": "5d0e493160d12089f406a208a0c14fcfa39312c5355b58a2124bcacc0af0aaec",
+      "sha256": "de1348f12191fc4b92899a3ade97ba8ae0e6c1623ca4b0dcc3401298af016ad4",
       "imports": [
         "collections",
         "databento",
@@ -1381,11 +1439,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "5d0e493160d12089f406a208a0c14fcfa39312c5355b58a2124bcacc0af0aaec",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "datagov_au_api.py",
-      "sha256": "05341417d41d5d83e272afb16cf60b13afc71a2b6eb7dbc9e9f5cf5fb21573fc",
+      "sha256": "0da6d247d037efefb2e5c83863cc3d7f1d9d9a189a0c6fd9bd27d35d7ad1bf3c",
       "imports": [
         "datetime",
         "json",
@@ -1396,7 +1456,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "05341417d41d5d83e272afb16cf60b13afc71a2b6eb7dbc9e9f5cf5fb21573fc",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "datagovsg_data.py",
@@ -1414,7 +1476,7 @@
     },
     {
       "file": "datagovuk_api.py",
-      "sha256": "6cfb80397875101ed7e909a32600c8b2cba4d95e2f28e9ea423379af746153a0",
+      "sha256": "6e7bfc20de8ecdfe69c2ffc629ce3d181c1dc4bdd006e695c0e5168625094a0b",
       "imports": [
         "csv",
         "datetime",
@@ -1427,7 +1489,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "6cfb80397875101ed7e909a32600c8b2cba4d95e2f28e9ea423379af746153a0",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "defillama_data.py",
@@ -1528,7 +1592,7 @@
     },
     {
       "file": "econdb_data.py",
-      "sha256": "3c4e08a0d8f7f505bc4d8ee8b57d82473dd56ed81d89abbd4a4105ba8c2855c8",
+      "sha256": "a9d28b9652918e295eda794c0915e58ffbc8ef71aadf57fea6e9137e20801871",
       "imports": [
         "aiohttp",
         "asyncio",
@@ -1538,7 +1602,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "3c4e08a0d8f7f505bc4d8ee8b57d82473dd56ed81d89abbd4a4105ba8c2855c8",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "economic_calendar.py",
@@ -1696,7 +1762,7 @@
     },
     {
       "file": "estat_japan_api.py",
-      "sha256": "fa0c740c151bccd27588633628b7f5b997760c46a0508a40641f83bb93415fec",
+      "sha256": "686ec0e3cd72bde43b0f1e6485749c271fb0c16d54e3d32681d6c3f6d86ee86e",
       "imports": [
         "datetime",
         "json",
@@ -1707,7 +1773,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "fa0c740c151bccd27588633628b7f5b997760c46a0508a40641f83bb93415fec",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "eurostat_data.py",
@@ -1737,10 +1805,12 @@
     },
     {
       "file": "exchange/__init__.py",
-      "sha256": "af0db1e522fb7b9eafaaae543bbcd98bcac91364dfaa185140b3557dc6816b7d",
+      "sha256": "d5eea6b34f8da5e925df93e02df6d1a1c4b6d041ff7f77402939c61adae24560",
       "imports": [],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "af0db1e522fb7b9eafaaae543bbcd98bcac91364dfaa185140b3557dc6816b7d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "exchange/broker_ws_bridge.py",
@@ -1995,7 +2065,7 @@
     },
     {
       "file": "exchange/totp_gen.py",
-      "sha256": "dd20734a84ab09ffc797c40a474f99061ab92351c3ee45b6476605bb78c7b257",
+      "sha256": "a6b5d09c73515498db0a544e26e613ef409f7c2ac8b8cd44f47c571187b43975",
       "imports": [
         "base64",
         "hashlib",
@@ -2008,7 +2078,9 @@
         "time"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "dd20734a84ab09ffc797c40a474f99061ab92351c3ee45b6476605bb78c7b257",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "exchange/ws_stream.py",
@@ -2071,7 +2143,7 @@
     },
     {
       "file": "faostat_data.py",
-      "sha256": "7cb2bc10337c51f4293c8fb95de7dcdc7d572e5f971247a3ffe9ad1e5be08e69",
+      "sha256": "487b5294817a226d43b72d34707de6025a1a3c089fbd0dfe4b53ab9ee2585933",
       "imports": [
         "datetime",
         "json",
@@ -2080,7 +2152,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "7cb2bc10337c51f4293c8fb95de7dcdc7d572e5f971247a3ffe9ad1e5be08e69",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "fdic_data.py",
@@ -2097,7 +2171,7 @@
     },
     {
       "file": "fdic_fetcher.py",
-      "sha256": "263778c3ab5dcf92f081213fab931f3f7ac5a3504109b7db844b615fdd8bc11d",
+      "sha256": "4419a5c9c71912de3e510dca8c760aa13c1acee6e0c9b9c2401c8eeeecc994af",
       "imports": [
         "datetime",
         "json",
@@ -2106,11 +2180,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "263778c3ab5dcf92f081213fab931f3f7ac5a3504109b7db844b615fdd8bc11d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "federal_reserve_data.py",
-      "sha256": "0e45192f46060926017d21714ef5ce007e4243d841219ef63eff503d756117b5",
+      "sha256": "06f59c07c16a9d77e5f81a0de40d48bb4d88d2f163e6cc8901a719aead4ddb1f",
       "imports": [
         "datetime",
         "io",
@@ -2121,7 +2197,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "0e45192f46060926017d21714ef5ce007e4243d841219ef63eff503d756117b5",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "fetch_company_news.py",
@@ -2152,7 +2230,7 @@
     },
     {
       "file": "fii_dii_scraper.py",
-      "sha256": "8b1a69fbc1f7760fe87c3c7937b5239b66917835d0b446b9501107f973de9186",
+      "sha256": "ac27f13d7079b6d03c928044ee1615d068b5b7bf60d8024b4536cb9ee1d189ad",
       "imports": [
         "datetime",
         "json",
@@ -2162,7 +2240,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "8b1a69fbc1f7760fe87c3c7937b5239b66917835d0b446b9501107f973de9186",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "financepy_wrapper.py",
@@ -2199,8 +2279,8 @@
       "status": "copied; runtime verification pending"
     },
     {
-      "file": "fincept_json.py",
-      "sha256": "438f3d2353e18a24946b0899ef4ecf6f1689b70df999ee9372e26e989c4e62c7",
+      "file": "financial_json.py",
+      "sha256": "9610c0268dba29df4cfed7106cd9e7adc48a78d6029e7f6f4a5e61f565185407",
       "imports": [
         "__future__",
         "decimal",
@@ -2210,11 +2290,13 @@
         "pandas"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "438f3d2353e18a24946b0899ef4ecf6f1689b70df999ee9372e26e989c4e62c7",
+      "adapted_for": "Financial Deep Agents"
     },
     {
-      "file": "fincept_output_standard.py",
-      "sha256": "f89b67136631f2350b7a535cc758da92799b06d0f94d5c0a89c3665769ae1e05",
+      "file": "financial_output_standard.py",
+      "sha256": "bb908d5008516e7d86315642849f068d680ca4ab6388374cb8904bbae5bf9c5b",
       "imports": [
         "datetime",
         "enum",
@@ -2227,7 +2309,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "f89b67136631f2350b7a535cc758da92799b06d0f94d5c0a89c3665769ae1e05",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "finnhub_data.py",
@@ -2245,7 +2329,7 @@
     },
     {
       "file": "fiscal_data.py",
-      "sha256": "093781d9138582df38646abe6160ddba042a78a80fb09356355ad952bfc12fb5",
+      "sha256": "7beb0ae6e688a48a18a931de3de3326b932206f6a20727c7c102a66fdf50385e",
       "imports": [
         "datetime",
         "json",
@@ -2255,7 +2339,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "093781d9138582df38646abe6160ddba042a78a80fb09356355ad952bfc12fb5",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "fitch_connect_data.py",
@@ -2272,7 +2358,7 @@
     },
     {
       "file": "fix_numerus_translations.py",
-      "sha256": "4a3744c0f841b7093b420970e4536f67c0c2ca9678ee658d5d3db8a503a50e57",
+      "sha256": "ff7be69963ee8ce5d2914ec84626b50608f372ab3f7fb210fa79430fd54ec9cc",
       "imports": [
         "__future__",
         "io",
@@ -2281,11 +2367,13 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "4a3744c0f841b7093b420970e4536f67c0c2ca9678ee658d5d3db8a503a50e57",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "fmp_data.py",
-      "sha256": "2146f8cfc15683f914c404bf4e80c6bd4293bbff8311f414eb836527527e2039",
+      "sha256": "2e293eecfdca0f6e5f80f20ccf28de540bda6da8ddde4f0e8cc7bdda805cfb93",
       "imports": [
         "datetime",
         "json",
@@ -2297,7 +2385,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "2146f8cfc15683f914c404bf4e80c6bd4293bbff8311f414eb836527527e2039",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "fmp_extra_data.py",
@@ -2327,7 +2417,7 @@
     },
     {
       "file": "fred_data.py",
-      "sha256": "cae3c28b58901dfc50eaca2353d7dc847fffa2fa718f3a93e265696cf9190dbd",
+      "sha256": "182906ddaef44fff341e082b1504b1a78883461a3354f461a81f1f578b998c85",
       "imports": [
         "concurrent",
         "datetime",
@@ -2351,7 +2441,9 @@
         "search_series",
         "get_multiple_series"
       ],
-      "integration_notes": "Key is read at import time. Reload/restart after configuration changes. Bound bulk series counts and returned observations."
+      "integration_notes": "Key is read at import time. Reload/restart after configuration changes. Bound bulk series counts and returned observations.",
+      "upstream_sha256": "cae3c28b58901dfc50eaca2353d7dc847fffa2fa718f3a93e265696cf9190dbd",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "fred_economic_data.py",
@@ -2395,7 +2487,7 @@
     },
     {
       "file": "french_gov_api.py",
-      "sha256": "affb368eb61b5907edd4535a44c8856fd2211827a4b0931ea03c1b51c835f31e",
+      "sha256": "d03af3c34c7ce605f51c95f1170f4a777b1246ab55ed52099413d69f381ff596",
       "imports": [
         "datetime",
         "json",
@@ -2407,7 +2499,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "affb368eb61b5907edd4535a44c8856fd2211827a4b0931ea03c1b51c835f31e",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "gas_infrastructure_data.py",
@@ -2424,7 +2518,7 @@
     },
     {
       "file": "geocoding_service.py",
-      "sha256": "062527e9c46b6f982bb467573e5c1860b524dcb12a9cbb418f7b0afcdc0959c9",
+      "sha256": "6d86689194c0820cf7fafb5cf4b35992ccd8dc9ca2af56537ec8b99f55ac96f5",
       "imports": [
         "geopy",
         "json",
@@ -2433,7 +2527,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "062527e9c46b6f982bb467573e5c1860b524dcb12a9cbb418f7b0afcdc0959c9",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "gfd_data.py",
@@ -2646,7 +2742,7 @@
     },
     {
       "file": "govdata_de_api_complete.py",
-      "sha256": "1757f54be714fe519813a42bdc3a6db38a34b3afaa2623ec7ca9d2446aed6b02",
+      "sha256": "b0a38a58fc7337a6a90ce3486b2dd48bdbba97a72a2959884cfdef9d21026936",
       "imports": [
         "csv",
         "datetime",
@@ -2659,7 +2755,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "1757f54be714fe519813a42bdc3a6db38a34b3afaa2623ec7ca9d2446aed6b02",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "government_us_data.py",
@@ -2680,7 +2778,7 @@
     },
     {
       "file": "govinfo_data.py",
-      "sha256": "7c1c03e085505fc3ce49b6921057f558f9deadf1f942daf7c993f0f8b6a5d38f",
+      "sha256": "c807e6e3b8ebe343e89b93bcc66d741646b4e189a9d3c9c5716eaba1a318c51a",
       "imports": [
         "datetime",
         "json",
@@ -2691,7 +2789,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "7c1c03e085505fc3ce49b6921057f558f9deadf1f942daf7c993f0f8b6a5d38f",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "govtrack_data.py",
@@ -2734,7 +2834,7 @@
     },
     {
       "file": "hdx_data.py",
-      "sha256": "86a9b7e49d1e0136ac4e050f72a664046bcc27691c496809ff8fac9dbab778a6",
+      "sha256": "254b03c859b146fb58af44af187b79bae80c2c24ae479cb82ec06acd3658e7d0",
       "imports": [
         "json",
         "sys",
@@ -2742,11 +2842,13 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "86a9b7e49d1e0136ac4e050f72a664046bcc27691c496809ff8fac9dbab778a6",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "hnb_data.py",
-      "sha256": "ba821213c4a3884736c2200421af857a75f6039751b8c46844a5d7307cee84da",
+      "sha256": "1c7f3d37fc5b884d2d8f0897ad13ae77049d9bb8c240efaf464f64a923ba0ddb",
       "imports": [
         "concurrent",
         "datetime",
@@ -2757,7 +2859,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "ba821213c4a3884736c2200421af857a75f6039751b8c46844a5d7307cee84da",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "hud_data.py",
@@ -2813,7 +2917,7 @@
     },
     {
       "file": "ilostat_data.py",
-      "sha256": "fb1e873f63735e5a7ab2c38f528a2f02a2e675c215024470696617dcab7040fe",
+      "sha256": "fa41a6b5b01b23adc738279305856902d46ab04c53c82c4f231b240f42764718",
       "imports": [
         "csv",
         "datetime",
@@ -2826,7 +2930,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "fb1e873f63735e5a7ab2c38f528a2f02a2e675c215024470696617dcab7040fe",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "ilostat_data_extended.py",
@@ -2843,7 +2949,7 @@
     },
     {
       "file": "imf_data.py",
-      "sha256": "110f33ec50c66ddc0af72e490ca20d84f6fd4c161a0293f2e9a92063b5e09251",
+      "sha256": "d8a3a3263f0f43ad0a666e6bdabfa7f592eb1511670b425801114d23c744b89d",
       "imports": [
         "datetime",
         "io",
@@ -2855,7 +2961,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "110f33ec50c66ddc0af72e490ca20d84f6fd4c161a0293f2e9a92063b5e09251",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "imf_datamapper_data.py",
@@ -2885,7 +2993,7 @@
     },
     {
       "file": "investing_calendar_data.py",
-      "sha256": "480ec219a96c34025a96ee28b7aae47d89b20e36030619697565ee12a2497562",
+      "sha256": "132ac82f10bc774b10cb1fbf6f50375bd90e5ed83fc9159cd03452236f0c842e",
       "imports": [
         "json",
         "os",
@@ -2894,7 +3002,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "480ec219a96c34025a96ee28b7aae47d89b20e36030619697565ee12a2497562",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "irena_data.py",
@@ -3054,7 +3164,7 @@
     },
     {
       "file": "mnb_data.py",
-      "sha256": "fba8e5d78c6ef5b0b6cc657eedcac0b0f32b97ef6578c837899e780e93ba2440",
+      "sha256": "3a1c8424f285647248f12ea82577da0a447b4a151076e8e074da15d3b87cc3d5",
       "imports": [
         "datetime",
         "html",
@@ -3066,7 +3176,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "fba8e5d78c6ef5b0b6cc657eedcac0b0f32b97ef6578c837899e780e93ba2440",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "multpl_data.py",
@@ -3090,7 +3202,7 @@
     },
     {
       "file": "n2yo_satellite_data.py",
-      "sha256": "e68652042202ab21aec8de40091340d4a45cd6f61ba3ba32988928c7bf18e41f",
+      "sha256": "2c03c6a223df4140e9dd2a23cd0cff79e5cfbd03b0978a88fcd04b3e3d847b14",
       "imports": [
         "datetime",
         "json",
@@ -3101,11 +3213,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "e68652042202ab21aec8de40091340d4a45cd6f61ba3ba32988928c7bf18e41f",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "nasa_gibs_api.py",
-      "sha256": "5985002b8426e25789983481e279b4bd90c5abd0d93a9eb44d8eaffd8ff07afc",
+      "sha256": "1e44e424c73f1248cf2ada96d45f5531acaa47eba6f8de8e2370adb5613bca17",
       "imports": [
         "base64",
         "datetime",
@@ -3123,7 +3237,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "5985002b8426e25789983481e279b4bd90c5abd0d93a9eb44d8eaffd8ff07afc",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "nasdaq_data.py",
@@ -3162,7 +3278,7 @@
     },
     {
       "file": "nbp_data.py",
-      "sha256": "3fdf4a5758073913cbd409c697906febc63dbe57219f1cdb184e1e587d9c8149",
+      "sha256": "c3ac23af0d9f243a308c08b47af97c5e1aafe8d01d379b5bdfd0cebd84de5c7f",
       "imports": [
         "datetime",
         "json",
@@ -3172,7 +3288,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "3fdf4a5758073913cbd409c697906febc63dbe57219f1cdb184e1e587d9c8149",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "news_correlation.py",
@@ -3191,7 +3309,7 @@
     },
     {
       "file": "news_geolocation.py",
-      "sha256": "973fc1531d07c87ebdf0a1cedabcffc16293daf2f12986b44b4b6a17350a696d",
+      "sha256": "392e89c5863527c24b2629ed1e3d902974aeb62cca3e6f2d2c324cac0caf15b4",
       "imports": [
         "json",
         "math",
@@ -3202,7 +3320,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "973fc1531d07c87ebdf0a1cedabcffc16293daf2f12986b44b4b6a17350a696d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "news_nlp.py",
@@ -3234,7 +3354,7 @@
     },
     {
       "file": "nominatim_data.py",
-      "sha256": "adaea9e3e59c6b517047d24489273b07ffa0588e097ab29219a61330c7791d10",
+      "sha256": "de3f742d77892bf018b51ee08853be0683623d67b3bf1c250589fe84eaaece3b",
       "imports": [
         "json",
         "os",
@@ -3243,11 +3363,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "adaea9e3e59c6b517047d24489273b07ffa0588e097ab29219a61330c7791d10",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "norges_bank_data.py",
-      "sha256": "7473ae10a69a8d86ac6a520951342ae398b8e0bb90ffa52858fce08ef60b634e",
+      "sha256": "720c0071a2771af68048dfd6a4e632034ef5eadfa9a2021338c49df99e3f6678",
       "imports": [
         "csv",
         "datetime",
@@ -3259,7 +3381,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "7473ae10a69a8d86ac6a520951342ae398b8e0bb90ffa52858fce08ef60b634e",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "numbeo_data.py",
@@ -3289,7 +3413,7 @@
     },
     {
       "file": "oecd_data.py",
-      "sha256": "41eb8b32572a2c82b19fe8351b36547d93f51761df26284388378d963a1b191d",
+      "sha256": "39050e64c3719de67cafc4bfb2160174b410e42d56139da08557b6e5466ff359",
       "imports": [
         "datetime",
         "defusedxml",
@@ -3307,7 +3431,9 @@
         "urllib3"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "41eb8b32572a2c82b19fe8351b36547d93f51761df26284388378d963a1b191d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "oecd_dev_data.py",
@@ -3350,7 +3476,7 @@
     },
     {
       "file": "ons_data.py",
-      "sha256": "ac168ad4554576591a8f1a2849a72be201ff4084ff2aac448157a42994b19626",
+      "sha256": "b93b64f1b9ff259037061fcc952ba4ba57f9954ce3083a46332dc09ab66d4641",
       "imports": [
         "json",
         "os",
@@ -3359,7 +3485,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "ac168ad4554576591a8f1a2849a72be201ff4084ff2aac448157a42994b19626",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "opec_data.py",
@@ -3441,7 +3569,7 @@
     },
     {
       "file": "openafrica_api.py",
-      "sha256": "41f013efb5af91254659701ea56d2bea9ad599d1c902d8b128b7b39b9c753ff1",
+      "sha256": "b175b546ab2ed857d3c3ba6f87b52f8ebe404c0283361f78fa232bd5c7605141",
       "imports": [
         "datetime",
         "json",
@@ -3452,7 +3580,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "41f013efb5af91254659701ea56d2bea9ad599d1c902d8b128b7b39b9c753ff1",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "openaq_data.py",
@@ -3521,7 +3651,7 @@
     },
     {
       "file": "optimize_portfolio_weights.py",
-      "sha256": "1242b59cce0e0a8da5c0ad55f8d88bd9ad3a052f3a9a684216fa1d8fe968830f",
+      "sha256": "26e43f8a4f0ea86ee6e1bf23af0db72f2deb63868c956a47abddc94ef4a80adf",
       "imports": [
         "json",
         "numpy",
@@ -3531,7 +3661,9 @@
         "yfinance"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "1242b59cce0e0a8da5c0ad55f8d88bd9ad3a052f3a9a684216fa1d8fe968830f",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "option_greeks_daemon.py",
@@ -3548,7 +3680,7 @@
     },
     {
       "file": "oscar_data.py",
-      "sha256": "4010fd623630cffc595bc283b4ecc376be2339ed045626059be2e3872b3265d0",
+      "sha256": "1b6bf2529a7f5d6329bda5fd90f45d69fe3d04effa746bf1453e98e3b661b30f",
       "imports": [
         "datetime",
         "json",
@@ -3559,11 +3691,13 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "4010fd623630cffc595bc283b4ecc376be2339ed045626059be2e3872b3265d0",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "overpass_api_data.py",
-      "sha256": "f19918e8cb9380d0c824348aaaebb1efb65495277cfea6a99767b052d6a711f3",
+      "sha256": "c23c346d71c042d59e64e13a6bfd33ca770097f7dbf918c9fc1a62f5a1b7c3ab",
       "imports": [
         "json",
         "os",
@@ -3572,7 +3706,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "f19918e8cb9380d0c824348aaaebb1efb65495277cfea6a99767b052d6a711f3",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "owid_co2_data.py",
@@ -3670,14 +3806,16 @@
     },
     {
       "file": "polymarket.py",
-      "sha256": "2fe080ace02b5b76832e1dbd59baa18b1c3faca19766d33b4d6750826319ed6f",
+      "sha256": "ae86415ce074908c219860e6740e9c878b18aacd3feaa3877b2e89a70c0ea4f9",
       "imports": [
         "json",
         "requests",
         "sys"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "2fe080ace02b5b76832e1dbd59baa18b1c3faca19766d33b4d6750826319ed6f",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "polymarket_quant_bot.py",
@@ -3727,7 +3865,7 @@
     },
     {
       "file": "prediction_kalshi.py",
-      "sha256": "fe995ab2de8b29aa04bec97cba813f910059d58e35c5a3389a50eab09fa610e5",
+      "sha256": "b8d40291f84844e5844274d3ef3226bbaeb7cce909eea32c59744d13074c9387",
       "imports": [
         "__future__",
         "base64",
@@ -3740,11 +3878,13 @@
         "uuid"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "fe995ab2de8b29aa04bec97cba813f910059d58e35c5a3389a50eab09fa610e5",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "prediction_polymarket.py",
-      "sha256": "fe5cef0705c5b4d931466be39244c9aa22d1524be2d12565cef1278f49c9e852",
+      "sha256": "b654f1c868657e841fe1b39bb8c298effb28dd88883bb7036e0c1cdf8d5dad2e",
       "imports": [
         "__future__",
         "eth_account",
@@ -3755,7 +3895,9 @@
         "traceback"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "fe5cef0705c5b4d931466be39244c9aa22d1524be2d12565cef1278f49c9e852",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "prs_group_data.py",
@@ -3785,7 +3927,7 @@
     },
     {
       "file": "pxweb_fetcher.py",
-      "sha256": "b77087a456b8faaaebebfd5c15812a5b57378a13f44dca8b387b4a1ba8e249a0",
+      "sha256": "675e1cc7b26d175f5f07ac7b9d5a91b25999d3ac629248eb68ca894540074fd5",
       "imports": [
         "datetime",
         "json",
@@ -3795,7 +3937,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "b77087a456b8faaaebebfd5c15812a5b57378a13f44dca8b387b4a1ba8e249a0",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "quandl_nasdaq_data.py",
@@ -3906,7 +4050,7 @@
     },
     {
       "file": "reliefweb_data.py",
-      "sha256": "c57d39df97ed060a19de76927526ea8b43782f60e9a892ddc48093a7cabd7c81",
+      "sha256": "f4dfb2ac8d3712bcfe4c09b027ec6854ffbb3d0939f3ed3ced66454062443ea1",
       "imports": [
         "json",
         "os",
@@ -3915,11 +4059,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "c57d39df97ed060a19de76927526ea8b43782f60e9a892ddc48093a7cabd7c81",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "riksbank_data.py",
-      "sha256": "336069478cfc2601ef35d50aedcb0adb6a18b44db5f6a14138668cf4bbf7dc3d",
+      "sha256": "353854b6535e0e0ba6f0bf6985338a9ad0c95107ae936d35904a980a5db84381",
       "imports": [
         "datetime",
         "json",
@@ -3930,7 +4076,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "336069478cfc2601ef35d50aedcb0adb6a18b44db5f6a14138668cf4bbf7dc3d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "rsf_press_freedom_data.py",
@@ -3947,7 +4095,7 @@
     },
     {
       "file": "scb_data.py",
-      "sha256": "33996b0d03aa0e2eb42c320a757b229fee4c49a9ff599b337ad0ced853d45cd9",
+      "sha256": "05a016d1d496bec900c690f0aec415eb9456d80a0361012cb91f0913ef340b71",
       "imports": [
         "datetime",
         "json",
@@ -3958,11 +4106,13 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "33996b0d03aa0e2eb42c320a757b229fee4c49a9ff599b337ad0ced853d45cd9",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "sec_data.py",
-      "sha256": "84ca15e108cefe4016daf074e9b2a32317a5d2f0a5baa47f85741951f65114b7",
+      "sha256": "fff886a819497c89f84c44e5d96fb26f93f2e3028b066c37c782cf647afaf696",
       "imports": [
         "bs4",
         "datetime",
@@ -3990,11 +4140,13 @@
         "SECDataWrapper.get_company_facts",
         "SECDataWrapper.get_financial_statements"
       ],
-      "integration_notes": "Replace the upstream Fincept User-Agent/contact in an integration adapter. Allowlist SEC hosts before exposing filing_content; bound document sizes and result counts. SEC does not cover Bursa filings."
+      "integration_notes": "Replace the upstream Financial User-Agent/contact in an integration adapter. Allowlist SEC hosts before exposing filing_content; bound document sizes and result counts. SEC does not cover Bursa filings.",
+      "upstream_sha256": "84ca15e108cefe4016daf074e9b2a32317a5d2f0a5baa47f85741951f65114b7",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "sec_xbrl_data.py",
-      "sha256": "cf8ce2d54fcc591bdb24bde3fc272682219ee1a403c0c759e475897fdb5856dd",
+      "sha256": "fbc2fc909661f1fb560d18576ba27f6cab1bae8a6ef29a1ef59124bd0576d38d",
       "imports": [
         "json",
         "os",
@@ -4003,7 +4155,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "cf8ce2d54fcc591bdb24bde3fc272682219ee1a403c0c759e475897fdb5856dd",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "semantic_scholar_data.py",
@@ -4020,7 +4174,7 @@
     },
     {
       "file": "sentinelhub_data.py",
-      "sha256": "e2c1e7fdf0fb7032cfec03383eb62f74e0d44a576c69ee6dfa3cc673f0dee29e",
+      "sha256": "8a8154fac50a85854a93fb47f407e685c051479902cd83f5e30958f90204be7b",
       "imports": [
         "base64",
         "datetime",
@@ -4034,7 +4188,9 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "e2c1e7fdf0fb7032cfec03383eb62f74e0d44a576c69ee6dfa3cc673f0dee29e",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "shipping_data.py",
@@ -4064,7 +4220,7 @@
     },
     {
       "file": "snb_data.py",
-      "sha256": "66e0dfb8df4e9785b40be131d9c958f5a03dfc4b46cd5de58bc82a2ac07185ef",
+      "sha256": "4bf0d27ef6da3acde782294663407084c1c72ef1a6aaa15ead7502f2c92f3994",
       "imports": [
         "csv",
         "datetime",
@@ -4076,11 +4232,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "66e0dfb8df4e9785b40be131d9c958f5a03dfc4b46cd5de58bc82a2ac07185ef",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "spain_data.py",
-      "sha256": "8fbce81ecd787a276bc2f66d087a054008a9bf7d74b4839d43d1cc4af737ffb1",
+      "sha256": "b2c45e7bcadfec13363d41d6bd58cfd2192bb034e5a8420969e6f3cc73f348f8",
       "imports": [
         "datetime",
         "json",
@@ -4091,11 +4249,13 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "8fbce81ecd787a276bc2f66d087a054008a9bf7d74b4839d43d1cc4af737ffb1",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "spreadsheet.py",
-      "sha256": "3fca5d95782893040ef77e9e6875317e1f8716dfe4d3e27aef297a64444ff029",
+      "sha256": "a79f8d7bd566ae2d32f4b0ae0cb35b03d102bf5ebe1c243b607186505179b533",
       "imports": [
         "argparse",
         "gspread",
@@ -4106,7 +4266,9 @@
         "sys"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "3fca5d95782893040ef77e9e6875317e1f8716dfe4d3e27aef297a64444ff029",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "ssrn_data.py",
@@ -4136,7 +4298,7 @@
     },
     {
       "file": "statista_free_data.py",
-      "sha256": "27e44fb4b62daee9dba3e7f14ab41ed54293e1bdc16ba0ebd16c7c73de87779a",
+      "sha256": "449b8275f07f56519b8b49eea16060b4ad960c7376437b0c8b352a55a2a258ab",
       "imports": [
         "json",
         "os",
@@ -4145,7 +4307,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "27e44fb4b62daee9dba3e7f14ab41ed54293e1bdc16ba0ebd16c7c73de87779a",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "stooq_data.py",
@@ -4164,7 +4328,7 @@
     },
     {
       "file": "strip_datahub_guard.py",
-      "sha256": "c1f011d9b6b7ecae6f880dc5595751a87a1517651a5e70b295a472e0bb29df63",
+      "sha256": "c1ff7ccb3f61cb05d41576aa29ad43bedfce922d5e1dbfcceda6eaf0504bb17a",
       "imports": [
         "__future__",
         "argparse",
@@ -4173,11 +4337,13 @@
         "sys"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "c1f011d9b6b7ecae6f880dc5595751a87a1517651a5e70b295a472e0bb29df63",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "swiss_gov_api.py",
-      "sha256": "c1354ef08cb98c8da0a44a38b4c44559de93c1c45a238b8a51850631da0d0ee8",
+      "sha256": "5e0aa11cc50876336fff3707080b7d0429b6f11c126f8516fc046a28772418b6",
       "imports": [
         "csv",
         "datetime",
@@ -4191,11 +4357,13 @@
         "urllib"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "c1354ef08cb98c8da0a44a38b4c44559de93c1c45a238b8a51850631da0d0ee8",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "tcmb_data.py",
-      "sha256": "05c0428aedb8f551d515e07b828124f27761e4dce94921502effed3cbcb1a388",
+      "sha256": "e5139ef4d431e4f0fefa4c1f041eaffab28e018b438b257b13603e3ddc195d7f",
       "imports": [
         "datetime",
         "json",
@@ -4206,7 +4374,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "05c0428aedb8f551d515e07b828124f27761e4dce94921502effed3cbcb1a388",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "tiingo_data.py",
@@ -4223,7 +4393,7 @@
     },
     {
       "file": "trading_economics_data.py",
-      "sha256": "8c1e85869501fde498cfb95ed023a71eedaacb767e0f5edf052bd2c21f3e6f3c",
+      "sha256": "d1f2651c14d0f589853275900152447e719c55f54ffe20e2ba72276c9307a109",
       "imports": [
         "datetime",
         "json",
@@ -4233,7 +4403,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "8c1e85869501fde498cfb95ed023a71eedaacb767e0f5edf052bd2c21f3e6f3c",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "tradingview_data.py",
@@ -4329,7 +4501,7 @@
     },
     {
       "file": "un_comtrade_data.py",
-      "sha256": "52eb20d242880106ebbbd6a7e6dd4f321a14fd1ca4977639e692e2a27b0e9270",
+      "sha256": "08230491d006432d15bc16b04480060fc6d44a270567cdad7848aa39a0bb7951",
       "imports": [
         "datetime",
         "json",
@@ -4339,7 +4511,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "52eb20d242880106ebbbd6a7e6dd4f321a14fd1ca4977639e692e2a27b0e9270",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "un_comtrade_extended_data.py",
@@ -4434,7 +4608,7 @@
     },
     {
       "file": "unesco_data.py",
-      "sha256": "f6542fbbf55de6d2b5a02d882ec8a1e19fd2ca79ad8f69f190fe7a634e7920d0",
+      "sha256": "bbcc3079d3b626bdb2389e3c1105d5eb0e13495fa13e098fbd9eff04cabead55",
       "imports": [
         "datetime",
         "io",
@@ -4447,7 +4621,9 @@
         "zipfile"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "f6542fbbf55de6d2b5a02d882ec8a1e19fd2ca79ad8f69f190fe7a634e7920d0",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "unfpa_data.py",
@@ -4490,7 +4666,7 @@
     },
     {
       "file": "universal_ckan_api.py",
-      "sha256": "eb2a0f5a221bc4e7922d014c196918cfa85ef176fd04325f7966f45d5c551a6a",
+      "sha256": "b0fb1bb789d16b5f2b1c8aa29cad12e840cf46d4c0720b71b8cf4565c55c9ddb",
       "imports": [
         "datetime",
         "json",
@@ -4500,7 +4676,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "eb2a0f5a221bc4e7922d014c196918cfa85ef176fd04325f7966f45d5c551a6a",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "universal_socrata_api.py",
@@ -4621,7 +4799,7 @@
     },
     {
       "file": "wikipedia_pageviews_data.py",
-      "sha256": "54591e4f271d25831f94876b97d4d0d26ce9fa2bb54f8af93c90718fcb06f233",
+      "sha256": "4e99b93ff3137d2ef2b89be01b54f19a101787b0860f407142f104481f0d4458",
       "imports": [
         "json",
         "os",
@@ -4630,7 +4808,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "54591e4f271d25831f94876b97d4d0d26ce9fa2bb54f8af93c90718fcb06f233",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "wipo_data.py",
@@ -4647,7 +4827,7 @@
     },
     {
       "file": "wisesheets_macro_data.py",
-      "sha256": "b07230af3845ba70c0d77231a03291dbca6b0cf59477d9d8ed4b07b373b43d0d",
+      "sha256": "05160cff8ce3e0ee58f3340ab28f3861e8b4a96c0b8836e961fb495352fad8db",
       "imports": [
         "json",
         "os",
@@ -4656,11 +4836,13 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "b07230af3845ba70c0d77231a03291dbca6b0cf59477d9d8ed4b07b373b43d0d",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "wits_trade_data.py",
-      "sha256": "f8f437809c7ce63eeac43c89bea375c97e1a85ef1d3efe4c61a5287171688a81",
+      "sha256": "3a01659ee57d15d4e9835ea285a96a36bccd0da5e5978d262b690fffcbc3d8f0",
       "imports": [
         "datetime",
         "json",
@@ -4672,7 +4854,9 @@
         "xml"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "f8f437809c7ce63eeac43c89bea375c97e1a85ef1d3efe4c61a5287171688a81",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "world_bank_climate_data.py",
@@ -4767,7 +4951,7 @@
     },
     {
       "file": "worldbank_data.py",
-      "sha256": "f022b29ba1c7482d07c0262af32b415ad5d5271c0c3f85a356b203823638d989",
+      "sha256": "463d50e944e68201bac57e197360c660381cfb6c2261e30bb5fb8d0a58e35665",
       "imports": [
         "datetime",
         "json",
@@ -4789,7 +4973,9 @@
         "get_economic_snapshot",
         "get_regional_comparison"
       ],
-      "integration_notes": "Indicators may be annual or stale. Preserve year and units; do not label observations as live market data. Bound pagination."
+      "integration_notes": "Indicators may be annual or stale. Preserve year and units; do not label observations as live market data. Bound pagination.",
+      "upstream_sha256": "f022b29ba1c7482d07c0262af32b415ad5d5271c0c3f85a356b203823638d989",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "worldbank_health_data.py",
@@ -4848,11 +5034,11 @@
     },
     {
       "file": "yfinance_data.py",
-      "sha256": "da36a8cce67459a8ab0e423efa67d71d38815100ef3c6ea0ce9e92e90a160600",
+      "sha256": "c59e2ed5071106f6d5cd9bc2ef118d184f921cbc04f92b6509792d6d3770a94c",
       "imports": [
         "contextlib",
         "datetime",
-        "fincept_json",
+        "financial_json",
         "io",
         "json",
         "logging",
@@ -4866,11 +5052,13 @@
         "yfinance"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "da36a8cce67459a8ab0e423efa67d71d38815100ef3c6ea0ce9e92e90a160600",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "yh_finance_data.py",
-      "sha256": "6067b609fcec4516e640c0c689e0d701b75f39bdf860155e8a6a4d3bee798796",
+      "sha256": "915571ec8eb084e906b7e1cd87b77fb43599b80f0b933ce50a6f4a8d3b2c1696",
       "imports": [
         "json",
         "os",
@@ -4879,7 +5067,9 @@
         "typing"
       ],
       "agent_registered": false,
-      "status": "copied; runtime verification pending"
+      "status": "copied; runtime verification pending",
+      "upstream_sha256": "6067b609fcec4516e640c0c689e0d701b75f39bdf860155e8a6a4d3bee798796",
+      "adapted_for": "Financial Deep Agents"
     },
     {
       "file": "zenodo_data.py",
@@ -4913,30 +5103,34 @@
       "sha256": "16141d7ca528c5d92fdcd242b23da9d24f0fc500614d6d917530a17b5016a2b7",
       "status": "active local adapter",
       "agent_registered": false,
-      "provenance": "local implementation; preserves migrated fixes"
+      "provenance": "local implementation; preserves migrated fixes",
+      "imports": []
     },
     {
       "file": "yh_market.py",
       "sha256": "d48eb41aa68ae6db04cb9ee78536812541c528cd150c2ad375be3ce49a7ca895",
       "status": "active local adapter",
       "agent_registered": false,
-      "provenance": "local implementation; preserves migrated fixes"
+      "provenance": "local implementation; preserves migrated fixes",
+      "imports": []
     },
     {
       "file": "fmp_client.py",
       "sha256": "c7d81a2b2bebe80e8ff6a57c547ef9ba74cf522c9b88db73e4acbd0747b57551",
       "status": "active local adapter",
       "agent_registered": false,
-      "provenance": "local implementation; preserves migrated fixes"
+      "provenance": "local implementation; preserves migrated fixes",
+      "imports": []
     },
     {
       "file": "alpha_vantage_client.py",
       "sha256": "90a0f6d1c257f5132802ba96a742cfa65ce3e0c0c49f58503321eda051689002",
       "status": "active local adapter",
       "agent_registered": false,
-      "provenance": "local implementation; preserves migrated fixes"
+      "provenance": "local implementation; preserves migrated fixes",
+      "imports": []
     }
   ],
   "syntax_errors": [],
-  "runner": "run_script via scripts/fincept_worker.py; existing allowlist unchanged"
+  "runner": "run_script via scripts/financial_worker.py; bounded allowlist and hash verification"
 }

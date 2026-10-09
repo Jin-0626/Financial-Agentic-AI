@@ -1,7 +1,7 @@
 """
 Spain Open Data (datos.gob.es) Data Fetcher
 Access to Spanish government datasets through hierarchical catalogue → dataset → resources structure
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 """
 
 import sys
@@ -196,7 +196,7 @@ def _make_request(endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dic
         url = f"{BASE_URL}{endpoint}"
         headers = {
             'Content-Type': 'application/json',
-            'User-Agent': 'Fincept-Terminal/1.0'
+            'User-Agent': 'Financial-Terminal/1.0'
         }
 
         # Ensure JSON format is requested

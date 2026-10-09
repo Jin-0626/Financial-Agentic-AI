@@ -1,4 +1,4 @@
-"""Fincept-style script discovery with read-only files and curated execution."""
+"""Read-only provider discovery and bounded execution for Financial Deep Agents."""
 import json
 import os
 import subprocess
@@ -72,9 +72,9 @@ def _capture(command):
 
 @tool
 def run_script(script: str, arguments: list[str]) -> str:
-    """Run a gathered Fincept provider script with CLI arguments (no shell command).
+    """Run a curated financial provider with bounded CLI arguments and verified source.
 
-    First read /scripts/AGENTS.md and /scripts/data_sources/README.md. script is
+    First read /scripts/AGENTS.md and /scripts/data_sources/curated-providers.md. script is
     one of bnm_data.py, fred_data.py, worldbank_data.py, treasury_data.py, sec_data.py.
     arguments starts with its documented read-only command, e.g. ["currency", "USD"].
     FRED requires FRED_API_KEY; SEC requires SEC_USER_AGENT with your contact identity.
@@ -85,7 +85,7 @@ def run_script(script: str, arguments: list[str]) -> str:
             raise ValueError("Unknown script or command; read /scripts/AGENTS.md")
         if len(arguments) > 12 or any(not isinstance(arg, str) or len(arg) > 256 or "\x00" in arg for arg in arguments):
             raise ValueError("Supply at most 12 short string arguments")
-        worker = SCRIPTS_ROOT / "fincept_worker.py"
+        worker = SCRIPTS_ROOT / "financial_worker.py"
         with _SLOTS:
             data = _capture([sys.executable, "-B", str(worker), script, *arguments])
         return json.dumps({"provider_script": script, "data": data,

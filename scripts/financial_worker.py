@@ -17,7 +17,7 @@ def main():
     path = (root / name).resolve()
     if path.parent != root.resolve() or hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
         raise ValueError("Provider script integrity check failed")
-    spec = importlib.util.spec_from_file_location("fincept_provider", path)
+    spec = importlib.util.spec_from_file_location("financial_provider", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     if name == "sec_data.py":

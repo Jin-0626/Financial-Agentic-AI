@@ -1,4 +1,4 @@
-//! In-house regular fixed-coupon bond analytics; Fincept fixedIncome reference.
+//! Regular fixed-coupon bond analytics for the Financial Deep Agents native engine.
 use crate::{finite, QuantError};
 use serde::{Deserialize, Serialize};
 

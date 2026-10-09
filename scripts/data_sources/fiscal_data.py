@@ -1,7 +1,7 @@
 """
 U.S. Treasury FiscalData API Wrapper
 Fetches U.S. government financial data from the Treasury's FiscalData platform
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 
 API Documentation: https://fiscaldata.treasury.gov/datasets/
 Base URL: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/
@@ -52,7 +52,7 @@ def _make_request(endpoint: str, params: Dict[str, Any] = None) -> Dict[str, Any
         url = f"{BASE_URL}/{endpoint}"
 
         headers = {
-            'User-Agent': 'Fincept-Terminal/1.0 (fiscaldata-api-wrapper)',
+            'User-Agent': 'Financial-Terminal/1.0 (fiscaldata-api-wrapper)',
             'Accept': 'application/json'
         }
 

@@ -1,7 +1,7 @@
 """
 World Bank WITS (World Integrated Trade Solution) API Wrapper
 Fetches international trade, tariff, and non-tariff data from World Bank WITS platform
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 
 API Documentation: https://wits.worldbank.org/data/public/WITSAPI_UserGuide.pdf
 Base URL: https://wits.worldbank.org/API/V1/
@@ -128,7 +128,7 @@ def _make_request(url: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
     """
     try:
         headers = {
-            'User-Agent': 'Fincept-Terminal/1.0 (wits-api-wrapper)',
+            'User-Agent': 'Financial-Terminal/1.0 (wits-api-wrapper)',
             'Accept': 'application/xml,application/json'
         }
 

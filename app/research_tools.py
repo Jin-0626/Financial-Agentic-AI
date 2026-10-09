@@ -96,7 +96,7 @@ class ResearchTools(AgentMiddleware):
 
     @staticmethod
     def shared_assignment(request):
-        """Forward completed findings, as the sample's sequential runner does."""
+        """Share completed findings and verified public evidence with delegated specialists."""
         if request.tool_call.get("name") != "task":
             return request
         state = getattr(request.runtime, "state", {}) or {}

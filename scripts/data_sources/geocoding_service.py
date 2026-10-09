@@ -1,7 +1,7 @@
 """
 Geocoding Service using geopy
 Provides location search, autocomplete, and reverse geocoding
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 
 Uses Nominatim (OpenStreetMap) - no API key required
 Rate Limit: 1 request per second (handled with delays)
@@ -15,7 +15,7 @@ from geopy.extra.rate_limiter import RateLimiter
 import time
 
 # Initialize geocoder with user agent
-geolocator = Nominatim(user_agent="fincept-terminal/3.0")
+geolocator = Nominatim(user_agent="financial-terminal/3.0")
 # Rate limiter: 1 call per second
 geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
 reverse = RateLimiter(geolocator.reverse, min_delay_seconds=1)

@@ -49,7 +49,7 @@ ONS_SERIES = {
 ONS_SERIES_BY_ID = {f"{s['id']}/{s['dataset']}": s for s in ONS_SERIES.values()}
 
 session = requests.Session()
-session.headers.update({"User-Agent": "Mozilla/5.0 (Fincept Terminal)"})
+session.headers.update({"User-Agent": "Mozilla/5.0 (Financial Terminal)"})
 adapter = requests.adapters.HTTPAdapter(pool_connections=10, pool_maxsize=10, max_retries=3)
 session.mount('https://', adapter)
 session.mount('http://', adapter)

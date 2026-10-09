@@ -1,8 +1,8 @@
 """
-Fincept Terminal - Python Output Standardization Library
+Financial Deep Agents provider output standardization
 =========================================================
 
-This library provides a standard output format for all Python scripts in the Fincept Terminal.
+This library provides a standard output format for provider scripts in Financial Deep Agents.
 It ensures consistent JSON output across 100+ scripts, making frontend parsing simple and reliable.
 
 Standard Output Format:
@@ -20,7 +20,7 @@ Standard Output Format:
 }
 
 Usage:
-    from fincept_output_standard import standardize_output, OutputType
+    from financial_output_standard import standardize_output, OutputType
 
     # Simple usage
     result = standardize_output(data, script_name="my_script")
@@ -56,7 +56,7 @@ class OutputType(Enum):
     EMPTY = "empty"          # No data/null result
 
 
-class FinceptOutputStandardizer:
+class FinancialOutputStandardizer:
     """Main class for standardizing Python script outputs"""
 
     VERSION = "1.0.0"
@@ -487,7 +487,7 @@ def standardize_output(data: Any,
     Returns:
         Standardized dictionary
     """
-    standardizer = FinceptOutputStandardizer(script_name, include_metadata)
+    standardizer = FinancialOutputStandardizer(script_name, include_metadata)
     return standardizer.standardize(data, output_type)
 
 
@@ -522,7 +522,7 @@ def wrap_script_execution(func):
     """
     def wrapper(*args, **kwargs):
         script_name = func.__module__ if func.__module__ != "__main__" else func.__name__
-        standardizer = FinceptOutputStandardizer(script_name)
+        standardizer = FinancialOutputStandardizer(script_name)
 
         try:
             result = func(*args, **kwargs)
@@ -580,7 +580,7 @@ class LegacyOutputHandler:
                     "script": script_name,
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                     "output_type": OutputType.ERROR.value,
-                    "version": FinceptOutputStandardizer.VERSION
+                    "version": FinancialOutputStandardizer.VERSION
                 }
             }
 

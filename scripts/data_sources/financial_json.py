@@ -1,39 +1,16 @@
-"""Safe JSON output boundary for Fincept Terminal scripts.
+"""Safe JSON output boundary for Financial Deep Agents providers.
 
-WHY THIS EXISTS
----------------
-`json.dumps` defaults to ``allow_nan=True``, which emits the bare tokens
-``NaN`` / ``Infinity`` / ``-Infinity``. None of those are valid JSON.
-``QJsonDocument::fromJson()`` on the C++ side does not repair them — it returns
-a **null document**, so the host discards the *entire* payload, not just the
-offending field. One halted trading day inside a 250-row price series is enough
-to blank a whole chart, and the user sees no error at all.
+Provider payloads can contain non-finite floats from missing prices, division by
+zero, and rolling calculations. Sanitize these values before JSON serialization
+so tool responses remain readable and valid across the API and report pipeline.
 
-Financial data produces non-finite floats routinely: a halted bar, a zero
-denominator in a ratio, ``pct_change()`` on the first row, an empty rolling
-window, a division by a zero previous close.
+Usage:
+    import financial_json
+    financial_json.emit(result)
+    payload = financial_json.dumps_bytes(result)
 
-USAGE
------
-Replace the output boundary only — you do not need to touch intermediate
-computation::
-
-    import fincept_json
-    print(fincept_json.dumps(result))     # instead of print(json.dumps(result))
-    fincept_json.emit(result)             # same thing, one call
-
-For a daemon/framed protocol use the bytes form::
-
-    payload = fincept_json.dumps_bytes(response)
-
-NOTES
------
-* ``allow_nan=False`` alone is a *detector*, not a fix — it raises ``ValueError``.
-  These helpers always run :func:`sanitize` first, so the flag only ever fires
-  on something the sanitiser genuinely could not reach (which is a bug worth
-  hearing about, not something to swallow).
-* numpy/pandas are imported lazily and optionally: this module is imported from
-  both venv-numpy1 and venv-numpy2, and from scripts that have neither.
+Optional numerical libraries are imported lazily. Sanitization does not alter
+intermediate provider calculations.
 """
 
 from __future__ import annotations

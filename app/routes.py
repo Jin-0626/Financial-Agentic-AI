@@ -243,7 +243,7 @@ def _build_env_footer(org_id: str) -> str:
 
 
 async def _chat(
-    message, thread_id, user_id, org_id, response_schema="fincept", resume=None
+    message, thread_id, user_id, org_id, response_schema="financial", resume=None
 ):
     try:
         await _ensure_user_habits(_store, user_id, org_id)
@@ -456,7 +456,7 @@ async def _stream_sse(
     user_id: str,
     org_id: str,
     file_id: Optional[str] = None,
-    response_schema="fincept",
+    response_schema="financial",
     resume=None,
 ) -> Any:
     """Async graph stream with specialist activity and one final parent narrative."""

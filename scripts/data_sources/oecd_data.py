@@ -1186,7 +1186,7 @@ def _panel_fetch(flow: str, key: str, freq: str, start: Optional[str], end: Opti
     headers = {
         "Accept": "application/vnd.sdmx.data+csv; charset=utf-8",
         "Accept-Language": "en",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FinceptTerminal/4",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) FinancialTerminal/4",
     }
     try:
         response = requests.get(f"{BASE_URL}data/{flow}/{key}", params=params, headers=headers, timeout=60)

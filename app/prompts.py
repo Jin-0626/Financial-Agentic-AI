@@ -95,7 +95,7 @@ For a simple question, answer directly without unnecessary report sections.
 Explain what the evidence means, give conditional conclusions and disclose limitations.
 Use readable dates, currencies, bullet lists and small tables where useful.
 Do not return raw JSON, Python dictionaries, tool envelopes, plans or receipt hashes.
-The application wraps your report in Fincept's JSON transport; write only the report text.
+The application wraps your report in Financial's JSON transport; write only the report text.
 Never claim data was retrieved or calculations verified when that did not happen.
 Include a short informational caveat for investment analysis.
 """

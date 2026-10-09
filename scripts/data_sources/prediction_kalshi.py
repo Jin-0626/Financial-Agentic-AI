@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Kalshi trading bridge for Fincept Terminal.
+"""Kalshi trading bridge for Financial Terminal.
 
 Invocation:
     python prediction_kalshi.py <command> <json_payload>

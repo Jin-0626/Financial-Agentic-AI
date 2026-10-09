@@ -31,7 +31,7 @@ def main():
    started=time.monotonic(); events=[]; first_token=None; first_result=None; error=None
    thread=f"eval-{campaign}-{repeat}-{name}"
    try:
-    with requests.post('http://127.0.0.1:8000/api/chat/stream',json={"message":prompt,"thread_id":thread,"org_id":"evaluation","user_id":"evaluation","response_schema":"fincept"},stream=True,timeout=(10,3605)) as response:
+    with requests.post('http://127.0.0.1:8000/api/chat/stream',json={"message":prompt,"thread_id":thread,"org_id":"evaluation","user_id":"evaluation","response_schema":"financial"},stream=True,timeout=(10,3605)) as response:
      response.raise_for_status()
      for line in response.iter_lines():
       if not line.startswith(b'data: '):continue

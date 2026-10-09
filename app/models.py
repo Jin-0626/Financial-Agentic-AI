@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class ChatRequest(BaseModel):
     message: str = Field(default="", max_length=32000)
-    response_schema: Optional[Literal["fincept", "analysis_report"]] = "fincept"
+    response_schema: Optional[Literal["financial", "analysis_report"]] = "financial"
     resume: Optional[dict] = None
     thread_id: str = Field(default="default-thread", max_length=254)
     user_id: str = Field(default="local-user", min_length=1, max_length=128)

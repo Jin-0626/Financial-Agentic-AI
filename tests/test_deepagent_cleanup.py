@@ -235,7 +235,7 @@ class CapabilityParityTests(unittest.IsolatedAsyncioTestCase):
             ("task", {}), ("execute", {}), ("write_todos", {}),
         ]
         for role in ROLE_TOOLS:
-            for mode in (None, "fincept"):
+            for mode in (None, "financial"):
                 for name, args in cases:
                     with self.subTest(role=role, mode=mode, tool=name, args=args):
                         context = SimpleNamespace(response_schema=mode, run_budget=None)
@@ -253,7 +253,7 @@ class CapabilityParityTests(unittest.IsolatedAsyncioTestCase):
         names = set().union(*ROLE_TOOLS.values()) | {"read_file", "ls", "glob", "grep", "write_file", "edit_file", "execute"}
         tools = tuple(SimpleNamespace(name=name) for name in sorted(names))
         for role in ROLE_TOOLS:
-            for mode in (None, "fincept"):
+            for mode in (None, "financial"):
                 with self.subTest(role=role, mode=mode):
                     context = SimpleNamespace(response_schema=mode)
                     req = replace(request("call", context), tools=tools)

@@ -1,6 +1,6 @@
-# Curated Fincept financial data scripts
+# Curated Financial financial data scripts
 
-Five unchanged source scripts gathered from the local Fincept sample. The application exposes these files read-only through /scripts/ and registers a
+Five curated provider scripts adapted for Financial Deep Agents. The application exposes these files read-only through /scripts/ and registers a
 curated run_script tool. Read /scripts/AGENTS.md for supported commands and limits.
 
 | Script | Adds | Key | Integration priority |
@@ -42,8 +42,8 @@ all upstream commands as unrestricted agent tools.
 CompositeBackend maps /scripts/ to a read-only FilesystemBackend. The agent reads
 /scripts/AGENTS.md for discovery, then calls run_script with an allowlisted command.
 Parent/research dispatch policies, tool receipts and telemetry include this runner.
-The worker verifies original file hashes, sets SEC_USER_AGENT and replaces the BNM
-TLS adapter with requests' default adapter without modifying the gathered sources.
+The worker verifies the current provider manifest hashes, sets SEC_USER_AGENT and replaces the BNM
+TLS adapter with requests' default adapter while preserving bounded, read-only runtime access.
 
 Execution is limited to four concurrent processes, 60 seconds per invocation and
 64 KiB per output stream. Broad commands and arbitrary filing URLs are excluded.

@@ -2,7 +2,7 @@
 """
 Sentinel Hub Data Fetcher
 Access to satellite imagery for financial analysis and alternative data
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 
 API Documentation:
 - Catalog API: Search for available satellite imagery

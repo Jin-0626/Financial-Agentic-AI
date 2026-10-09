@@ -1,7 +1,7 @@
 """
 FRED Data Fetcher
 Fetches economic data from Federal Reserve Economic Data (FRED)
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 Based on OpenBB FRED provider
 
 Optimized with concurrent fetching for multiple series

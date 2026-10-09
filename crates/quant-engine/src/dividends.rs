@@ -1,5 +1,5 @@
-//! Dividend valuation formulas ported from Fincept dividend_models.py.
-//! See NOTICE.md and docs/migration/analytics-inventory.json for attribution.
+//! Dividend valuation formulas for the Financial Deep Agents native engine.
+//! Source provenance is recorded in scripts/data_sources/manifest.json.
 use crate::{finite, QuantError};
 
 /// D1 is next-period dividend; rates are fractions, not percentages.

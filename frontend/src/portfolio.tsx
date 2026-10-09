@@ -382,7 +382,7 @@ export function PortfolioPage({ identity }: { identity: Identity }) {
         <div className="empty">
           <h2>Your portfolio workspace</h2>
           <p>
-            Create a portfolio or import a Fincept transaction file to begin.
+            Create a portfolio or import a Financial transaction file to begin.
           </p>
           <button className="accent" onClick={() => open("New portfolio")}>
             Create portfolio
@@ -1021,7 +1021,7 @@ export function PortfolioPage({ identity }: { identity: Identity }) {
                   </select>
                 </label>
                 <label>
-                  Fincept transaction file
+                  Financial transaction file
                   <input
                     type="file"
                     accept=".json,application/json"

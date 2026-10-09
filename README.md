@@ -68,7 +68,7 @@ Rust recovers/checks their ledger when possible without inventing purchase dates
 export an undated legacy opening position, create a new portfolio from transactions
 with your actual purchase dates. Original records remain available as a reference.
 
-JSON imports use the Fincept export contract: `format_version`, `portfolio_name`, `owner`,
+JSON imports use the Financial export contract: `format_version`, `portfolio_name`, `owner`,
 `currency`, `export_date`, `transactions` with date/symbol/type/quantity/price/notes.
 Exports preserve transaction IDs and add the benchmark. Import modes are **New** and
 **Merge**, with preview/hash/revision validation followed by an atomic commit. Holdings-only

@@ -1,7 +1,7 @@
 """
 YFinance Data Fetcher
 Fetches real-time stock quotes and historical data using yfinance
-Returns JSON output for Qt/C++ integration
+Returns JSON output for Financial Deep Agents integration
 """
 
 import math
@@ -15,16 +15,14 @@ from datetime import datetime
 
 # Safe JSON output boundary. `json.dumps` defaults to allow_nan=True and emits
 # the bare tokens NaN / Infinity / -Infinity, none of which are valid JSON.
-# QJsonDocument::fromJson() on the C++ side does not repair them — it returns a
-# *null document*, so the host throws away the ENTIRE payload, not just the
-# offending field. One halted bar inside a 250-row series is enough to blank a
-# whole chart with no error shown. Every print/frame boundary in this file goes
-# through fincept_json.
+# Financial Deep Agents consumes strict JSON at every provider boundary.
+# Missing or non-finite fields are sanitized through financial_json so the
+# remaining tool response stays readable.
 try:
-    import fincept_json
+    import financial_json
 except ImportError:  # defensive: scripts dir not on sys.path (unusual launcher)
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    import fincept_json
+    import financial_json
 
 # Per-HTTP-request budget for every yfinance call reachable from the daemon.
 # run_daemon() is a strictly serial read -> dispatch -> write loop, so a single
@@ -32,9 +30,9 @@ except ImportError:  # defensive: scripts dir not on sys.path (unusual launcher)
 # sparklines, history, search and financials all stall together. yfinance's own
 # default is 10s but it is applied per underlying HTTP call and silently
 # inherited; pin it explicitly so the budget is visible and tunable.
-# Override with FINCEPT_YF_TIMEOUT (seconds).
+# Override with FINANCIAL_YF_TIMEOUT (seconds).
 try:
-    _NET_TIMEOUT = float(os.environ.get("FINCEPT_YF_TIMEOUT", "15"))
+    _NET_TIMEOUT = float(os.environ.get("FINANCIAL_YF_TIMEOUT", "15"))
 except (TypeError, ValueError):
     _NET_TIMEOUT = 15.0
 
@@ -73,7 +71,7 @@ def _num(value, digits=None):
 
     yfinance returns NaN cells routinely: halted sessions, missing intraday
     bars, thinly-traded tickers, futures roll gaps. `round(float(nan), 2)` is
-    still nan and nan is not valid JSON (see the fincept_json note above), so
+    still nan and nan is not valid JSON (see the financial_json note above), so
     an unguarded conversion voids the whole response.
     """
     if value is None:
@@ -1170,7 +1168,7 @@ def main(args=None):
         args = sys.argv[1:]
 
     if len(args) < 1:
-        return fincept_json.dumps({"error": "Usage: python yfinance_data.py <command> <args>"})
+        return financial_json.dumps({"error": "Usage: python yfinance_data.py <command> <args>"})
 
     command = args[0]
 
@@ -1374,8 +1372,8 @@ def main(args=None):
     # IMPORTANT: Do NOT use indent=2 here. The host subprocess parser
     # looks for the last line starting with '{' or '[' to extract JSON.
     # Pretty-printed JSON puts '{' alone on the first line, breaking parsing.
-    # fincept_json.emit == print(dumps(...)) with NaN/Infinity scrubbed.
-    return fincept_json.emit(result)
+    # financial_json.emit == print(dumps(...)) with NaN/Infinity scrubbed.
+    return financial_json.emit(result)
 
 # ── Daemon mode ──────────────────────────────────────────────────────────────
 #
@@ -1475,7 +1473,7 @@ def run_daemon():
     # Ready marker so the C++ host knows imports are done and the worker is
     # ready to accept requests. Uses the same framing.
     try:
-        ready = fincept_json.dumps_bytes({"ready": True, "pid": os.getpid()})
+        ready = financial_json.dumps_bytes({"ready": True, "pid": os.getpid()})
         _daemon_write_frame(stdout, ready)
     except Exception:
         pass
@@ -1488,14 +1486,14 @@ def run_daemon():
             req = json.loads(frame.decode("utf-8"))
         except Exception as e:
             err = {"id": 0, "ok": False, "error": f"bad request JSON: {e}"}
-            _daemon_write_frame(stdout, fincept_json.dumps_bytes(err))
+            _daemon_write_frame(stdout, financial_json.dumps_bytes(err))
             continue
 
         req_id = req.get("id", 0)
         action = req.get("action", "")
         if action == "shutdown":
             resp = {"id": req_id, "ok": True, "result": {"shutdown": True}}
-            _daemon_write_frame(stdout, fincept_json.dumps_bytes(resp))
+            _daemon_write_frame(stdout, financial_json.dumps_bytes(resp))
             break
 
         try:
@@ -1510,9 +1508,9 @@ def run_daemon():
         # itself can't be serialised, downgrade to an error frame for that id
         # rather than dropping it (or killing the loop).
         try:
-            payload_bytes = fincept_json.dumps_bytes(resp)
+            payload_bytes = financial_json.dumps_bytes(resp)
         except Exception as e:
-            payload_bytes = fincept_json.dumps_bytes(
+            payload_bytes = financial_json.dumps_bytes(
                 {"id": req_id, "ok": False, "error": f"unserialisable result for {action}: {e}"})
         try:
             _daemon_write_frame(stdout, payload_bytes)

@@ -12,7 +12,7 @@ import sys
 
 # Store in AppData like other terminal files
 APPDATA = os.environ.get('APPDATA', os.path.expanduser('~/.config'))
-DB_DIR = os.path.join(APPDATA, 'fincept-terminal')
+DB_DIR = os.path.join(APPDATA, 'financial-terminal')
 os.makedirs(DB_DIR, exist_ok=True)
 DB_PATH = os.path.join(DB_DIR, 'akshare_symbols.db')
 

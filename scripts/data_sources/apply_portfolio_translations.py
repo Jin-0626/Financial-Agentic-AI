@@ -29,7 +29,7 @@ TRANS_DIR = ROOT  # translations_<locale>.json sit at project root
 
 
 def apply_locale(locale: str) -> None:
-    ts_path = TS_DIR / f"fincept_{locale}.ts"
+    ts_path = TS_DIR / f"financial_{locale}.ts"
     json_path = TRANS_DIR / f"translations_{locale}.json"
 
     if not ts_path.exists():
