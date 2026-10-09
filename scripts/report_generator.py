@@ -13,8 +13,7 @@ import io
 import json
 import logging
 import os
-import sys
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -28,7 +27,7 @@ except (ImportError, OSError):
     WEASYPRINT_AVAILABLE = False
 
 try:
-    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib.pagesizes import A4
     from reportlab.platypus import (
         SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage, KeepTogether
     )

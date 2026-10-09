@@ -1,7 +1,5 @@
 from __future__ import annotations
-from datetime import datetime, timezone
 from typing import Any
-from .research_integrity import RESEARCH_INTEGRITY
 from .prompts import SPECIALIST_RESEARCH_PROMPT
 
 # Subagents def
@@ -217,30 +215,18 @@ AGENT_SUBAGENTS: dict[str, list[str]] = {
 }
 
 def get_subagents_for_type(agent_type: str) -> list[dict[str, Any]]:
-    """ 
-    Return the list of SubAgent dicts for the given agent type.
-    
-    Falls back to tall agents if agent_type is unknown.
+    """Return specialist definitions, falling back to all for unknown types.
+
+    ResearchFreshness supplies the current date on every model call, including
+    calls through compiled agents retained across requests.
     """
-    names = AGENT_SUBAGENTS.get(agent_type, list(_ALL_AGENTS.keys()))
-    current_date = datetime.now(timezone.utc).date().isoformat()
-    integrity_rules = (
-        f"\n\nData integrity rules:\n"
-        f"- Current UTC date: {current_date}.\n"
-        "- Use only facts and sources supplied in your assignment or returned by tools.\n"
-        "- Never invent current values, news, dates, URLs, consensus figures, or citations.\n"
-        "- Label every current value with its as-of date and report unavailable evidence explicitly."
-    )
+    names = AGENT_SUBAGENTS.get(agent_type, list(_ALL_AGENTS))
     return [
-        {**_ALL_AGENTS[name], "system_prompt": _ALL_AGENTS[name]["system_prompt"] + integrity_rules + "\n\n" + SPECIALIST_RESEARCH_PROMPT + "\n\n" + RESEARCH_INTEGRITY}
+        {
+            **_ALL_AGENTS[name],
+            "system_prompt": _ALL_AGENTS[name]["system_prompt"]
+            + "\n\n" + SPECIALIST_RESEARCH_PROMPT,
+        }
         for name in names
         if name in _ALL_AGENTS
     ]
-
-def list_agent_types() -> list[str]:
-    """ Return all supported agent type names."""
-    return list(AGENT_SUBAGENTS.keys())
-
-def list_subagent_names() -> list[str]:
-    """ Return all defined subagent names."""
-    return list(_ALL_AGENTS.keys())

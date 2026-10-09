@@ -3,11 +3,14 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 from app import financial_tools as finance
-import fmp_client
+from scripts.data_sources import fmp_client
 
 
 class NewsEndpointTests(unittest.TestCase):
     def setUp(self):
+        rss = patch.object(finance, "_public_market_news", return_value=[])
+        rss.start()
+        self.addCleanup(rss.stop)
         settings = patch.dict(os.environ, {"TAVILY_API_KEY": ""})
         settings.start()
         self.addCleanup(settings.stop)

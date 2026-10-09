@@ -1,0 +1,429 @@
+[
+  {
+    "id": "about",
+    "label": "About",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "action_center",
+    "label": "Action Center",
+    "stage": 5,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "agent_config",
+    "label": "Agent Config",
+    "stage": 1,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "ai_chat",
+    "label": "Ai Chat",
+    "stage": 1,
+    "registered": true,
+    "status": "partial"
+  },
+  {
+    "id": "ai_quant_lab",
+    "label": "Ai Quant Lab",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "akshare",
+    "label": "Akshare",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "algo_trading",
+    "label": "Algo Trading",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "alpha_arena",
+    "label": "Alpha Arena",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "alt_investments",
+    "label": "Alt Investments",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "asia_markets",
+    "label": "Asia Markets",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "auth",
+    "label": "Auth",
+    "stage": 1,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "backtesting",
+    "label": "Backtesting",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "chat_mode",
+    "label": "Chat Mode",
+    "stage": 5,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "code_editor",
+    "label": "Code Editor",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "contact",
+    "label": "Contact",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "crypto_center",
+    "label": "Crypto Center",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "crypto_trading",
+    "label": "Crypto Trading",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "dashboard",
+    "label": "Dashboard",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "data_mapping",
+    "label": "Data Mapping",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "data_sources",
+    "label": "Data Sources",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "dbnomics",
+    "label": "Dbnomics",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "derivatives",
+    "label": "Derivatives",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "devtools",
+    "label": "Devtools",
+    "stage": 3,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "docs",
+    "label": "Docs",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "economics",
+    "label": "Economics",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "equity_research",
+    "label": "Equity Research",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "equity_trading",
+    "label": "Equity Trading",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "excel",
+    "label": "Excel",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "file_manager",
+    "label": "File Manager",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "fno",
+    "label": "Fno",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "forum",
+    "label": "Forum",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "geopolitics",
+    "label": "Geopolitics",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "gov_data",
+    "label": "Gov Data",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "help",
+    "label": "Help",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "info",
+    "label": "Info",
+    "stage": 5,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "launchpad",
+    "label": "Launchpad",
+    "stage": 2,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "ma_analytics",
+    "label": "Ma Analytics",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "maritime",
+    "label": "Maritime",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "markets",
+    "label": "Markets",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "mcp_servers",
+    "label": "Mcp Servers",
+    "stage": 1,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "news",
+    "label": "News",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "node_editor",
+    "label": "Node Editor",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "notes",
+    "label": "Notes",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "polymarket",
+    "label": "Polymarket",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "portfolio",
+    "label": "Portfolio",
+    "stage": 1,
+    "registered": true,
+    "status": "partial"
+  },
+  {
+    "id": "portfolio_monitor",
+    "label": "Portfolio Monitor",
+    "stage": 4,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "privacy",
+    "label": "Privacy",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "profile",
+    "label": "Profile",
+    "stage": 1,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "quantlib",
+    "label": "Quantlib",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "recovery",
+    "label": "Recovery",
+    "stage": 1,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "relationship_map",
+    "label": "Relationship Map",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "report_builder",
+    "label": "Report Builder",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "screener",
+    "label": "Screener",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "settings",
+    "label": "Settings",
+    "stage": 1,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "setup",
+    "label": "Setup",
+    "stage": 1,
+    "registered": false,
+    "status": "missing"
+  },
+  {
+    "id": "support",
+    "label": "Support",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "surface_analytics",
+    "label": "Surface Analytics",
+    "stage": 3,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "terms",
+    "label": "Terms",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "trade_viz",
+    "label": "Trade Viz",
+    "stage": 4,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "trademarks",
+    "label": "Trademarks",
+    "stage": 5,
+    "registered": true,
+    "status": "missing"
+  },
+  {
+    "id": "watchlist",
+    "label": "Watchlist",
+    "stage": 2,
+    "registered": true,
+    "status": "missing"
+  }
+]

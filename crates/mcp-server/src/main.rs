@@ -73,33 +73,54 @@ struct Initialize {
     _meta: Option<serde_json::Map<String, Value>>,
 }
 
-pub async fn read_frame<R: AsyncBufRead + Unpin>(
+#[derive(Default)]
+struct FrameState {
+    bytes: Vec<u8>,
+    oversized: bool,
+}
+impl FrameState {
+    fn take(&mut self) -> Result<Vec<u8>, ()> {
+        let oversized = std::mem::take(&mut self.oversized);
+        let bytes = std::mem::take(&mut self.bytes);
+        if oversized {
+            Err(())
+        } else {
+            Ok(bytes)
+        }
+    }
+}
+// State lives outside select!, so cancelling a pending read cannot discard partial JSON.
+async fn read_frame_resume<R: AsyncBufRead + Unpin>(
     reader: &mut R,
+    state: &mut FrameState,
 ) -> Result<Option<Result<Vec<u8>, ()>>, std::io::Error> {
-    let mut frame = Vec::new();
-    let mut oversized = false;
     loop {
         let buffer = reader.fill_buf().await?;
         if buffer.is_empty() {
-            return if frame.is_empty() && !oversized {
+            return if state.bytes.is_empty() && !state.oversized {
                 Ok(None)
             } else {
-                Ok(Some(if oversized { Err(()) } else { Ok(frame) }))
+                Ok(Some(state.take()))
             };
         }
         let position = buffer.iter().position(|byte| *byte == b'\n');
         let count = position.map_or(buffer.len(), |index| index + 1);
-        if frame.len() + count > MAX_FRAME {
-            oversized = true;
+        if state.bytes.len() + count > MAX_FRAME {
+            state.oversized = true;
         }
-        if !oversized {
-            frame.extend_from_slice(&buffer[..count]);
+        if !state.oversized {
+            state.bytes.extend_from_slice(&buffer[..count]);
         }
         reader.consume(count);
         if position.is_some() {
-            return Ok(Some(if oversized { Err(()) } else { Ok(frame) }));
+            return Ok(Some(state.take()));
         }
     }
+}
+pub async fn read_frame<R: AsyncBufRead + Unpin>(
+    reader: &mut R,
+) -> Result<Option<Result<Vec<u8>, ()>>, std::io::Error> {
+    read_frame_resume(reader, &mut FrameState::default()).await
 }
 fn protocol_error(id: Value, code: i32, message: &str) -> Value {
     json!({"jsonrpc":"2.0", "id":id,"error":{"code":code,"message":message}})
@@ -233,6 +254,7 @@ async fn serve(
         }
     });
     let mut reader = BufReader::new(tokio::io::stdin());
+    let mut frame_state = FrameState::default();
     let admission = Arc::new(Semaphore::new(68));
     let workers = Arc::new(Semaphore::new(4));
     let recovery = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -248,7 +270,7 @@ async fn serve(
                 if let Some(Ok(key)) = completed { pending.remove(&key); }
                 continue;
             }
-            frame = read_frame(&mut reader) => frame?,
+            frame = read_frame_resume(&mut reader, &mut frame_state) => frame?,
         };
         let Some(frame) = frame else {
             break;
@@ -417,14 +439,11 @@ async fn serve(
                 continue;
             }
         };
-        if ![
-            "compute_discounted_cash_flow",
-            "calculate_historical_var",
-            "extract_financial_ratios",
-            "run_monte_carlo_simulation",
-        ]
-        .contains(&call.name.as_str())
-        {
+        if !types::tools().as_array().is_some_and(|tools| {
+            tools
+                .iter()
+                .any(|tool| tool["name"].as_str() == Some(call.name.as_str()))
+        }) {
             if send(&tx, protocol_error(id, -32602, "Unknown tool"))
                 .await
                 .is_err()
@@ -563,11 +582,30 @@ mod tests {
         assert!(read_frame(&mut reader).await?.is_none());
         Ok(())
     }
+    #[tokio::test]
+    async fn partial_frame_survives_cancelled_read() -> Result<(), Box<dyn std::error::Error>> {
+        let (mut input, output) = tokio::io::duplex(64);
+        let mut reader = BufReader::new(output);
+        let mut state = FrameState::default();
+        input.write_all(b"{\"id\":").await?;
+        assert!(tokio::time::timeout(
+            Duration::from_millis(5),
+            read_frame_resume(&mut reader, &mut state)
+        )
+        .await
+        .is_err());
+        input.write_all(b"103}\n").await?;
+        assert_eq!(
+            read_frame_resume(&mut reader, &mut state).await?,
+            Some(Ok(b"{\"id\":103}\n".to_vec()))
+        );
+        Ok(())
+    }
     #[test]
     fn strict_tool_arguments_and_output_schemas() {
         let schema = types::tools();
         if let Some(tools) = schema.as_array() {
-            assert_eq!(tools.len(), 4);
+            assert_eq!(tools.len(), 9);
             for tool in tools {
                 assert!(jsonschema::validator_for(&tool["inputSchema"]).is_ok());
                 assert!(jsonschema::validator_for(&tool["outputSchema"]).is_ok());

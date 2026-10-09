@@ -1,103 +1,101 @@
-from contextlib import asynccontextmanager, ExitStack
+from contextlib import asynccontextmanager, AsyncExitStack
 import logging
 import os
 from pathlib import Path
-from typing import Any
-
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
-
-from .agent import create_agent, _ensure_agents_memory, _remove_per_user_agents_memory
-from .config import DB_URL, SANDBOX_IMAGE
+from app.persistence import AsyncPostgresStore, AsyncPostgresSaver, AsyncConnectionPool
+from app.agent_runtime import AgentRuntime
+from app.native_engine import NativeEngine, set_engine
+from app.portfolio_repository import PortfolioRepository
+from app.checkpoint_migration import migrate_checkpoint_contract
+from .config import DB_URL
+from .auth import router as auth_router, validate_config, production
 from .routes import router, set_globals
-from .sandbox import init_sandbox_manager, get_sandbox_manager
-from .diagnostics import sanitize_error
+from .portfolio_routes import router as portfolio_router, set_repository
 from orchestrator.telemetry import initialize_telemetry
 from orchestrator.telemetry.http import ResearchTelemetryMiddleware
 
-# Setup logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
 
 
-_store: Any = None
-_checkpointer: Any = None
-_agent: Any = None
+async def _ensure_agents_memory(store):
+    from orchestrator.agent import _ensure_agents_memory as ensure
+
+    return await ensure(store)
+
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    global _store, _checkpointer, _agent
+async def lifespan(app):
+    if production():
+        validate_config()
     telemetry = initialize_telemetry()
-    stack = ExitStack()
-    manager = None
+    engine = None
     try:
-        logger.info("Initializing database connections...")
-        from langgraph.store.postgres import PostgresStore
-        from langgraph.checkpoint.postgres import PostgresSaver
-        from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
-        from research_schema import AnalysisReport
-
-        # Resource initialization
-        _store = stack.enter_context(PostgresStore.from_conn_string(DB_URL))
-        _checkpointer = stack.enter_context(PostgresSaver.from_conn_string(DB_URL))
-        
-        _store.setup()
-        _checkpointer.serde = JsonPlusSerializer(allowed_msgpack_modules=[AnalysisReport])
-        _checkpointer.setup()
-        
-        manager = init_sandbox_manager(SANDBOX_IMAGE)
-        _agent = create_agent(_checkpointer, _store)
-        set_globals(_store, _checkpointer, _agent)
-        
-        # Seed configurations
-        try:
-            _ensure_agents_memory(_store)
-            _remove_per_user_agents_memory(_store)
-        except Exception as e:
-            logger.warning(f"Failed to seed AGENTS.md at startup: {e}", exc_info=True)
-            
-        logger.info("Application started successfully.")
-        yield  # Hand over control to FastAPI execution context
-        
-    except Exception as e:
-        logger.error("Failed to initialize during startup: %s", sanitize_error(e))
-        raise
+        engine = NativeEngine()
+        async with AsyncExitStack() as stack:
+            store = await stack.enter_async_context(
+                AsyncPostgresStore.from_conn_string(DB_URL)
+            )
+            checkpointer = await stack.enter_async_context(
+                AsyncPostgresSaver.from_conn_string(DB_URL)
+            )
+            pool = AsyncConnectionPool(DB_URL, open=False, min_size=1, max_size=8)
+            await stack.enter_async_context(pool)
+            await store.setup()
+            await checkpointer.setup()
+            await migrate_checkpoint_contract(pool)
+            repository = PortfolioRepository(pool, store)
+            await repository.setup()
+            await _ensure_agents_memory(store)
+            set_engine(engine)
+            set_repository(repository)
+            set_globals(store, checkpointer, AgentRuntime(checkpointer, store, engine))
+            yield
     finally:
-        # Shut down execution before closing persistence, even if initialization failed.
+        set_globals(None, None, None)
+        set_repository(None)
+        set_engine(None)
         try:
-            if manager is not None:
-                manager.stop()
+            if engine is not None:
+                await engine.close()
         finally:
-            try:
-                stack.close()
-            finally:
-                _store = _checkpointer = _agent = None
-                set_globals(None, None, None)
-                telemetry.release()
+            telemetry.release()
 
 
-app = FastAPI(title="AI Chat Web", lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+app = FastAPI(title="Financial Research Terminal", lifespan=lifespan)
 app.add_middleware(ResearchTelemetryMiddleware)
+_origins = [
+    value.strip()
+    for value in os.getenv("OIDC_CLIENT_ORIGINS", "").split(",")
+    if value.strip()
+]
+if _origins:
+    if "*" in _origins:
+        raise ValueError(
+            "OIDC_CLIENT_ORIGINS must list explicit trusted frontend origins"
+        )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_origins,
+        allow_methods=["GET", "POST", "PUT", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
 
+app.include_router(auth_router, prefix="/api")
 app.include_router(router, prefix="/api")
+app.include_router(portfolio_router, prefix="/api")
+_frontend = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+if (_frontend / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=_frontend / "assets"), name="assets")
 
-@app.get("/")
-async def root():
-    frontend_path = Path(__file__).parent.parent / "static" / "app.py"
-    if frontend_path.exists():
-        return FileResponse(str(frontend_path))
-    return {"status": "ok", "message": "AI Chat API is running"}
 
-@app.get("/@vite/client")
-async def vite_client():
-    return Response(content="", media_type="text/javascript")
+@app.get("/{path:path}")
+async def frontend(path: str):
+    if path.startswith("api/") or path == "api":
+        raise HTTPException(404, "API route not found")
+    if (_frontend / "index.html").exists():
+        return FileResponse(_frontend / "index.html")
+    raise HTTPException(503, "Build the React frontend with npm run build in frontend/")

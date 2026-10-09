@@ -4,13 +4,13 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "deepagents>=0.7.19",
-    "deepagents-opensandbox>=1.0.2",
     "fastapi>=0.141.1",
+    "langchain[mcp]==1.4.3",
+    "requests>=2.31.0",
     "langchain-core>=1.5.4",
     "langchain-ollama>=1.1.0",
     "langgraph-cli[inmem]>=0.4.32",
     "langgraph-checkpoint-postgres>=3.1.2",
-    "opensandbox>=1.1.0",
     "opentelemetry-api==1.42.1",
     "opentelemetry-sdk==1.42.1",
     "opentelemetry-exporter-otlp-proto-grpc==1.42.1",
@@ -20,8 +20,7 @@ dependencies = [
     "psycopg[binary,pool]>=3.3.6",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.3",
-    "python-multipart>=0.0.32",
     "uvicorn>=0.53.0",
-    "streamlit>=1.57",
     "yfinance>=1.7.0",
+    "pyjwt[crypto]>=2.10,<3",
 ]

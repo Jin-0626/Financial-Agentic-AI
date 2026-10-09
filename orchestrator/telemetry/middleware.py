@@ -50,11 +50,13 @@ class ResearchTelemetry(AgentMiddleware):
         failure = category(error) if error else None
         if error is None and result is not None:
             if getattr(result, 'status', None) == 'error':
-                failure = 'validation' if name == 'AnalysisReport' else 'runtime'
+                failure = 'runtime'
             try:
                 payload = json.loads(getattr(result, 'content', ''))
             except (ValueError, TypeError):
                 payload = None
+            if isinstance(payload, dict) and "_evidence" in payload and "data" in payload:
+                payload = payload["data"]
             items = payload if isinstance(payload, list) else [payload]
             def failed(item):
                 if not isinstance(item, dict):

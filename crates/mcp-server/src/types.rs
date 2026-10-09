@@ -183,14 +183,60 @@ pub fn schemas() -> Value {
     json!({"snapshot":schema_for!(data_pipeline::Snapshot), "tools":tools()})
 }
 pub fn tools() -> Value {
-    json!([
+    let mut listed = json!([
+        {"name":"recover_opening_positions", "description":"Recover and replay-check undated legacy opening holdings", "inputSchema":schema_for!(RecoveryInput), "outputSchema":schema_for!(RecoveryResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
+        {"name":"portfolio_ledger", "description":"Decimal weighted-average accounting for BUY/SELL/DIVIDEND; no persistence", "inputSchema":schema_for!(LedgerInput), "outputSchema":schema_for!(LedgerResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
+        {"name":"portfolio_summary", "description":"Decimal valuation; exact symbols and same currency required", "inputSchema":schema_for!(SummaryInput), "outputSchema":schema_for!(PortfolioSummary), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
+        {"name":"portfolio_performance", "description":"Recorded snapshot performance or explicitly labelled fixed-holdings projection", "inputSchema":schema_for!(PerformanceInput), "outputSchema":schema_for!(PortfolioPerformance), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
+        {"name":"register_snapshot", "description":"Register a bounded normalized organization-scoped snapshot", "inputSchema":schema_for!(data_pipeline::Snapshot), "outputSchema":{"type":"object","properties":{"snapshot_id":{"type":"string"}},"required":["snapshot_id"]}, "annotations":{"readOnlyHint":false,"destructiveHint":false,"idempotentHint":true}},
         {"name":"compute_discounted_cash_flow", "description":"DCF from an explicitly registered dated forecast and historical statements", "inputSchema":schema_for!(DcfArgs), "outputSchema":schema_for!(Envelope<DcfResult>), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"calculate_historical_var", "description":"One-day historical and normal-parametric VaR/ES from adjusted daily prices", "inputSchema":schema_for!(RiskArgs), "outputSchema":schema_for!(Envelope<RiskAnalysis>), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"extract_financial_ratios", "description":"Ratios for an exact reporting-period end date; missing inputs remain unavailable", "inputSchema":schema_for!(RatioArgs), "outputSchema":schema_for!(Envelope<RatioResult>), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"run_monte_carlo_simulation", "description":"Reproducible seeded GBM terminal scenarios, not price predictions", "inputSchema":schema_for!(SimulationArgs), "outputSchema":schema_for!(Envelope<MonteCarloAnalysis>), "annotations":{"readOnlyHint":false,"destructiveHint":false,"idempotentHint":true}}
-    ])
+    ]);
+    if let Some(tools) = listed.as_array_mut() {
+        for tool in tools {
+            tool["outputSchema"]["type"] = json!("object");
+        }
+    }
+    listed
 }
 pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<WorkerJob, ToolError> {
+    if matches!(
+        name,
+        "recover_opening_positions"
+            | "portfolio_ledger"
+            | "portfolio_summary"
+            | "portfolio_performance"
+            | "register_snapshot"
+    ) {
+        match name {
+            "recover_opening_positions" => {
+                let _: RecoveryInput = parse(args)?;
+            }
+            "portfolio_ledger" => {
+                let _: LedgerInput = parse(args)?;
+            }
+            "portfolio_summary" => {
+                let _: SummaryInput = parse(args)?;
+            }
+            "portfolio_performance" => {
+                let _: PerformanceInput = parse(args)?;
+            }
+            "register_snapshot" => {
+                let s: data_pipeline::Snapshot = parse(args)?;
+                s.validate()?;
+            }
+            _ => unreachable!(),
+        }
+        return Ok(WorkerJob {
+            name: name.into(),
+            arguments: args.clone(),
+            snapshot_id: String::new(),
+            traceparent: None,
+            tracestate: None,
+        });
+    }
     let (ticker, kind, explicit) = match name {
         "compute_discounted_cash_flow" => {
             let input: DcfArgs = parse(args)?;
@@ -279,6 +325,26 @@ pub fn compute(
     cancel: &CancellationToken,
 ) -> Result<Value, ToolError> {
     match job.name.as_str() {
+        "recover_opening_positions" => {
+            serde_json::to_value(recover_opening_positions(&parse(&job.arguments)?)?)
+                .map_err(|_| invalid())
+        }
+        "portfolio_ledger" => Ok(
+            serde_json::to_value(portfolio_ledger(&parse(&job.arguments)?)?)
+                .map_err(|_| invalid())?,
+        ),
+        "portfolio_summary" => Ok(serde_json::to_value(portfolio_summary(&parse(
+            &job.arguments,
+        )?)?)
+        .map_err(|_| invalid())?),
+        "portfolio_performance" => Ok(serde_json::to_value(portfolio_performance(&parse(
+            &job.arguments,
+        )?)?)
+        .map_err(|_| invalid())?),
+        "register_snapshot" => {
+            let s: data_pipeline::Snapshot = parse(&job.arguments)?;
+            Ok(json!({"snapshot_id":store.import(s)?}))
+        }
         "compute_discounted_cash_flow" => {
             let input: DcfArgs = parse(&job.arguments)?;
             let historical = store.load(&job.snapshot_id, &input.ticker, "statements")?;
@@ -375,6 +441,9 @@ pub fn error_reply(error: ToolError) -> WorkerReply {
     }
 }
 pub fn validate_output(name: &str, value: &Value) -> bool {
+    if value["status"] == "error" {
+        return serde_json::from_value::<Envelope<Value>>(value.clone()).is_ok();
+    }
     let list = tools();
     let Some(tool) = list
         .as_array()

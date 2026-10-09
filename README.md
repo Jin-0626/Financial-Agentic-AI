@@ -1,294 +1,120 @@
-# Financial Research Deep Agent
+# Financial Research Terminal
 
-A financial research assistant with a Streamlit chat interface, a FastAPI backend,
-PostgreSQL conversation persistence, and organization-scoped Python execution through
-OpenSandbox. Built with Deep Agents, LangGraph, and LangChain.
+React + FastAPI + Deep Agents + Rust. Portfolio and Research have independent sidebar
+pages in a shared terminal shell. `/` opens Portfolio and automatically selects the
+previously selected or first saved portfolio for the current organization/user.
 
-[Quick start](#quick-start) · [Configuration](#configuration)· [Usage](#usage) ·
-[Architecture](#architecture) · [Tests](#tests) · [Troubleshooting](#troubleshooting)
+## Run locally
 
-## Features
-
-- Market quotes, company fundamentals, historical prices, financial news, and treasury data.
-- Specialist agents for financial research and analysis, with inherited financial tools.
-- CSV and Excel analysis: small inputs are included in agent context; larger inputs use
-  the organization's sandbox when execution is available.
-- Saved conversation history and persistent agent memory through PostgreSQL.
-- Per-organization sandbox provisioning and idle cleanup, with file-ownership checks.
-- Sanitized execution diagnostics and explicit provider failures, including partial
-  treasury results that preserve valid data.
-
-> [!NOTE]
-> Research depends on retrieved evidence and provider availability. Prompt rules reduce
-> unsupported claims but do not guarantee factual accuracy. Review source data and
-> calculations before using a generated report.
-
-## Quick start
-
-### Prerequisites
-
-- Python **3.12 or newer** and **uv**.
-- A running PostgreSQL database with credentials authorized to create the persistence tables.
-- Access to the configured Ollama model: `ollama:gpt-oss:120b-cloud`.
-- Docker and an authenticated OpenSandbox management server for Python script execution.
-  The application can run with reduced capabilities when the sandbox is unavailable.
-
-Run commands from the repository root. Setup and startup commands below work in
-PowerShell, Bash, and similar shells, except where a platform is explicitly named.
-
-### 1. Install dependencies
-
-```sh
-uv sync --frozen
-```
-
-Copy the environment template using the command for your shell:
+Python 3.12+, Node 20.19+/22.12+, Rust 1.99 and PostgreSQL are required.
+Copy `.env.example` to `.env` and configure DB_URL and the model/provider settings.
 
 ```powershell
-# PowerShell
-Copy-Item .env.example .env
+uv sync --frozen
+cargo build --locked
+npm --prefix frontend ci
+npm --prefix frontend run build
+uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11
 ```
 
-```sh
-# Bash
-cp .env.example .env
-```
+The explicit `--http h11` uses Uvicorn's supported Python HTTP parser and avoids
+automatic selection of an incomplete optional `httptools` installation.
 
-Edit `.env` and replace placeholders with your existing database, model-provider,
-and sandbox settings. PostgreSQL is not included in the Compose recipe. Backend
-startup initializes the PostgreSQL store and checkpoint tables.
+Open http://127.0.0.1:8000. For development, run `npm --prefix frontend run dev`;
+Vite proxies `/api` to port 8000. The backend serves the built React SPA and returns
+404 for unknown API routes. Streamlit and the retired sandbox are removed.
 
-### 2. Connect the sandbox management server
-
-If you already have a management server, set `OPEN_SANDBOX_DOMAIN` and use its existing
-API key. To start the included local Docker recipe instead:
-
-```sh
-docker compose --env-file .env config --quiet
-docker compose --env-file .env up -d opensandbox
-```
-
-> [!IMPORTANT]
-> Do not start another management server on an occupied port 8080. This Compose recipe
-> mounts the Docker socket and is intended for a trusted local environment. Preserve
-> another deployment's existing configuration and network policies.
-
-### 3. Start the backend
-
-In terminal 1:
-
-```sh
-uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000
-```
-
-### 4. Start the UI
-
-In terminal 2:
-
-```sh
-uv run --frozen python -m streamlit run static/app.py
-```
-
-Open **http://localhost:8501**. If the backend is already running, start only the UI.
-The UI and backend are separate processes; no root `app.py` launcher or `langgraph dev`
-command is required. Stop each process with Ctrl+C.
-
-## Configuration
-
-Use [.env.example](.env.example) as the starting point. Keep actual credentials in
-ignored local files or your process environment.
-
-| Setting | Purpose |
-| --- | --- |
-| `DB_URL` | PostgreSQL connection URL for conversation checkpoints and persistent memory. |
-| `OLLAMA_URL` | Model-provider endpoint; use this spelling, not `OLALAMA_URL`. |
-| `OLLAMA_API_KEY` | Model-provider credential when required by the configured service. |
-| `OPEN_SANDBOX_DOMAIN` | Management API host and port, typically `localhost:8080`. |
-| `OPEN_SANDBOX_API_KEY` | Existing management-server API key; authentication stays enabled. |
-| `OPEN_SANDBOX_USE_SERVER_PROXY` | Use the management server's proxy when direct container endpoints are inaccessible. |
-| `OPEN_SANDBOX_CONFIG_FILE` | Optional readable server TOML; its `server.api_key` overrides the environment key. |
-| `SANDBOX_IMAGE` | Code-interpreter image used for execution containers. |
-| `FMP_API_KEY` | Optional Financial Modeling Prep credential. |
-| `ALPHA_VANTAGE_API_KEY` | Optional Alpha Vantage credential for scripts that use it. |
-| `BACKEND_URL` | UI's backend address; defaults to `http://localhost:8000`. Set in the UI process environment. |
-
-The backend loads root `.env` without replacing existing process variables. Explicit
-server TOML takes precedence for sandbox authentication. The shared server launcher
-preserves a selected TOML's full configuration; mount that file and use its
-container-readable path if configuring the server container this way. The SDK sends
-credentials using the management API's `OPEN-SANDBOX-API-KEY` header.
-
-Restart the backend after editing its environment. Restart the UI after changing
-`BACKEND_URL`; the UI does not independently load root `.env`. Compose also gives shell
-variables precedence over `.env`. Changed container environment requires recreation:
-
-```sh
-docker compose --env-file .env up -d --force-recreate opensandbox
-```
-
-## Usage
-
-Ask a question in the UI, choose a conversation, or upload a CSV or `.xlsx` workbook
-for analysis. File parsing depends on the installed pandas reader and Excel engine;
-legacy workbook formats may require additional support.
-
-Example research prompt:
-
-> Research Focus Point Holdings Berhad (Bursa Malaysia 0157 / 0157.KL). Retrieve
-> financial statements and valuation data, cite the evidence used, and identify
-> unavailable data without inventing peers, catalysts, or news.
-
-The API documentation is available at **http://127.0.0.1:8000/docs**. Common routes:
-
-| Route | Purpose |
-| --- | --- |
-| `POST /api/chat` | Send a message with thread, user, and organization identifiers. |
-| `POST /api/chat/stream` | Stream an agent response. |
-| `POST /api/files/upload` | Upload a file with an organization identifier. |
-| `POST /api/chat-with-file` | Analyze an uploaded file; a streaming variant is also available. |
-| `GET /api/threads` | List conversations. |
-| `GET /api/history/{thread_id}` | Retrieve conversation history. |
-| `GET /api/sandbox/status` | Inspect `available`, `active_count`, and sanitized `error`. |
-
-Sandbox availability is checked through container creation and execution, not only a
-health response. Host-side market tools remain independent of sandbox availability.
-Treasury results report `success`, `partial_success`, or `error`, preserve valid quotes,
-and separate direct yields from Yahoo yield-index proxies.
-
-## Structured financial research output
-
-The main DeepAgent returns a validated Pydantic `AnalysisReport` using LangChain
-ToolStrategy. Reports contain Executive Summary, Key Findings, Risks, Recommendations,
-Confidence, typed metrics, evidence sources, missing-data notices and sanitized tool errors.
-Multi-step research uses explicit planning and executed quantitative workpapers. Supported
-accounting and valuation findings appear in dedicated sections, values retain their supplied
-precision, and every structured report ends with an informational caveat.
-Readable text derives from that report. JSON-looking model text is never accepted as a
-replacement for the final graph structured_response.
-
-Chat requests default to `"response_schema": "analysis_report"`. Set it to null for ordinary
-chat, or use the Streamlit checkbox. Unsupported schema names fail explicitly. Invalid
-completion gets at most two correction retries before an exposed error.
-
-JSON endpoints return readable `reply` and typed `structured_response`. SSE emits progress,
-then one validated `report` event, then `done`. The structured_response field now lives in
-`report`, while done retains readable reply. Interrupted, failed and incomplete runs are
-not saved as completed reports. Restart both application processes after updating.
-
-See [the complete contract, examples, reference findings and migration notes](docs/structured-output.md).
+On Windows, native compilation needs Visual Studio C++ Build Tools. An existing Linux
+ELF build in `target/debug/financial-engine` can run through installed WSL; the adapter
+detects it when a Windows executable is absent. Override ENGINE_COMMAND with a trusted
+JSON argument array if needed, for example:
+`["wsl.exe","-d","Ubuntu-22.04","--","/mnt/d/Learning/Project/analysis_deepagent/target/debug/financial-engine"]`.
+Build inside WSL with the pinned toolchain, or supply a Windows executable. Python
+uses a small PostgreSQL thread bridge on Windows Proactor loops; Linux uses the native
+async driver. The graph and MCP execution remain asynchronous and cancellable.
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    UI[Streamlit UI] --> API[FastAPI backend]
-    API --> Agent[Deep Agent and specialists]
-    Agent --> Model[Ollama model]
-    Agent --> DB[(PostgreSQL)]
-    Agent --> Providers[Host financial data providers]
-    Agent --> Sandbox[Organization-scoped OpenSandbox execution]
-```
+- React owns presentation: command bar, statistics, holdings heatmap/table, performance,
+  sectors, transaction records, history, import/export, research streaming/activity and
+  provider financial statement tables.
+- Python owns exact-symbol provider retrieval, normalization, transactional persistence
+  and `create_deep_agent` configuration. No silent exchange suffix guessing or FX conversion.
+- Rust owns decimal ledger accounting, valuation, performance and quantitative tools.
+  Financial results are decimal strings; charts use finite numeric values.
+- The LangChain `MCPAdapter` is pinned through `langchain[mcp]`. Connections are bounded
+  and organization-scoped. Missing Rust infrastructure fails explicitly; there is no
+  Python calculation fallback.
+- Deep Agents uses native planning/delegation and isolated specialists. `/scripts/` is
+  a shared read-only folder with curated, bounded script execution. Skills are explicitly
+  supplied to specialists. Existing script limits and hash checks remain in force.
+- Checkpoints use org/user-prefixed thread IDs. Memory uses `(memories,org,user)`;
+  ambiguous old user-only memory remains preserved and is not copied across organizations.
+  Retired report channel references are archived in checkpoint_legacy_contracts; original
+  checkpoint blobs and messages remain intact. Historical scoped thread IDs receive
+  ownership metadata so history listings do not deserialize other workspaces.
 
-| Directory | Contents |
-| --- | --- |
-| `app/` | API routes, agent configuration, persistence lifecycle, financial tools, and sandbox management. |
-| `static/` | Streamlit UI entrypoint. |
-| `_tools/` | Uploaded-file parsing helpers. |
-| `scripts/` | Provider clients and analytics/reporting scripts. |
-| `skills/` | Runtime agent skill packages. |
-| `deployment/` | Shared sandbox credential resolver and server launcher. |
-| `tests/` | Fake-client regression tests. |
-| `.github/workflows/` | GitHub Actions checks. |
+## Portfolio contract
 
-> [!NOTE]
-> This checkout currently contains only a placeholder in `skills/`. Restore the intended
-> `SKILL.md` packages there before expecting skill-based workflows. The local coding-agent
-> `.agents/` directory is separate and excluded from publication.
+Create an empty portfolio; add BUY/SELL/DIVIDEND transactions. Holdings derive from a
+weighted-average ledger. Sell quantities cannot exceed holdings; dividends use quantity
+and amount per share. Repeating a transaction ID is idempotent; conflicting details fail.
+The UI refreshes quotes every five minutes while visible and supports manual refresh.
 
-## Tests
+PostgreSQL portfolio documents use transactional row/advisory locks and revisions.
+Existing LangGraph portfolio records retain IDs and are copied non-destructively with
+SQL backups and migration markers. Undated opening holdings stay explicitly identified;
+Rust recovers/checks their ledger when possible without inventing purchase dates. To
+export an undated legacy opening position, create a new portfolio from transactions
+with your actual purchase dates. Original records remain available as a reference.
 
-```sh
+JSON imports use the Fincept export contract: `format_version`, `portfolio_name`, `owner`,
+`currency`, `export_date`, `transactions` with date/symbol/type/quantity/price/notes.
+Exports preserve transaction IDs and add the benchmark. Import modes are **New** and
+**Merge**, with preview/hash/revision validation followed by an atomic commit. Holdings-only
+imports are rejected. Same-day transaction order is retained.
+
+Recorded performance uses saved valuations, common benchmark dates and an end-of-period
+trade-flow adjustment. Sparse snapshots limit accuracy. Fixed-holdings adjusted-price
+projections are labelled separately. Neither includes cash, fees, taxes or FX; mixed
+currency comparisons fail rather than returning misleading totals.
+
+Portfolio APIs are under `/api/portfolio`: list, create, load/update/delete, symbols,
+transactions, summary, export, import/preview and import/commit. `revision` protects
+concurrent edits. Production portfolio access stays disabled until server-authenticated
+organization/user identity is implemented.
+
+## Research contract
+
+`/api/chat` returns `{success,result,todos,files,thread_id,error}`. `result` is readable
+Markdown. SSE `/api/chat/stream` emits progress, tool activity, financial_statements and
+one final `done` envelope. A missing final answer or truncated stream is not success.
+Internal evidence receipts stay in message artifacts; provider/native receipt integrity,
+role restrictions and token/tool limits remain enforced. No AnalysisReport model or
+schema completion tool is used. The old request selector `analysis_report` remains a
+transport compatibility alias; saved legacy JSON is rendered as readable text.
+
+DCF uses explicit registered forecast assumptions and validated historical snapshots.
+Risk/ratio tools fetch exact-symbol normalized snapshots or reuse supplied snapshot IDs.
+Curated scripts and attribution are documented in `scripts/data_sources/README.md`
+and `NOTICE.md`. Standalone financialanalysis/report-generator CLIs remain available;
+they are not a second live calculation path for the web application.
+
+## Verification
+
+```powershell
+cargo test --locked
+cargo fmt --all --check
+cargo clippy --locked --workspace --all-targets -- -D warnings
 uv run --frozen python -B -m unittest discover -s tests -v
+npm --prefix frontend run build
+cd frontend
+npx playwright install chromium
+npm test
 ```
 
-Additional checks:
-
-```powershell
-# Windows
-uv pip check --python .venv/Scripts/python.exe
-```
-
-```sh
-# Linux/macOS
-uv pip check --python .venv/bin/python
-```
-
-```sh
-docker compose --env-file .env config --quiet
-```
-
-The 64 regression tests cover sandbox failures and retries, concurrent provisioning,
-cleanup races, provider outcomes, organization file ownership, specialist tools, backend
-initialization, persistence cleanup, and UI backend configuration. GitHub Actions installs
-frozen dependencies and runs fake-client tests plus Compose validation without live
-credentials. These checks do not prove live provider or infrastructure availability.
-
-## Troubleshooting
-
-| Symptom | What to check |
-| --- | --- |
-| Windows error 10048 or address already in use | A backend is already listening. Reuse it or select another port; do not start two backends on port 8000. |
-| UI opens but requests fail | Confirm the backend is running and the UI process has the correct `BACKEND_URL`. |
-| PostgreSQL startup failure | Confirm `DB_URL`, database reachability, credentials, and table-creation permissions. |
-| `INVALID_API_KEY` | Match the effective application and management-server keys; inspect environment/TOML precedence, then restart the backend. |
-| Sandbox creation works but readiness fails | If direct endpoints are unreachable, enable `OPEN_SANDBOX_USE_SERVER_PROXY=true`. |
-| Empty news or unavailable quotes | Inspect actual provider results; an empty result is distinct from a failed request. |
-| Agent cannot use expected skills | Restore the missing runtime packages under `skills/`. |
-
-For alternate ports, start the backend with `--port 18001`. Then set the UI address
-in terminal 2 before launching Streamlit:
-
-```powershell
-# PowerShell
-$env:BACKEND_URL = 'http://127.0.0.1:18001'
-uv run --frozen python -m streamlit run static/app.py --server.port 18501
-```
-
-```sh
-# Bash
-BACKEND_URL=http://127.0.0.1:18001 uv run --frozen python -m streamlit run static/app.py --server.port 18501
-```
-
-## Publishing to GitHub
-
-Review the proposed file set before committing. `.env`, `sandbox.toml`, local agent state,
-and generated files are ignored. Rotate any active credential previously exposed in
-source or terminal output. Create an empty GitHub repository, replace the placeholder
-URL below, and run:
-
-```sh
-git add .
-git diff --cached --stat
-git commit -m "Prepare financial research application"
-git branch -M main
-git remote add origin <YOUR_GITHUB_REPOSITORY_URL>
-git push -u origin main
-```
-
-### News search
-
-Set `TAVILY_API_KEY` in your local `.env` and restart FastAPI to enable Tavily as
-`financial_news`'s primary source. The existing tool accepts `symbol`, `count`
-(1-20), and optional `query` with a verified company name or event. Searches use
-Tavily's news topic and return article URLs, snippets and available publication
-dates; generated search answers are disabled. FMP and Yahoo remain fallbacks.
-Missing credentials, empty searches and provider failures are reported separately.
-A failed Tavily request remains visible when a fallback returns articles.
-The search runs in the application process and does not require a sandbox.
-
-## Observability
-
-Phase 1 adds privacy-safe OpenTelemetry request, model, specialist, tool, and report spans.
-See [local Collector setup, metrics, propagation fixture, and verification](docs/observability.md).
-
-Native engine implementation and local ingestion: [Phase 2 native engine](docs/native-engine.md).
+Set ENGINE_TEST_COMMAND to a JSON executable argument array for Rust integration tests,
+TEST_DB_URL for isolated PostgreSQL tests, and TRACE_FIXTURE_COMMAND for the optional
+native telemetry fixture. PLAYWRIGHT_CHANNEL=chrome uses installed Chrome locally.
+CI runs Rust checks on Linux and Windows, database integration on Linux, and React browser
+tests. It no longer references the removed sandbox deployment.

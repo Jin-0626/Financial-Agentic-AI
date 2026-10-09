@@ -1,0 +1,4942 @@
+{
+  "upstream": "https://github.com/Fincept-Corporation/FinceptTerminal",
+  "license": "See LICENSE; preserve upstream headers and notices",
+  "runtime_source": "local files only; external sample folder not required",
+  "scripts": [
+    {
+      "file": "abs_data.py",
+      "sha256": "6c5865133eae01388310bbd80e9e2237b04843ff6785be3ee398fab8f0d5945d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "acled_data.py",
+      "sha256": "e4e56ecec32071079656563e2d0f8a8abb666f948e78663fea7e6efd1f3a3f6f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "adb_data.py",
+      "sha256": "1b497f48f857810573f7227d1a0456feb248140c348576104e0c528fe3dcc717",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing",
+        "urllib",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "adb_data_extended.py",
+      "sha256": "49d668c6a2e50a56496a9aa584f3d7f68c8cf042491ac7e2e5b56999ac5f631c",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "afdb_data.py",
+      "sha256": "426cda79eb0c07228243b9bd37bb9b1b94839120d6a79a3b05b65be587930002",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "aisstream_data.py",
+      "sha256": "9f25c4a82cd6d5f90f2354ae150f62f13e7bb441c115e7d62416f35f05ea4fc4",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_alternative.py",
+      "sha256": "6899c22d434c007a07fd49055d6354a34f04bbe4da9e5270ae3a96314d5e8b01",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_analysis.py",
+      "sha256": "5d19c63bf9c359de56b6ce317e8a0196e5c8ff921b60db5bd4ea3d211d0f1c9d",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_bonds.py",
+      "sha256": "fe7be18906916b6666ad42a9096c695e3acf4ea5f366d4f9768a7b01d80c8ffa",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_company_info.py",
+      "sha256": "558c67e740d836f71c550238e50d85ddda77dce3ce1d63874782872525100e79",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_crypto.py",
+      "sha256": "e83822d788b417bc844321d40db4b52d20ab9e27c9a52f1763ef11e14bb6dc49",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_currency.py",
+      "sha256": "4878395ba35d6b494763270d6b707bc09d3af33be54a1abfa47f6fb0fb98584d",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_data.py",
+      "sha256": "e4fea97200d1a01fa95e7d1c51ac63c0e67f9f167dba78977206c1a89e915831",
+      "imports": [
+        "akshare",
+        "akshare_alternative",
+        "akshare_analysis",
+        "akshare_bonds",
+        "akshare_derivatives",
+        "akshare_economics_china",
+        "akshare_funds_expanded",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_derivatives.py",
+      "sha256": "613104fe5acff5f723721c4f96f9d79723fafdd0e6aa47157253fc17cd309289",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_economics_china.py",
+      "sha256": "9e1694a77ff61344f4ef326a8c950888801d4e128fa6dc7ca37e48e3f5efbe9c",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_economics_global.py",
+      "sha256": "8d68e3f7ffab8764e81a24e06557c72fb9255c061773849a45b1aa2d1b560245",
+      "imports": [
+        "datetime",
+        "json",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_energy.py",
+      "sha256": "e4e67991e209cae935e89da2df199e6d92946c9661c05778a18a58a74186a724",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_funds_expanded.py",
+      "sha256": "564d8e465595ad003812220886a8a5b30a2622237fc00213be0004601dae04a9",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_futures.py",
+      "sha256": "d11096702c158c45335ca05f9cd521e16b79cd8d0804a25873c466ea8b4a5b55",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_index.py",
+      "sha256": "85dcab9b6a8daacade3bde83c20826c06b44a9b959ffa21799b242f8f4230015",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "requests",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_macro.py",
+      "sha256": "4bb97a772d9cb8fb1aed6068911c6a718848a1a3582a0cb42333afe28c5d495f",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_misc.py",
+      "sha256": "b9ece350951851e8648c747fc1b75ca221425951f67daf0eef4f12493064de30",
+      "imports": [
+        "akshare",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_news.py",
+      "sha256": "d3a60cd0696a9f7826bef72d8fc38e096403f97e83b073140842b443ec3582a7",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_reits.py",
+      "sha256": "327d28f5cfc1867043f898eeca2dcaf71bd4240f6e4463d29bd5618d1c3e12ca",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_board.py",
+      "sha256": "b0e5296981d3cb306ac6f7531276fd611bd62678abcafac37d19f7247047d33e",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_financial.py",
+      "sha256": "bfca649e70e10a813a177bec7a7f866d0372c038386852eabc8aecfcd7d659e0",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_funds.py",
+      "sha256": "774946226ddda8711a956b79179bd35684a79693e3fc2650aef652d2810bb2f6",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_historical.py",
+      "sha256": "5ab650f57d10cc0796ad5593478f3f0967d266e356a243c534c0d1c731215fe1",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_holders.py",
+      "sha256": "4ea47f53feb4dab66f0c7030a1deb5365f0df3812cc280f36eb111938546d554",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_hot.py",
+      "sha256": "9c30e25f9077c561b4e743f27835101a1a1d21c7ea752b1b08211bf8e231164d",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_margin.py",
+      "sha256": "be5cd37716a98fffb0eb8720bfe642ccb72734d092db38add37edf338bd87d0a",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "akshare_stocks_realtime.py",
+      "sha256": "69bb348fb636d17c3ac3a247c86a55a29b1b332f4c2960b2b37c18e78f4fc8c7",
+      "imports": [
+        "akshare",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "alpha_spread_data.py",
+      "sha256": "495b0c32b7345d2ef314841f42710d1442e9ef69c23d8003c4de6f96abe93a2b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "alpha_vantage_extra_data.py",
+      "sha256": "9a90cbb25d2783326c7a2565cd13742de247d2ad467e2d7ff2a22262690cb159",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "alphavantage_data.py",
+      "sha256": "c65d42cc6f93bde0db5bde5fd53d069b813760496a28fb3ec2c9dd4c1fe4d2a2",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "alternative_me_data.py",
+      "sha256": "2b1b6736ba2b44d62bcc6a6ab6f37645d415916b2101370c694b7d428d8e99b6",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "apply_portfolio_translations.py",
+      "sha256": "6fa6b294f237cccad9b215f1f6491e1282240ddc9e17c2d65c26a1b34e73db2c",
+      "imports": [
+        "__future__",
+        "io",
+        "json",
+        "pathlib",
+        "sys",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "arxiv_data.py",
+      "sha256": "a2217c52c41c40ef1ffbec85bf264c05817bb7cf66c7e0a7bb135d7809eb6258",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "baostock_corporate_actions.py",
+      "sha256": "4b710d583bb2a42f7f6c13ea968650ec7ad9afc9a4e773bb9083a357c29116b3",
+      "imports": [
+        "baostock",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "pathlib",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "baostock_daily_backfill.py",
+      "sha256": "6863083b40199e3899c58c4bdb5ed02c4c96662cdef052901fdd414fe4404a67",
+      "imports": [
+        "baostock",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "pathlib",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "baostock_data.py",
+      "sha256": "27bcf0d7650d4a42f4607defd8ad67f8f88ac654999aa68235e20c2e2c44c7c8",
+      "imports": [
+        "baostock",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "baostock_fundamentals_quarterly.py",
+      "sha256": "7765ab19ed1be2640580c47ceae9582a23b63acc55496bb7194604ffa78be420",
+      "imports": [
+        "baostock",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "pathlib",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bcb_data.py",
+      "sha256": "dfebb73d1e12a48ced2189bb38a53a120bf5e59d7d1a481bae75a8f3b4d58e27",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bea_data.py",
+      "sha256": "1c65e4e08225e77b45bd58485b329b4e534e9cf7f184cbe90c24cd38f0539ed4",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bis_data.py",
+      "sha256": "aaccd1507a3b092a3c34a7e4fe2676ec0ee90d976a2eebd8ca923a031ac33f15",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "collections",
+        "datetime",
+        "html",
+        "json",
+        "math",
+        "random",
+        "re",
+        "sys",
+        "typing",
+        "urllib",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bis_data_extended.py",
+      "sha256": "bf0ff4a9a0e2b5efbc009021cedaa0017e832ccc75d649c30b5e1093a4ed7feb",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bis_stats_data.py",
+      "sha256": "a84f962f4b4f86623726f903c39481f88b8aa85700d620f5c451e55837226338",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "blockchain_com_data.py",
+      "sha256": "2901d2e42e2219ce0b1feb0a53aa55d53f9d14ef0314c9686d2130b94278315e",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bls_data.py",
+      "sha256": "14ae107ca698c80641ceb3b34465034685eb55d9ee7af9ffde5d6af0ef9d67a2",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "datetime",
+        "io",
+        "json",
+        "os",
+        "pandas",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "bnm_data.py",
+      "sha256": "9a18fefb259ea2168bf0114ddae1c2402abe57d0fbc9480518a06b79ce3834cf",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "ssl",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": true,
+      "status": "curated provider; bounded execution",
+      "source_path": "fincept-qt\\scripts\\bnm_data.py",
+      "purpose": "Malaysia FX, OPR and lending rates",
+      "dependencies": [
+        "requests"
+      ],
+      "api_key_environment": null,
+      "entry_points": [
+        "BNMWrapper.get_currency",
+        "BNMWrapper.get_opr",
+        "BNMWrapper.get_interest_rates"
+      ],
+      "integration_notes": "Review _BnmTlsAdapter: upstream reduces TLS security level. Preserve reported unit multipliers; do not confuse per-100-unit quotes with per-unit quotes."
+    },
+    {
+      "file": "bnr_data.py",
+      "sha256": "2e7e88445156036ec60882711039df690f85952e2a8f1da00f32235fb54af0fc",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "boc_data.py",
+      "sha256": "5302a8c2a8456a1fafa2113d3e7c4850964c0b975d8956db363937468f39c620",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "boe_data.py",
+      "sha256": "34f5b37114802eace5de6b23ed0ba1af1b1db610fe670ea8821f95df4d7cb1b3",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "boi_data.py",
+      "sha256": "4ae0c0ff5757e1af383396c88b9c845566ac4789978711de27b51c5a4ecd8892",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "boj_fetcher.py",
+      "sha256": "77d2852bd5afc48d02cd8bc7c09c6499de05c3a83dd5fe4ad53c775ea89720b7",
+      "imports": [
+        "bs4",
+        "datetime",
+        "json",
+        "numpy",
+        "pandas",
+        "requests",
+        "sys",
+        "urllib",
+        "warnings"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "build_akshare_symbols_db.py",
+      "sha256": "26404be3d4e3002e6599d1dfb1821ddf580443e51d82292f4f8c1d647ba8c872",
+      "imports": [
+        "akshare",
+        "datetime",
+        "os",
+        "pandas",
+        "sqlite3",
+        "sys",
+        "traceback"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "canada_gov_api.py",
+      "sha256": "a71b3d28245ab32ae7c0b6675ac72071e2c6539b056895932bd6d8ad739d1de0",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "carbon_price_data.py",
+      "sha256": "e7541173d699f728bef5e6da44b20daaa42611d15a1fb21ba659b54341e58378",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cboe_data.py",
+      "sha256": "f10528b66f22ae7b3844c0752a7938270a3590ae0e86f456d9b1cedcbbdfc1d7",
+      "imports": [
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cboe_vix_data.py",
+      "sha256": "58806497a1af04c42a4e1248faa2712cbcfa43aade655b219bb36da5ae3d003d",
+      "imports": [
+        "csv",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "census_data.py",
+      "sha256": "bddbcab1df128f46c7393b91360fb46499b4967e03a7b0a35e67bb3cd936b89a",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "census_international_data.py",
+      "sha256": "781f6db22bbd497258fe670211db92e13ddd5eee6f063784fe56e9d333ca1945",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cftc_data.py",
+      "sha256": "b21c0c03ed2c07543a858f4f13a838adb96d7b494d08a8a537b4676fb43be74d",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "pandas",
+        "requests",
+        "sys",
+        "traceback",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "china_data_quality_checks.py",
+      "sha256": "ba1dd66b66322b5df0ae7c5ac158f0dd0967122723d49737d03ab598e7613bbb",
+      "imports": [
+        "datetime",
+        "hashlib",
+        "io",
+        "json",
+        "pathlib",
+        "sqlite3",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "china_data_unified_store.py",
+      "sha256": "814ae17cc59276520993f23e5845c5a8d284c384f33d91de5336e01a93cba097",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "pathlib",
+        "sqlite3",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "china_pipeline_scheduler.py",
+      "sha256": "4885f29b2dee265992ff76588c9724470fc906bb88a47ba5fedfa697f029b96a",
+      "imports": [
+        "baostock_corporate_actions",
+        "baostock_daily_backfill",
+        "baostock_fundamentals_quarterly",
+        "china_data_quality_checks",
+        "china_data_unified_store",
+        "cninfo_announcements_incremental",
+        "cninfo_entity_resolver",
+        "cninfo_pdf_downloader",
+        "cninfo_pdf_text_extractor",
+        "datetime",
+        "io",
+        "json",
+        "pathlib",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "climate_trace_data.py",
+      "sha256": "ee9c3eb1d05598467b2a7b6151b83fdee601ae5e6bae2c05e985371017e959ee",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cme_data.py",
+      "sha256": "e683f18e00c41137ddc5cb49e2da2560c41940f42f662a53ef4ba1d0316dd852",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cnb_data.py",
+      "sha256": "b60280c5e3b9136dc551cd2be573d838e2da2eb6d7a34682dbef31f5d3b929b4",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cninfo_announcements_incremental.py",
+      "sha256": "e7fa7b20c92b55b57d4b75bb495d925dd59b94a6b6e2e6aef88b73c3c35e9cf2",
+      "imports": [
+        "datetime",
+        "io",
+        "json",
+        "pathlib",
+        "re",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cninfo_data.py",
+      "sha256": "35ce26051cdfd7e2837129e890fe8f0b74904ac8d5410034a7e0c91923a336ee",
+      "imports": [
+        "cninfo",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "re",
+        "requests",
+        "sys",
+        "time",
+        "typing",
+        "warnings"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cninfo_entity_resolver.py",
+      "sha256": "1cafa31b262f4676f8dba17b36a24dea0ddc4cad7cf0a1a52c2ea32a11d14149",
+      "imports": [
+        "baostock",
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "pathlib",
+        "re",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cninfo_pdf_downloader.py",
+      "sha256": "b4dcf6ee61d3439c6631be317b906079ee6ee15860642297f0dbe9067d9d340c",
+      "imports": [
+        "datetime",
+        "hashlib",
+        "io",
+        "json",
+        "pathlib",
+        "re",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cninfo_pdf_text_extractor.py",
+      "sha256": "75f37a65fb83b9d530c5e61e3d4bd442395f6c011c644be463cd4de7f5dc787e",
+      "imports": [
+        "PyPDF2",
+        "datetime",
+        "hashlib",
+        "io",
+        "json",
+        "pathlib",
+        "pypdf",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cnstats_data.py",
+      "sha256": "41acb9081d9447d20e025e73ab806458280956f9aa9086f5e328a48bd5b2a124",
+      "imports": [
+        "argparse",
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "coincap_data.py",
+      "sha256": "df238a8fd750e65dceb8bbc0116d4cd950f71c27b5d36ddb1bcf4fe50a4dd0a4",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "coingecko.py",
+      "sha256": "3988013f7bd0ed29548fa21a99b2405341c4b6bba4deaba5616a7c8131b24eea",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "coinglass_data.py",
+      "sha256": "fd5baa57b1a0ff222a072bab58b96c39d67267129a41f49fdd66508f20b72569",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "coinmarketcap_data.py",
+      "sha256": "9fb8eb8bb90600fdd12a7bce0801e2121851c892cc402aa192fe80cac5528196",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "coinpaprika_data.py",
+      "sha256": "9c6b59b7af3cb04d223d5d2c3bb5ee84d72beee4035a35628eeba644d1d51982",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "comex_data.py",
+      "sha256": "6df1eac6451de54fb45cdcc0feddf2f617a6dde5dc83ed395221d38990b79942",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "compute_technicals.py",
+      "sha256": "264aa3116be922d8e2b0e5d8fd36f61254ba7e3375ec0b216b1fc4004863e20f",
+      "imports": [
+        "json",
+        "os",
+        "pandas",
+        "sys",
+        "technicals"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "congress_gov_data.py",
+      "sha256": "c5e878240d2445745175a6862544869fe6fda539dbcc7c8d34d4dd56def6c9f7",
+      "imports": [
+        "asyncio",
+        "base64",
+        "datetime",
+        "io",
+        "json",
+        "math",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "copernicus_data.py",
+      "sha256": "11528efdaaa871dccf34bd91ddf2a5ac17aa78cf541f31b639380da98b9be729",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "crossref_data.py",
+      "sha256": "b7154a222f76a1a71643527934603d6ba564303b7d43d055f74367c46b3f0d09",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "cryptocompare_data.py",
+      "sha256": "6e84152fac91884f9e2bdedc4248c67c67ba2a64792d1da3a53e21c0e4f276f0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "data_gov_hk_api.py",
+      "sha256": "a9592ac0e24134c1955816305f2666fe0504b8be30e9e9e23cec0cb993e3d0dd",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "data_world_data.py",
+      "sha256": "c81a672676abebc5bf6dbae734b780c3dd7bdd8ae73b22567c585d1e72e8c95f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "databento_fno_chain.py",
+      "sha256": "4bb83b4e72e62d4aec97f29379c8e9ed00ebdd441c40d30a5fe208e0ef5b573a",
+      "imports": [
+        "databento_provider",
+        "datetime",
+        "json",
+        "os",
+        "pandas",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "databento_live.py",
+      "sha256": "7f54626349a84a64cb34c1ac2238dc5f748fab64fdc7fa4459b9683305bcd933",
+      "imports": [
+        "databento",
+        "datetime",
+        "json",
+        "os",
+        "signal",
+        "sys",
+        "threading",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "databento_provider.py",
+      "sha256": "5d0e493160d12089f406a208a0c14fcfa39312c5355b58a2124bcacc0af0aaec",
+      "imports": [
+        "collections",
+        "databento",
+        "datetime",
+        "json",
+        "math",
+        "numpy",
+        "os",
+        "pandas",
+        "scipy",
+        "sys",
+        "tempfile",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "datagov_au_api.py",
+      "sha256": "05341417d41d5d83e272afb16cf60b13afc71a2b6eb7dbc9e9f5cf5fb21573fc",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "datagovsg_data.py",
+      "sha256": "77d05c8eb1b7a6155a71d3d36c6f6f40540f064b66f6ff42880c929884dbc2e0",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "datagovuk_api.py",
+      "sha256": "6cfb80397875101ed7e909a32600c8b2cba4d95e2f28e9ea423379af746153a0",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "defillama_data.py",
+      "sha256": "10796a3ffcdaef34d9112580003474b3eb84baefa6b858d7868a8040ba7b63b7",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "derivatives_pricing.py",
+      "sha256": "9c65622708d4990b3dc0cde20a1ab31d7aaf2a9da9204e45562fe011a39934e2",
+      "imports": [
+        "argparse",
+        "calendar",
+        "datetime",
+        "json",
+        "math",
+        "numpy",
+        "scipy",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "dexscreener_data.py",
+      "sha256": "b663f02f260f2c5e81d195f0b9e4ca7baee923d75b0d4eee0a8a6914961e0f8a",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "doing_business_data.py",
+      "sha256": "cd7aab23da7704429f18bb78faf75ca5631f06fb721c659e0b9a80db5e9d3bce",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ebrd_data.py",
+      "sha256": "6a42639084634d6415644c597ea9e1aa0deba647fc4a8438ab0f3d748e701d2a",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ecb_data.py",
+      "sha256": "6ff8d83cf062824da6928e48267ed3d4ba6c4841f5aa32ffa3bc398caa4c0773",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "datetime",
+        "json",
+        "pandas",
+        "sys",
+        "typing",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ecb_sdmx_data.py",
+      "sha256": "0f01a55d5fb7332f3e1a1c3aba7f2d23e277ce3bb1cdb128b8571360de8b089b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "econdb_data.py",
+      "sha256": "3c4e08a0d8f7f505bc4d8ee8b57d82473dd56ed81d89abbd4a4105ba8c2855c8",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "datetime",
+        "json",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "economic_calendar.py",
+      "sha256": "bbc5049408c5836ebd502b3c6c50e39d88c84757281a9fd25f37426cca067b8a",
+      "imports": [
+        "bs4",
+        "datetime",
+        "json",
+        "requests",
+        "requests_html",
+        "selenium",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eia_data.py",
+      "sha256": "a788002d53f27deab710a599e492f94eb8bd4b31fdba3505f4cc8ec1dd960e9f",
+      "imports": [
+        "asyncio",
+        "datetime",
+        "io",
+        "json",
+        "numpy",
+        "os",
+        "pandas",
+        "random",
+        "re",
+        "requests",
+        "sys",
+        "typing",
+        "warnings"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eia_electricity_data.py",
+      "sha256": "16b13124a6251eaaad1570159099c84f6c049daa6ec9337f3ba5afdcf72d7153",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eia_natural_gas_data.py",
+      "sha256": "6885692d5eb300fd6dbb55c58e668ac872d77e22f2051531b3509393cac84210",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eia_petroleum_data.py",
+      "sha256": "f3e5adaa41de7ad141ed6db15b89e518dd2157301bbba449424987c12eeeabd7",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eia_steo_data.py",
+      "sha256": "73cb121c4f0db1c57f30a6f550aa811689323f214325cc517dd7e3c065bb0b41",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eiu_data.py",
+      "sha256": "1c9354964994ed1c26f95844036201f822cb3fd068a48d6b4e79d1a10a90c4d1",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ember_energy_data.py",
+      "sha256": "f85fa212956a09416191215a89597696cd634dd3c42d11f499c7d39776b643d3",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "energy_transition_data.py",
+      "sha256": "992421bc23aa6a83cc5bd4243c0c77cef9d829b6954c9d16a4d72becad57095d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "entso_e_data.py",
+      "sha256": "2bfedae86331fabeee10fce7c86cb37353f1e408ae7ec86fa1fad2f326ff292f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eodhd_data.py",
+      "sha256": "f77dd2216a60b21c20b9009716d7ddab7bbabf20c3ff8f4cdf3dd3181880073c",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "estat_japan_api.py",
+      "sha256": "fa0c740c151bccd27588633628b7f5b997760c46a0508a40641f83bb93415fec",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eurostat_data.py",
+      "sha256": "c93963ddfc1a4c1e92ca178c62516022509f1751da1debffea3d6720a81d959b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "eurostat_extra_data.py",
+      "sha256": "f7ff62c89405e5cee22e6ae09c4ceb89d7efc7438a039b11493aaf34fa04827d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/__init__.py",
+      "sha256": "af0db1e522fb7b9eafaaae543bbcd98bcac91364dfaa185140b3557dc6816b7d",
+      "imports": [],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/broker_ws_bridge.py",
+      "sha256": "56c734b37567146b50a53169f829edb4f8a331018db98e743d57263833bf7c34",
+      "imports": [
+        "argparse",
+        "importlib",
+        "json",
+        "logging",
+        "os",
+        "signal",
+        "sys",
+        "threading",
+        "time",
+        "traceback",
+        "types",
+        "urllib",
+        "zmq"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/cancel_order.py",
+      "sha256": "e1d3ffb870b041ef53310e888759d62794641dc14b25ec84c6ee95f877eef549",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/exchange_client.py",
+      "sha256": "b28b2ba111405b6d8e6918cd575b09ef1a3fb307a96fd400e707e5deec567933",
+      "imports": [
+        "ccxt",
+        "json",
+        "os",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/exchange_daemon.py",
+      "sha256": "980d3311f6b57dd9586bc55c3f436bc3d8e62de5bf48272704687aab021a22bd",
+      "imports": [
+        "ccxt",
+        "exchange_client",
+        "json",
+        "orjson",
+        "os",
+        "signal",
+        "sys",
+        "time",
+        "traceback"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_balance.py",
+      "sha256": "526630bb62498393a9b2d8080f3f3efcb09cb2e9bfd04178bb3384dca13722ef",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_funding_rate.py",
+      "sha256": "7337e101a0573917c4986840f0618a0638c389a8d2824fe8d1de6a2e5228feb3",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_mark_price.py",
+      "sha256": "e10908aabcde48da37dc49d9038a87b602fc77b79cc3997b301a6c3873552723",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_markets.py",
+      "sha256": "87c24d3b900f8cec37a6bba3faef8ac47f24db9ac85397007bed6c86b8b37581",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_my_trades.py",
+      "sha256": "a8f545bf7b8b7e7572cb626575500a16da9e0fe9e6be6b5a35fb2035fbff1da6",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_ohlcv.py",
+      "sha256": "157661b1a62e16514c58ce7b031a0be4cbb3b494472bf1358ebb435a60ed1067",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_open_interest.py",
+      "sha256": "b43633e8bbaeacab19c3eec96267e3bdf317154e7a19076549142d9567c2ea8e",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_open_orders.py",
+      "sha256": "fb9644a8dc17a8acf2d20a54780de95b37e7865055d40fc1c98399d929c65f8d",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_orderbook.py",
+      "sha256": "a2183c54bd63efc501cb1c5baac35b6d8a0c40fe4da56314019ce143db6f75c7",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_positions.py",
+      "sha256": "ea2e22dbd9c80c6056c66709c18ded46027688f3c2ae5c28f08db10078423805",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_ticker.py",
+      "sha256": "5827cbafbf193114927b640488efd1d36eb03306b481a456a2d29b500e63434f",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_tickers.py",
+      "sha256": "83089b512b951fa542c63520bcb6324d238bae6005f24054f5df446f6b3777ec",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_trades.py",
+      "sha256": "2b61ead0c9fb52b17a37cf981718d3c694f99c4f8218920ec5df58908283d1ea",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/fetch_trading_fees.py",
+      "sha256": "ffceb43a6d06f27ea52434c33736b45a609d1dd742afdddb44fe6e7553c4d056",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/list_exchange_ids.py",
+      "sha256": "b7d812e70b6178b91e7e0b4341688a7b2eb1ff50fe6dc3da234dcc7b3ffe9584",
+      "imports": [
+        "ccxt",
+        "exchange_client"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/list_exchanges.py",
+      "sha256": "2a09f4fae1a6b5325d0c413d86e4b5ef6f81c333493768ac4c46e4f7b1fb28b0",
+      "imports": [
+        "ccxt",
+        "exchange_client"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/place_order.py",
+      "sha256": "925b6183f8fecf1a6a5a453ca2c31654a75df788ba5c566caf192a30b3ed8e0f",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/set_leverage.py",
+      "sha256": "2d5af56e937abaad2845b964004a44c60c5d5c5cbdc43024fafa2d66ce5d2499",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/set_margin_mode.py",
+      "sha256": "0b4cd296e82a5b770912a0f67246e8baf272a01a43e80b5e1cbe29a108375d1c",
+      "imports": [
+        "exchange_client",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/totp_gen.py",
+      "sha256": "dd20734a84ab09ffc797c40a474f99061ab92351c3ee45b6476605bb78c7b257",
+      "imports": [
+        "base64",
+        "hashlib",
+        "hmac",
+        "json",
+        "os",
+        "pyotp",
+        "struct",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchange/ws_stream.py",
+      "sha256": "50770dad13aac514bc1d8a8c060d969da8e074e7670e063c23646ad21ee07d2c",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "ccxt",
+        "concurrent",
+        "json",
+        "orjson",
+        "os",
+        "signal",
+        "sys",
+        "time",
+        "traceback",
+        "warnings"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "exchangerate_data.py",
+      "sha256": "6e1fdf63d152ecb40aeee79dc7db394968e747b02c956e8601817a167c07a7da",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "explore_databento_data.py",
+      "sha256": "86e5017479cc72d10091162320f6423a6a7876595f4ca0eef1bbcf695e26645f",
+      "imports": [
+        "datetime",
+        "json",
+        "re",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fao_data_extended.py",
+      "sha256": "92f8e935292d458dd25e3bafe1ed1cbebbf0c15f22ec84e8bcec9a47b7734697",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "faostat_data.py",
+      "sha256": "7cb2bc10337c51f4293c8fb95de7dcdc7d572e5f971247a3ffe9ad1e5be08e69",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fdic_data.py",
+      "sha256": "f5addea7a34159eaa97bca8c6425a120f03c25d998bdfe9e57be367281bca1f2",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fdic_fetcher.py",
+      "sha256": "263778c3ab5dcf92f081213fab931f3f7ac5a3504109b7db844b615fdd8bc11d",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "federal_reserve_data.py",
+      "sha256": "0e45192f46060926017d21714ef5ce007e4243d841219ef63eff503d756117b5",
+      "imports": [
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fetch_company_news.py",
+      "sha256": "a4acfceaaf883b741374d46e3ef6c1963888d44436bc9e1f4e2bebac92a240b1",
+      "imports": [
+        "datetime",
+        "email",
+        "gnews",
+        "json",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ffn_analysis.py",
+      "sha256": "04d19a288894895b4ada0da23e69aca7c3bb95faaecd0d609d7d0e87b86882fe",
+      "imports": [
+        "ffn",
+        "json",
+        "numpy",
+        "pandas",
+        "sys",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fii_dii_scraper.py",
+      "sha256": "8b1a69fbc1f7760fe87c3c7937b5239b66917835d0b446b9501107f973de9186",
+      "imports": [
+        "datetime",
+        "json",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "financepy_wrapper.py",
+      "sha256": "d3e44a305ddd3f953049effcc6ef74c804e22986835dc4e0bd1ff7a56eab1331",
+      "imports": [
+        "datetime",
+        "financepy",
+        "json",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "financial_report_generator.py",
+      "sha256": "eb83b0c99f0165c1b88af9fa518ea3cfc429feeb6f5cb143e973cf02c466fdcc",
+      "imports": [
+        "base64",
+        "datetime",
+        "io",
+        "jinja2",
+        "json",
+        "matplotlib",
+        "os",
+        "pandas",
+        "pdfkit",
+        "reportlab",
+        "sys",
+        "typing",
+        "weasyprint"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fincept_json.py",
+      "sha256": "438f3d2353e18a24946b0899ef4ecf6f1689b70df999ee9372e26e989c4e62c7",
+      "imports": [
+        "__future__",
+        "decimal",
+        "json",
+        "math",
+        "numpy",
+        "pandas"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fincept_output_standard.py",
+      "sha256": "f89b67136631f2350b7a535cc758da92799b06d0f94d5c0a89c3665769ae1e05",
+      "imports": [
+        "datetime",
+        "enum",
+        "json",
+        "numpy",
+        "pandas",
+        "sys",
+        "time",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "finnhub_data.py",
+      "sha256": "e2e3721f68ae206eaa5f1adc4b9365766d329c4570ac8a7cab4f8291ba469505",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fiscal_data.py",
+      "sha256": "093781d9138582df38646abe6160ddba042a78a80fb09356355ad952bfc12fb5",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fitch_connect_data.py",
+      "sha256": "63224762b57d84727dc9cfd3253070a0627ec6383b78e7d76e644975668bc779",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fix_numerus_translations.py",
+      "sha256": "4a3744c0f841b7093b420970e4536f67c0c2ca9678ee658d5d3db8a503a50e57",
+      "imports": [
+        "__future__",
+        "io",
+        "pathlib",
+        "sys",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fmp_data.py",
+      "sha256": "2146f8cfc15683f914c404bf4e80c6bd4293bbff8311f414eb836527527e2039",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "pandas",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fmp_extra_data.py",
+      "sha256": "85514835a07cc7266fb00dfd4f5f853212cddfa5850d824edf3fae4c5b8e9d09",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "frankfurter_data.py",
+      "sha256": "6d1416ac6fedb4b91ef115a4637734ab1da2be0ab7bd2859a9cd962abf7883d3",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "fred_data.py",
+      "sha256": "cae3c28b58901dfc50eaca2353d7dc847fffa2fa718f3a93e265696cf9190dbd",
+      "imports": [
+        "concurrent",
+        "datetime",
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": true,
+      "status": "curated provider; bounded execution",
+      "source_path": "fincept-qt\\scripts\\fred_data.py",
+      "purpose": "US inflation, employment, rates and macro time series",
+      "dependencies": [
+        "requests"
+      ],
+      "api_key_environment": "FRED_API_KEY",
+      "entry_points": [
+        "get_series",
+        "search_series",
+        "get_multiple_series"
+      ],
+      "integration_notes": "Key is read at import time. Reload/restart after configuration changes. Bound bulk series counts and returned observations."
+    },
+    {
+      "file": "fred_economic_data.py",
+      "sha256": "4661718ee3d7d986cc883ab115c7dc2d9b82416324cd288868bdea033006229c",
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "freedom_house_data.py",
+      "sha256": "f245abe05605a9b5235315a1395401313b1c4a68bfe7f3b6b3d5b6a3c155e6b6",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "freightos_fbx_data.py",
+      "sha256": "6c116ae620e8f393f8aef73c8f198acfbc4f9477e34b8c95521dc05ccdbbf126",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "french_gov_api.py",
+      "sha256": "affb368eb61b5907edd4535a44c8856fd2211827a4b0931ea03c1b51c835f31e",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "gas_infrastructure_data.py",
+      "sha256": "1ce7fc51600a7749cff50f0fa4b09bfa97e25f98d1bc470fbeb65fe0f2caa993",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "geocoding_service.py",
+      "sha256": "062527e9c46b6f982bb467573e5c1860b524dcb12a9cbb418f7b0afcdc0959c9",
+      "imports": [
+        "geopy",
+        "json",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "gfd_data.py",
+      "sha256": "8468430bd00b9b19a06b997180cb812b441f55b6e3babc6285da25715fea6adf",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "github_stats_data.py",
+      "sha256": "24bcd964e263e06b0b4b3e59f073d4f7426fedd0b7536415a60a81d89c36c419",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "glassnode_data.py",
+      "sha256": "e1ea45af36d4baf9067434b3c5ff8f9903e6d35c86769794bfdc65421ca861e0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_competitiveness_data.py",
+      "sha256": "81895a188f640e597b8cb52245e51ee247bcf3a6a1dbea3f81916bc90bebf88c",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_debt_monitor_data.py",
+      "sha256": "60ea3f41ea71e0a00104e99915da7f645c07b067558e21c95f4d134ba16b7204",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_findex_data.py",
+      "sha256": "4fed53f4ae7199c3d6654a2103e438767b76e5000995312a7990117e1847e6a8",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_fishing_watch_data.py",
+      "sha256": "b4fe14f597bab18a2dc5ef87c43e2af32e9ce8e29cfc489bb033f0d41ce2331d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_forest_watch_data.py",
+      "sha256": "9080be50f46d1833ebb0cba1ad779428cf771013c3611de7ab5a8eb01519692d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_health_security_data.py",
+      "sha256": "0787067c106df4349132b05ac2d22919c805a992e9ef1957d504944827761658",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_innovation_data.py",
+      "sha256": "d6365a2cbe414e434469f0fb341c624bf67bb9ea83b67cd620cf4d18aa89c434",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_petrol_prices_data.py",
+      "sha256": "c4fd83045657c9453501bf15136186af7514a3852f57ae306ac5a42364d6691a",
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_price_index_data.py",
+      "sha256": "babeb7deaa6dedb2d6927c2da08da8f89f20f893fc09ee906ae07ba1d4c285ac",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_risks_data.py",
+      "sha256": "f81dbed768082dc0b700e095e47ffb9cbad6ac038344bc0dcaf2897a47db3bbe",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_solar_atlas_data.py",
+      "sha256": "01f6c1920def3fef56e26f28743c56035bdbbf13076a1c56ff1e38fdeb5238ec",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_trade_alert_data.py",
+      "sha256": "06f18e8839e2a5fc16e12a8854dc4a193aad70aa76e85f6605c977f2cd60d59e",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "global_wind_atlas_data.py",
+      "sha256": "1033ca5fc9285f33fc76c0de8ae9296a5c838654e9c68f22e9badea1f36727c6",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "govdata_de_api_complete.py",
+      "sha256": "1757f54be714fe519813a42bdc3a6db38a34b3afaa2623ec7ca9d2446aed6b02",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "government_us_data.py",
+      "sha256": "840e0b824f3025b8bcd2e6057f10ee35f947411d6bfbfa3efd04721510f93bef",
+      "imports": [
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "random_user_agent",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "govinfo_data.py",
+      "sha256": "7c1c03e085505fc3ce49b6921057f558f9deadf1f942daf7c993f0f8b6a5d38f",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "govtrack_data.py",
+      "sha256": "e500f51ec08fd2065955db6d412486c3655ef22467c025b11a214ff0256ba852",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "grain_futures_data.py",
+      "sha256": "c8a92ded8e9e8278ae77e97f1b6d7d77c13359c9eb4af982fe7689784db66260",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "harvard_dataverse_data.py",
+      "sha256": "26d166be372e7e3cb283009aa27e3bce7941a2818de1f11ea24ddbbe1a616fbf",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "hdx_data.py",
+      "sha256": "86a9b7e49d1e0136ac4e050f72a664046bcc27691c496809ff8fac9dbab778a6",
+      "imports": [
+        "json",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "hnb_data.py",
+      "sha256": "ba821213c4a3884736c2200421af857a75f6039751b8c46844a5d7307cee84da",
+      "imports": [
+        "concurrent",
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "hud_data.py",
+      "sha256": "6bb76e0f76f6b6665b058d9e16131d9985c5c4202a98d3a437a8e86ccfe88e12",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "iadb_data.py",
+      "sha256": "196cecd0f7eb8cdbca68131b8f01e8a34020321c0e54a7dc0902eb62b1b37e91",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "iea_data.py",
+      "sha256": "7358c6e014d9f1ae000eb6504110462ebcae01aaf953caa9befb5854872126a6",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "iex_cloud_data.py",
+      "sha256": "3acd1bf85ea6d7627e867343636647d3b93a1db280494a166ac2ec38c3d0c1d0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ilostat_data.py",
+      "sha256": "fb1e873f63735e5a7ab2c38f528a2f02a2e675c215024470696617dcab7040fe",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "re",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ilostat_data_extended.py",
+      "sha256": "89e8e2b16a1eaeb3b629d7dc89b59d5dcaf75328fa02e143cf46f9fb20b44259",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "imf_data.py",
+      "sha256": "110f33ec50c66ddc0af72e490ca20d84f6fd4c161a0293f2e9a92063b5e09251",
+      "imports": [
+        "datetime",
+        "io",
+        "json",
+        "pandas",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "imf_datamapper_data.py",
+      "sha256": "b4a420b72522007fe65021f1c62ebd807f5e0ceb1ddf16d660933cba708a76af",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "intrinio_data.py",
+      "sha256": "9d8282b1d638be3f7dab108b4dfc34399911e413ae1c81428be628a84491248f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "investing_calendar_data.py",
+      "sha256": "480ec219a96c34025a96ee28b7aae47d89b20e36030619697565ee12a2497562",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "irena_data.py",
+      "sha256": "e684ffeaf4e4316a1ddd1e7f88f4044a5111b1443bc0ffadf0bf5864e66b3c3f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "irs_data.py",
+      "sha256": "4245ee6efa81ec8148f6dd438477f5ec8c346e6495285076e258ed3768117b36",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "isdb_data.py",
+      "sha256": "23fce513a630ede9439df9f55f24601d1a26b60bd29216cd2399bab0912a6974",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "kaggle_data.py",
+      "sha256": "b32709cd046ed029ec9bde4f53f10a2aa8579dd0de77db15daaf5925fbeb3680",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "lei_data.py",
+      "sha256": "7b233940b361f973439d439d09de20d54a9c1b41d07071c97b5f6e6c5fcf44a5",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "litellm_models.py",
+      "sha256": "262f4efa2efb048b09280922ea5e69eef9baf0fefe5ec3280500815caf5197bd",
+      "imports": [
+        "json",
+        "litellm",
+        "pathlib",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "lme_data.py",
+      "sha256": "a9b8f2369b2bdab0c75a5c0f9ea01f33945eaebc055bdafcfeeeaf0c5c7aed22",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "maddison_project_data.py",
+      "sha256": "92446a3c4304ac560b38a70d5a9f8d1aace83add7b37d1606a6e0094c2b55726",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "marinetraffic_data.py",
+      "sha256": "3c2d590129b438300725a459b9c7e7a5673b48c6e661439be1ff33098fbd7d7b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "marketstack_data.py",
+      "sha256": "422a49050a590027efcdc45c395ea0b25ca16cf80d52d102f8f7d1ae0e67914f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "messari_data.py",
+      "sha256": "25c023d0613b45c83d77aaea0007dda161f74bf8a264975cf4c777f1d9798b52",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "metals_prices_data.py",
+      "sha256": "88b421f7156ab8227e881dacd529b83946fbea8daaa559acc810690a410faa46",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "mnb_data.py",
+      "sha256": "fba8e5d78c6ef5b0b6cc657eedcac0b0f32b97ef6578c837899e780e93ba2440",
+      "imports": [
+        "datetime",
+        "html",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "multpl_data.py",
+      "sha256": "16509f04a311530727d101ef508a1dc118b15bc425acb7d12357020723a06c21",
+      "imports": [
+        "asyncio",
+        "bs4",
+        "datetime",
+        "io",
+        "json",
+        "numpy",
+        "pandas",
+        "random",
+        "requests",
+        "sys",
+        "typing",
+        "warnings"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "n2yo_satellite_data.py",
+      "sha256": "e68652042202ab21aec8de40091340d4a45cd6f61ba3ba32988928c7bf18e41f",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "nasa_gibs_api.py",
+      "sha256": "5985002b8426e25789983481e279b4bd90c5abd0d93a9eb44d8eaffd8ff07afc",
+      "imports": [
+        "base64",
+        "datetime",
+        "hashlib",
+        "io",
+        "json",
+        "math",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "time",
+        "typing",
+        "urllib",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "nasdaq_data.py",
+      "sha256": "e578e88965417bd1ca8c85d155a849619f0ffed9a47fa2ae75aa1c5a708897ad",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "datetime",
+        "html",
+        "io",
+        "json",
+        "os",
+        "pandas",
+        "random",
+        "re",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "nber_data.py",
+      "sha256": "8bd77b4a4511156c0fac81507d8af20b7befefc49852453a94d72abaa975d2e8",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "nbp_data.py",
+      "sha256": "3fdf4a5758073913cbd409c697906febc63dbe57219f1cdb184e1e587d9c8149",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "news_correlation.py",
+      "sha256": "eaa39f62cbf02dc550983b684163d825e427d15a9fdb3a2fb02caa6e1aa0bb90",
+      "imports": [
+        "collections",
+        "json",
+        "math",
+        "os",
+        "re",
+        "sys",
+        "time"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "news_geolocation.py",
+      "sha256": "973fc1531d07c87ebdf0a1cedabcffc16293daf2f12986b44b4b6a17350a696d",
+      "imports": [
+        "json",
+        "math",
+        "os",
+        "re",
+        "sys",
+        "time",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "news_nlp.py",
+      "sha256": "242fbbf4aef2b385c5202b315cb0d0e4a8a9b5d5b4123750bce69e43c970e6ff",
+      "imports": [
+        "collections",
+        "json",
+        "math",
+        "os",
+        "re",
+        "sys",
+        "vaderSentiment"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "noaa_climate_data.py",
+      "sha256": "94fb3418fcdab1b124b798c6db4dbaaaf76e202c65c92a94c877e834b4b87af0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "nominatim_data.py",
+      "sha256": "adaea9e3e59c6b517047d24489273b07ffa0588e097ab29219a61330c7791d10",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "norges_bank_data.py",
+      "sha256": "7473ae10a69a8d86ac6a520951342ae398b8e0bb90ffa52858fce08ef60b634e",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "numbeo_data.py",
+      "sha256": "09e9fa6848165c5e7f93f2f411a2f70a53e5097a24c54bebde2e832913c91f94",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "nymex_data.py",
+      "sha256": "809829fcb00d024f6a7024dd27b4b57fa12c72deef392e9919e2567c66ef1b7a",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "oecd_data.py",
+      "sha256": "41eb8b32572a2c82b19fe8351b36547d93f51761df26284388378d963a1b191d",
+      "imports": [
+        "datetime",
+        "defusedxml",
+        "io",
+        "json",
+        "numpy",
+        "os",
+        "pandas",
+        "pathlib",
+        "re",
+        "requests",
+        "ssl",
+        "sys",
+        "typing",
+        "urllib3"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "oecd_dev_data.py",
+      "sha256": "aea13528a5e2f0b88f3c3c6e888f3230f00595db918fa2dddd6225f2be5ad3ae",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "oecd_energy_data.py",
+      "sha256": "53ea87acb0b26f4716533ba6f9bd08e8347262e6e84e36da58a11b2b60a8c3a1",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "oecd_health_data.py",
+      "sha256": "adcceeede12141381ef7f0358d0c18c20ca123e3af80fbe18e39337cecb5263b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ons_data.py",
+      "sha256": "ac168ad4554576591a8f1a2849a72be201ff4084ff2aac448157a42994b19626",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "opec_data.py",
+      "sha256": "b6c98f21d73b57cd510573aae00539048141cf46a6ff7e6cf37ad1a19debf556",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "open_exchange_data.py",
+      "sha256": "8ea92f01629992ffaaffcabf824f3565ee9a76ea84f61ca3cc990a6d50cdb6e2",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "open_meteo_data.py",
+      "sha256": "fce9eadb03a698d9a00fae14f5ce2f243f54ebde3bca256bcc35e0afd8e8f23e",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "open_ownership_data.py",
+      "sha256": "26b28490f8317a8b4b3cb50aeae3ec8824feaed1f65f61bccea551c5cd13eb46",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "open_parliament_data.py",
+      "sha256": "db37211ffdacb40ae86bd8df10cde34e9f1f3287d7540a1c672efdc7087bacf0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "open_secrets_data.py",
+      "sha256": "9f37d75ec3fd3d86b2e0e1607bbd1656d09998444a418cee6960c585dde939fe",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "openafrica_api.py",
+      "sha256": "41f013efb5af91254659701ea56d2bea9ad599d1c902d8b128b7b39b9c753ff1",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "openaq_data.py",
+      "sha256": "83b4d99c508a245be189f49b959a067aeb41bb5ce5edd6eb9ffcc9424e82c65d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "openbb_data.py",
+      "sha256": "2ffaabe30751b9acaa1e5f2b68341c09b8a0be3918b820ab0264031f14c32610",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "openCorporates_data.py",
+      "sha256": "518dfde195214fc22458a023a38e5bea5d3350ccac9db32ea2491dcb1ac7a2e9",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "openfigi_data.py",
+      "sha256": "988153e3d2b8fb77e9839cd6053d5049ab569b7d8f1499c73298477e49599d58",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "opsd_energy_data.py",
+      "sha256": "bda2f429311be5d0c91e4f3e78d8edeb4e69d5c3ba1e24f6725da27b09b10504",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "optimize_portfolio_weights.py",
+      "sha256": "1242b59cce0e0a8da5c0ad55f8d88bd9ad3a052f3a9a684216fa1d8fe968830f",
+      "imports": [
+        "json",
+        "numpy",
+        "pandas",
+        "scipy",
+        "sys",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "option_greeks_daemon.py",
+      "sha256": "e4b123011d8a12ba35ba945d95d6c08d1ee7083855be572d3b2c796d61bd268f",
+      "imports": [
+        "json",
+        "os",
+        "py_vollib",
+        "sys",
+        "traceback"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "oscar_data.py",
+      "sha256": "4010fd623630cffc595bc283b4ecc376be2339ed045626059be2e3872b3265d0",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "overpass_api_data.py",
+      "sha256": "f19918e8cb9380d0c824348aaaebb1efb65495277cfea6a99767b052d6a711f3",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "owid_co2_data.py",
+      "sha256": "e32ac099642b204e6177b3a18846cfe2e22c02d08523adb576ba68e0d5cf981d",
+      "imports": [
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "owid_data.py",
+      "sha256": "ce5182250304ac73def2e6850414c92a765dc2fdd562ff5a6b62a87849d51cd6",
+      "imports": [
+        "csv",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "paris_agreement_data.py",
+      "sha256": "ddceef4811d094c6ee13b98c581e54a3186edc9738ec0bcbe1d54da7877ab55f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "penn_world_table_data.py",
+      "sha256": "2ec899be62607f3f855e88ad3a45c4ab409727d0acbe46122ca75a9fb3ab3359",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "pew_research_data.py",
+      "sha256": "fc279a53a63ad3a6b0fe026cc6c8139e545f795ba9ecf24cc0a29d7731a7e7ec",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "platts_data.py",
+      "sha256": "498839fb3a98c197b9cd1c890c338ded0a641e5633c37c6500d2a28183f88af7",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "polygon_io_data.py",
+      "sha256": "283e7b8f6719c1c5ad4a0cbdbfa689ad597a35ea934d77a7a049c107dbb0ec87",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "polymarket.py",
+      "sha256": "2fe080ace02b5b76832e1dbd59baa18b1c3faca19766d33b4d6750826319ed6f",
+      "imports": [
+        "json",
+        "requests",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "polymarket_quant_bot.py",
+      "sha256": "a4665cd545aace5cf32bacb256be8f99a65805ade150c939d6382407517d9d05",
+      "imports": [
+        "dataclasses",
+        "datetime",
+        "io",
+        "json",
+        "math",
+        "numpy",
+        "random",
+        "requests",
+        "scipy",
+        "sys",
+        "time",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "port_congestion_data.py",
+      "sha256": "14c168d08e267bab52da8b661384fdd4a52bfd755870112d217f95632fc24480",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "portfolio_sparklines.py",
+      "sha256": "72a3a89dca3fa05e5c6e26fef958b61746eeda82490f88a8a1ed47ff227496ae",
+      "imports": [
+        "json",
+        "pandas",
+        "sys",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "prediction_kalshi.py",
+      "sha256": "fe995ab2de8b29aa04bec97cba813f910059d58e35c5a3389a50eab09fa610e5",
+      "imports": [
+        "__future__",
+        "base64",
+        "cryptography",
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "uuid"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "prediction_polymarket.py",
+      "sha256": "fe5cef0705c5b4d931466be39244c9aa22d1524be2d12565cef1278f49c9e852",
+      "imports": [
+        "__future__",
+        "eth_account",
+        "json",
+        "py_clob_client",
+        "requests",
+        "sys",
+        "traceback"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "prs_group_data.py",
+      "sha256": "ba41b3eeeff90c185965ad78c9e897eceadb73a7cd5d94f65ce6747fb55a2bcb",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "public_apis_finance_data.py",
+      "sha256": "f0611273773532dbfa8cfa9a9fc73cba70cb815218fa9313ccecfa2f8562e29f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "pxweb_fetcher.py",
+      "sha256": "b77087a456b8faaaebebfd5c15812a5b57378a13f44dca8b387b4a1ba8e249a0",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "time",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "quandl_nasdaq_data.py",
+      "sha256": "ce5a5d37899c63296e24b8f848797fa1b40812e4fec92562d9e00474d676600c",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "quandl_wiki_data.py",
+      "sha256": "b796befebadba58c68f92c30fcf1b1d6353027a306d5f02a4f54e447ba64f9c5",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "quantstats_analysis.py",
+      "sha256": "7e557be76b14836a126c16ce240417d372cb6d7c34ec919ffba0bb265b6e965f",
+      "imports": [
+        "json",
+        "numpy",
+        "pandas",
+        "sys",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "quantstats_monte_carlo.py",
+      "sha256": "913834b0d0bc6c544d08178450f6cf7a6fa632d690268e5e9f5cf471ba78f305",
+      "imports": [
+        "json",
+        "numpy",
+        "pandas",
+        "sys",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "quiverquant_data.py",
+      "sha256": "a357b6c661281c249db1fa071a49f06c58646f3d2ac05ff23ca7c0cf0300748e",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "rba_data.py",
+      "sha256": "96696b7a6cda7380020b2633aaee1f52b454eb258f25fafc4fc893c50b751311",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "redfin_data.py",
+      "sha256": "8aedeeb49c77e46201f19ab363b14c5398de67e3e20e53da454a96a1c38b5cf8",
+      "imports": [
+        "gzip",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "relationship_map.py",
+      "sha256": "ac86744be3c413923c687860d01cec5a90c0039e9fb9e2dfaf7b89c50a65d28a",
+      "imports": [
+        "json",
+        "sys",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "reliefweb_data.py",
+      "sha256": "c57d39df97ed060a19de76927526ea8b43782f60e9a892ddc48093a7cabd7c81",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "riksbank_data.py",
+      "sha256": "336069478cfc2601ef35d50aedcb0adb6a18b44db5f6a14138668cf4bbf7dc3d",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "time",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "rsf_press_freedom_data.py",
+      "sha256": "02ca58fe75cdf40e2bb42ab3b74f159ea8df73cffd4df9b3676fdf01ab3e3f54",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "scb_data.py",
+      "sha256": "33996b0d03aa0e2eb42c320a757b229fee4c49a9ff599b337ad0ced853d45cd9",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "sec_data.py",
+      "sha256": "84ca15e108cefe4016daf074e9b2a32317a5d2f0a5baa47f85741951f65114b7",
+      "imports": [
+        "bs4",
+        "datetime",
+        "json",
+        "pandas",
+        "re",
+        "requests",
+        "sys",
+        "time",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": true,
+      "status": "curated provider; bounded execution",
+      "source_path": "fincept-qt\\scripts\\sec_data.py",
+      "purpose": "US filings, company facts, insider and institutional disclosures",
+      "dependencies": [
+        "requests",
+        "pandas",
+        "beautifulsoup4 (optional HTML parser)"
+      ],
+      "api_key_environment": null,
+      "entry_points": [
+        "SECDataWrapper.get_company_filings",
+        "SECDataWrapper.get_company_facts",
+        "SECDataWrapper.get_financial_statements"
+      ],
+      "integration_notes": "Replace the upstream Fincept User-Agent/contact in an integration adapter. Allowlist SEC hosts before exposing filing_content; bound document sizes and result counts. SEC does not cover Bursa filings."
+    },
+    {
+      "file": "sec_xbrl_data.py",
+      "sha256": "cf8ce2d54fcc591bdb24bde3fc272682219ee1a403c0c759e475897fdb5856dd",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "semantic_scholar_data.py",
+      "sha256": "8f3a28c3e41e74b7f6ad1cdbc4cecde0e8a1eabea15e21be8d0de9a2764a18cf",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "sentinelhub_data.py",
+      "sha256": "e2c1e7fdf0fb7032cfec03383eb62f74e0d44a576c69ee6dfa3cc673f0dee29e",
+      "imports": [
+        "base64",
+        "datetime",
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "tempfile",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "shipping_data.py",
+      "sha256": "6472e81133cc886fd6600a42d53255189af47334e3268290817236751db65955",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "simfin_data.py",
+      "sha256": "a66f488d2de8385f307d02b4a5a979b95fe34505ed22f9a792fb24fd768f0130",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "snb_data.py",
+      "sha256": "66e0dfb8df4e9785b40be131d9c958f5a03dfc4b46cd5de58bc82a2ac07185ef",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "spain_data.py",
+      "sha256": "8fbce81ecd787a276bc2f66d087a054008a9bf7d74b4839d43d1cc4af737ffb1",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "spreadsheet.py",
+      "sha256": "3fca5d95782893040ef77e9e6875317e1f8716dfe4d3e27aef297a64444ff029",
+      "imports": [
+        "argparse",
+        "gspread",
+        "json",
+        "openpyxl",
+        "os",
+        "requests",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "ssrn_data.py",
+      "sha256": "06b0a8142f25de5b197b06a50b5fbb43812c89fdd5571c3f1ff73f5a8ae4db48",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "statcan_data.py",
+      "sha256": "8dddbbac34829b5cc9b453a7f86e834cd894be9a0dbcd1a28feaed6ca4d168f2",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "statista_free_data.py",
+      "sha256": "27e44fb4b62daee9dba3e7f14ab41ed54293e1bdc16ba0ebd16c7c73de87779a",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "stooq_data.py",
+      "sha256": "b09584bbb5d4cef76c0276ffa936dbce5eac60cc2dcd868f1cfcc5f90e6f289b",
+      "imports": [
+        "csv",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "strip_datahub_guard.py",
+      "sha256": "c1f011d9b6b7ecae6f880dc5595751a87a1517651a5e70b295a472e0bb29df63",
+      "imports": [
+        "__future__",
+        "argparse",
+        "pathlib",
+        "re",
+        "sys"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "swiss_gov_api.py",
+      "sha256": "c1354ef08cb98c8da0a44a38b4c44559de93c1c45a238b8a51850631da0d0ee8",
+      "imports": [
+        "csv",
+        "datetime",
+        "io",
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "tcmb_data.py",
+      "sha256": "05c0428aedb8f551d515e07b828124f27761e4dce94921502effed3cbcb1a388",
+      "imports": [
+        "datetime",
+        "json",
+        "requests",
+        "sys",
+        "traceback",
+        "typing",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "tiingo_data.py",
+      "sha256": "fa00ec1b9eb41e75c80073c3f9e3367cc6e641cfe6cd23065ea16af45a456cc6",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "trading_economics_data.py",
+      "sha256": "8c1e85869501fde498cfb95ed023a71eedaacb767e0f5edf052bd2c21f3e6f3c",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "tradingview_data.py",
+      "sha256": "1af841b3afab33ff3c16f4cfea869337c483e8e3e0e9637cd72cb77d05e44ccc",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "translate_text.py",
+      "sha256": "26003fd32b8fd3ccd69134f7f08c7a1b52bacee86560f40c0b85e71b1539d0dd",
+      "imports": [
+        "asyncio",
+        "deep_translator",
+        "googletrans",
+        "inspect",
+        "json",
+        "sys",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "transparency_budget_data.py",
+      "sha256": "f7b5512e68a7411672ff10ab5529c1888e54771107bf962888e9ae6035111439",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "transparency_intl_data.py",
+      "sha256": "a97aae00156f1dae1de764848e6618ccf6c6f29aabbe549a9e600ea540ed7f48",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "treasury_data.py",
+      "sha256": "d1f3bd37e6d53919a69e3c4ccf9d47805a07f26739df4983dbf32289a29cdb1f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": true,
+      "status": "curated provider; bounded execution",
+      "source_path": "fincept-qt\\scripts\\treasury_data.py",
+      "purpose": "US debt, fiscal exchange rates and debt interest data",
+      "dependencies": [
+        "requests"
+      ],
+      "api_key_environment": null,
+      "entry_points": [
+        "get_debt_to_penny",
+        "get_interest_rates",
+        "get_exchange_rates"
+      ],
+      "integration_notes": "FiscalData interest rates are not a replacement for live market Treasury yield quotes. Preserve record dates and security types."
+    },
+    {
+      "file": "twelve_data.py",
+      "sha256": "618a1c9cfad5ec31e6d5f4313432bcc3cea8cd8d30b4fbd8dee68cd16d502b19",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "un_comtrade_data.py",
+      "sha256": "52eb20d242880106ebbbd6a7e6dd4f321a14fd1ca4977639e692e2a27b0e9270",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "un_comtrade_extended_data.py",
+      "sha256": "c04b5bc97542c1740347756ad182f57ac9ee82862bae5db599de90012bb01e04",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "un_population_data.py",
+      "sha256": "cd339e1ee66bc064fe89759523a696efbf37cdaadf7e0afdabf12304a64c2014",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "un_sdg_data.py",
+      "sha256": "ec1536599e902d07a8621d392bc89900bb0bf07f30df138982c447ee4b00d6c0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "un_stats_data.py",
+      "sha256": "2c7167c2aa4dc7b0e0be313b7e06f3cf8912a9d193cce27b6d64da25938d337b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "unctad_data.py",
+      "sha256": "345a1a6824a04bca8a64cec871320781cbf69472b163ef86c75eb587952aa414",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "undp_data.py",
+      "sha256": "0022bda4819a01c12454d3982f3a57ccc2ff45e63e67ab32fbf6337e43ad3548",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "unep_data.py",
+      "sha256": "21ca1f656f4bcd148227619f1768235aa036dcc1f242f6b0b5625b2d3f375074",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "unesco_data.py",
+      "sha256": "f6542fbbf55de6d2b5a02d882ec8a1e19fd2ca79ad8f69f190fe7a634e7920d0",
+      "imports": [
+        "datetime",
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing",
+        "urllib",
+        "zipfile"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "unfpa_data.py",
+      "sha256": "0cce874b6a3c7e820d01cde1aff916241539d2d1f6527f7772ce8049d12984d8",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "unhcr_data.py",
+      "sha256": "be4c43629831f97f0f2f6114a28954a8ed0a8d372d7a8cadbde451d9ab2de424",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "unicef_data.py",
+      "sha256": "d683a3a8925b98b2c98533add97899e0966e94e9cea0a5ec57abeaacd358223c",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "universal_ckan_api.py",
+      "sha256": "eb2a0f5a221bc4e7922d014c196918cfa85ef176fd04325f7966f45d5c551a6a",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "universal_socrata_api.py",
+      "sha256": "ae4462b628d225b11456a4d9c5c6c72776dee15d208aeba13f74d37543314cf6",
+      "imports": [
+        "argparse",
+        "json",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "usda_crop_data.py",
+      "sha256": "20f04318d5394717edc9df5e787dccbbe14ac9f89309935a148efb70599cdee3",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "usda_ers_data.py",
+      "sha256": "02a786e0d1a610beada214c22ad56938d75087929dce0083fb920fd51a0994f5",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "usda_fas_data.py",
+      "sha256": "c7b2380cb5ee8660709571c4bbcd892de46934493101dc44ed8dda831c07960f",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "usda_nass_data.py",
+      "sha256": "d646c33da48828c32e47e0dd97b00c3a30af94d28a284791518fcb308dcf05f0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "waqi_data.py",
+      "sha256": "b8a4c425530a28d39b888090bfef29f21f5b6e3ffb120998d7f7f768dd4dc53e",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "weforum_data.py",
+      "sha256": "e670bb85f7523e45270dc8624579b408d614979e0f5037a2640c87d7949dabab",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "who_data.py",
+      "sha256": "8aa3a12a6f0ea8cc4dc7df59f5ea255d205a2e71a59f0e60632512ca5d4cef71",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "who_immunization_data.py",
+      "sha256": "2f83c618389060788aca8cf03454a49d929f5d6909b9f67dcfef12670e7f0d8a",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "wikipedia_pageviews_data.py",
+      "sha256": "54591e4f271d25831f94876b97d4d0d26ce9fa2bb54f8af93c90718fcb06f233",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "wipo_data.py",
+      "sha256": "f59b94b35db3cd6ca7c80c5a721743a2f4709989342ec29422f3d4d8b2138d83",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "wisesheets_macro_data.py",
+      "sha256": "b07230af3845ba70c0d77231a03291dbca6b0cf59477d9d8ed4b07b373b43d0d",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "wits_trade_data.py",
+      "sha256": "f8f437809c7ce63eeac43c89bea375c97e1a85ef1d3efe4c61a5287171688a81",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "re",
+        "requests",
+        "sys",
+        "typing",
+        "xml"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_bank_climate_data.py",
+      "sha256": "2646fd36ef5a06b2f16c8916a87aaa6c905595f208f7c9b8e89a290fb6ced6fa",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_bank_commodity_data.py",
+      "sha256": "e8edcab815d8fa7da1c180837999068315f99204f50cb6a1a1048101ad3c7caf",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_bank_extra_data.py",
+      "sha256": "178088ca0ad11cecf6adbdb3f2544c1f1be0f9d46d04d1ca4faf4b9ac8fdb338",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_inequality_data.py",
+      "sha256": "3b671f6ba05c12a7797586dc6276785c118306c6c3eea93073c383e77c15535c",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_justice_rule_data.py",
+      "sha256": "5d7ec791b3217426a49609dc6b3ecbb733a033d933bbdb5e79f972031eef8c46",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_pop_data.py",
+      "sha256": "e0f2df918ca559ddc119fcf5078c520a47166acec900539f3916588f47acb308",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "world_values_survey_data.py",
+      "sha256": "b0a051a958cf249d68cc723c426980403468b81c0129bff87e546f97a9b8b4d0",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "worldbank_data.py",
+      "sha256": "f022b29ba1c7482d07c0262af32b415ad5d5271c0c3f85a356b203823638d989",
+      "imports": [
+        "datetime",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": true,
+      "status": "curated provider; bounded execution",
+      "source_path": "fincept-qt\\scripts\\worldbank_data.py",
+      "purpose": "Country GDP, development and cross-country comparisons",
+      "dependencies": [
+        "requests"
+      ],
+      "api_key_environment": null,
+      "entry_points": [
+        "get_indicators",
+        "get_economic_snapshot",
+        "get_regional_comparison"
+      ],
+      "integration_notes": "Indicators may be annual or stale. Preserve year and units; do not label observations as live market data. Bound pagination."
+    },
+    {
+      "file": "worldbank_health_data.py",
+      "sha256": "967775e00d0b4b7945361b4a1bc90356f33703f30dd78a24728f4448335f4aec",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "worldometers_data.py",
+      "sha256": "07a16fd1b0f2feef614fd26c45b89848abe751d1e976650307138bbadb75bf56",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "wto_data.py",
+      "sha256": "cec7b75b2ecb78c9749f0cb9c7c1a1a15921f3cf6e070f57bef74be5c2f60164",
+      "imports": [
+        "aiohttp",
+        "asyncio",
+        "datetime",
+        "json",
+        "os",
+        "sys",
+        "typing",
+        "urllib"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "wto_data_extended.py",
+      "sha256": "7343d95ba1747edb51811c73a582efa597590b32f41658a6f7bd67dfcdf0cedb",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "yfinance_data.py",
+      "sha256": "da36a8cce67459a8ab0e423efa67d71d38815100ef3c6ea0ce9e92e90a160600",
+      "imports": [
+        "contextlib",
+        "datetime",
+        "fincept_json",
+        "io",
+        "json",
+        "logging",
+        "math",
+        "os",
+        "pandas",
+        "re",
+        "ssl",
+        "sys",
+        "urllib",
+        "yfinance"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "yh_finance_data.py",
+      "sha256": "6067b609fcec4516e640c0c689e0d701b75f39bdf860155e8a6a4d3bee798796",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "zenodo_data.py",
+      "sha256": "0e0e7a237590ebcda3a59c1f8822135dcada1bd3e0d2c945d82b10eaebbc6d1b",
+      "imports": [
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "zillow_data.py",
+      "sha256": "494f1d2ec1847210499a1237b05b56fd412ae2ac8e913122749fa272641105ff",
+      "imports": [
+        "io",
+        "json",
+        "os",
+        "requests",
+        "sys",
+        "typing"
+      ],
+      "agent_registered": false,
+      "status": "copied; runtime verification pending"
+    },
+    {
+      "file": "yf_data.py",
+      "sha256": "16141d7ca528c5d92fdcd242b23da9d24f0fc500614d6d917530a17b5016a2b7",
+      "status": "active local adapter",
+      "agent_registered": false,
+      "provenance": "local implementation; preserves migrated fixes"
+    },
+    {
+      "file": "yh_market.py",
+      "sha256": "d48eb41aa68ae6db04cb9ee78536812541c528cd150c2ad375be3ce49a7ca895",
+      "status": "active local adapter",
+      "agent_registered": false,
+      "provenance": "local implementation; preserves migrated fixes"
+    },
+    {
+      "file": "fmp_client.py",
+      "sha256": "c7d81a2b2bebe80e8ff6a57c547ef9ba74cf522c9b88db73e4acbd0747b57551",
+      "status": "active local adapter",
+      "agent_registered": false,
+      "provenance": "local implementation; preserves migrated fixes"
+    },
+    {
+      "file": "alpha_vantage_client.py",
+      "sha256": "90a0f6d1c257f5132802ba96a742cfa65ce3e0c0c49f58503321eda051689002",
+      "status": "active local adapter",
+      "agent_registered": false,
+      "provenance": "local implementation; preserves migrated fixes"
+    }
+  ],
+  "syntax_errors": [],
+  "runner": "run_script via scripts/fincept_worker.py; existing allowlist unchanged"
+}

@@ -1,20 +1,8 @@
-def assistant_namespace(rt):
-    if rt.server_info:
-        return (rt.server_info.assistant_id,)
-    return ("local-agent",)
-
-
+"""Memory belongs to an organization and a user, never a user alone."""
 def user_namespace(rt):
-    if rt.server_info and rt.server_info.user:
-        return (rt.server_info.user.identity,)
-    user_id = getattr(rt.context, "user_id", "local-user")
-    return (user_id,)
-
-
-def org_namespace(rt):
-    org_id = getattr(rt.context, "org_id", "default-org")
-    return (org_id,)
-
-
-def def_namespace(rt):
-    return ("default",)
+    context = getattr(rt, "context", None)
+    org_id = getattr(context, "org_id", "default-org")
+    user_id = getattr(context, "user_id", "local-user")
+    if getattr(rt, "server_info", None) and rt.server_info.user:
+        user_id = rt.server_info.user.identity
+    return ("memories", org_id, user_id)

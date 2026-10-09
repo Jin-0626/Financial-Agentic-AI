@@ -1,9 +1,15 @@
 //! Deterministic, provider-independent financial mathematics.
+mod bonds;
+pub use bonds::*;
+mod dividends;
+pub use dividends::*;
 mod indicators;
+mod portfolio;
 mod ratios;
 mod risk;
 mod valuation;
 pub use indicators::*;
+pub use portfolio::*;
 pub use ratios::*;
 pub use risk::*;
 use thiserror::Error;

@@ -18,10 +18,9 @@ from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExp
 
 _runtime = None
 _lock = threading.RLock()
-TOOLS = frozenset({'market_data', 'portfolio_analytics', 'financial_news', 'economics_data',
-    'write_todos', 'task', 'AnalysisReport', 'execute', 'read_file', 'write_file',
-    'edit_file', 'ls', 'glob', 'grep', 'compute_discounted_cash_flow',
-    'calculate_historical_var', 'extract_financial_ratios', 'run_monte_carlo_simulation'})
+from orchestrator.tool_registry import FINANCIAL_TOOLS
+TOOLS = FINANCIAL_TOOLS | frozenset({'write_todos','task','execute','read_file','write_file','edit_file','ls','glob','grep'})
+
 CATEGORIES = frozenset({'provider', 'calculation', 'validation', 'dependency', 'sandbox',
     'timeout', 'cancelled', 'runtime', 'schema_retry'})
 
