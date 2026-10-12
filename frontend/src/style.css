@@ -699,3 +699,24 @@ tr:last-child td {
   max-width: 600px;
   margin: 10vh auto;
 }
+
+.stock-search { margin-bottom: 16px; }
+.stock-search .inline { flex-wrap: wrap; }
+.stock-search input { flex: 1; min-width: 180px; }
+.stock-search-results { list-style: none; padding: 0; margin: 12px 0 0; }
+.stock-search-results li + li { margin-top: 6px; }
+.stock-search-results button { width: 100%; text-align: left; }
+
+.trace-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 16px; margin-top: 18px; }
+.trace-runs, .trace-calls { overflow: auto; max-height: 75vh; }
+.trace-runs button, .trace-calls button { display: block; width: 100%; text-align: left; margin-bottom: 6px; padding: 12px; }
+.trace-runs button span, .trace-calls button span, .trace-runs button small { display: block; margin-top: 6px; color: var(--muted); }
+.trace-runs strong, .trace-detail small { overflow-wrap: anywhere; }
+.trace-runs .selected, .trace-calls .selected { border-color: var(--orange); background: #24201c; }
+.trace-call-layout { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr); gap: 16px; }
+.trace-inspector { min-width: 0; }
+.trace-detail pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 400px; overflow: auto; background: #0b1017; padding: 12px; border: 1px solid var(--border); }
+@media (max-width: 1000px) { .trace-layout, .trace-call-layout { grid-template-columns: minmax(0, 1fr); } }
+
+.trace-auto-refresh { display: flex; align-items: center; gap: 8px; width: fit-content; }
+.trace-auto-refresh input { width: auto; min-width: 0; }

@@ -7,7 +7,7 @@ from langgraph.store.memory import InMemoryStore
 from orchestrator import agent
 from app.context_type import MemoryContext
 from app.research_tools import current_evidence
-from app.research_output import format_result
+from app.research_output import format_result, normalize_report
 
 class ToolModel(FakeMessagesListChatModel):
     def bind_tools(self, tools, **kwargs): return self
@@ -30,7 +30,7 @@ class DeepAgentArchitectureTests(unittest.TestCase):
         self.assertNotIn("research_evidence_v1", task.content)
         self.assertIn("specialist_evidence", task.artifact)
         self.assertEqual(current_evidence(state["messages"])[0].name, "run_script")
-        self.assertEqual(format_result(state, "t")["result"], report)
+        self.assertEqual(format_result(state, "t")["result"], normalize_report(report))
         self.assertEqual(state["todos"], todos)
 
     def test_factory_uses_native_planning_and_shared_scripts(self):

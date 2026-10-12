@@ -350,3 +350,31 @@ test("production configuration errors do not expose local workspace", async ({
   await expect(page.getByLabel("Organization")).toHaveCount(0);
   await expect(page.getByLabel("Selected portfolio")).toHaveCount(0);
 });
+
+test("research stock search selects the exact ticker without starting a run", async ({ page }) => {
+  await mock(page);
+  let researchCalls = 0;
+  await page.route("**/api/chat/stream", async (route) => {
+    researchCalls++;
+    await route.abort();
+  });
+  await page.goto("/research");
+  await page.getByLabel("Find a stock").fill("AAPL");
+  await page.getByRole("button", { name: "Search stocks" }).click();
+  await page.getByRole("button", { name: "AAPL · Apple · NASDAQ" }).click();
+  await expect(page.getByLabel("Research question")).toHaveValue("Research Apple (AAPL).");
+  expect(researchCalls).toBe(0);
+});
+
+test("research stock search reports empty results and provider errors", async ({ page }) => {
+  await mock(page);
+  await page.route("**/api/portfolio/symbols?**", (route) => route.fulfill({ json: { symbols: [] } }));
+  await page.goto("/research");
+  await page.getByLabel("Find a stock").fill("UNKNOWN");
+  await page.getByRole("button", { name: "Search stocks" }).click();
+  await expect(page.getByText("No matching stocks. Try another ticker or company name.")).toBeVisible();
+  await page.route("**/api/portfolio/symbols?**", (route) => route.fulfill({ status: 502, json: { detail: "Provider unavailable" } }));
+  await page.getByLabel("Find a stock").fill("AAPL");
+  await page.getByRole("button", { name: "Search stocks" }).click();
+  await expect(page.getByText("Provider unavailable", { exact: true })).toBeVisible();
+});

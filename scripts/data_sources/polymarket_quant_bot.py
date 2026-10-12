@@ -12,7 +12,7 @@ How it works (4 steps):
 Run:  python polymarket_quant_bot.py
 Deps: pip install numpy scipy requests
 
-Author: Fincept Corporation
+Author: Financial Corporation
 License: AGPL-3.0-or-later
 """
 

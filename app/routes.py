@@ -4,7 +4,7 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import (
     AIMessage,
@@ -24,15 +24,16 @@ from .models import (
     ChatHistoryResponse,
     ThreadInfo,
 )
-from .diagnostics import sanitize_error
+from .diagnostics import research_error, sanitize_error
 from .statements import financial_statements
-from orchestrator.telemetry import traced
+from .local_traces import traces
 from .research_output import (
     format_result,
     error_result,
     request_mode,
     extract_text,
     readable_text,
+    normalize_report,
 )
 from langgraph.types import Command
 
@@ -141,7 +142,6 @@ def _interruptions(state):
     ]
 
 
-@traced("result.deserialize")
 def _get_messages_from_state(state):
     result = []
     for msg in state.get("messages", []):
@@ -169,7 +169,7 @@ def _get_messages_from_state(state):
                     None,
                 )
             )
-            result.append(MessageItem(role=role, content=content, reasoning=reasoning))
+            result.append(MessageItem(role=role, content=normalize_report(content) if role == "assistant" else content, reasoning=reasoning))
         elif isinstance(msg, dict):
             role = msg.get("role", msg.get("type", "unknown"))
             role = {"ai": "assistant", "human": "user"}.get(role, role)
@@ -191,7 +191,7 @@ def _get_messages_from_state(state):
                     extract_text(msg.get("content")),
                     msg.get("reasoning"),
                 )
-            result.append(MessageItem(role=role, content=content, reasoning=reasoning))
+            result.append(MessageItem(role=role, content=normalize_report(content) if role == "assistant" else content, reasoning=reasoning))
     # Each saved answer owns only the evidence from its own user turn.
     assistant_items = iter(item for item in result if item.role == "assistant")
     turn = []
@@ -245,6 +245,7 @@ def _build_env_footer(org_id: str) -> str:
 async def _chat(
     message, thread_id, user_id, org_id, response_schema="financial", resume=None
 ):
+    trace = traces.begin(org_id, user_id, thread_id, message)
     try:
         await _ensure_user_habits(_store, user_id, org_id)
         state = await _agent.ainvoke(
@@ -257,17 +258,24 @@ async def _chat(
             config=RunnableConfig(
                 configurable={"thread_id": thread_id},
                 metadata={"org_id": org_id, "user_id": user_id},
+                callbacks=[trace],
             ),
         )
         if state.get("__interrupt__"):
+            trace.finish("interrupted")
             result = error_result("Research paused for a decision", thread_id)
             result["interruptions"] = _interruptions(state)
             return result
         # Format raw state so unfinished tool calls remain a completion boundary.
-        return format_result(state, thread_id)
+        result = format_result(state, thread_id)
+        trace.finish("success" if result["success"] else "error", result["error"])
+        return result
     except Exception as exc:
         logger.exception("Chat failed")
+        trace.finish("error", exc)
         return error_result(exc, thread_id)
+    finally:
+        trace.finish("interrupted")
 
 
 async def _get_history(thread_id: str) -> ChatHistoryResponse:
@@ -482,6 +490,7 @@ async def _stream_sse(
         pending_events.clear()
         return events
 
+    trace = traces.begin(org_id, user_id, thread_id, message)
     try:
         await _ensure_user_habits(_store, user_id, org_id)
         if file_id is not None:
@@ -496,6 +505,7 @@ async def _stream_sse(
         config = RunnableConfig(
             configurable={"thread_id": thread_id},
             metadata={"org_id": org_id, "user_id": user_id},
+            callbacks=[trace],
         )
         context = MemoryContext(
             user_id=user_id, org_id=org_id, response_schema=response_schema
@@ -575,17 +585,22 @@ async def _stream_sse(
                     for ev in drain():
                         yield ev
         if final_state.get("__interrupt__"):
+            trace.finish("interrupted")
             yield _sse("interrupted", {"interruptions": _interruptions(final_state)})
             return
         result = format_result(final_state, thread_id)
         if not result["success"]:
             raise ValueError(result["error"])
+        trace.finish()
     except Exception as e:
+        trace.finish("error", e)
         logger.error(f"Streaming chat error: thread_id={thread_id}: {e}", exc_info=True)
         if "budget exhausted" in str(e):
             yield _sse("budget_stop", {"message": sanitize_error(e), **context.run_budget.snapshot()})
-        yield _sse("error", {"message": sanitize_error(e)})
+        yield _sse("error", {"message": research_error(e)})
         return
+    finally:
+        trace.finish("interrupted")
 
     splitter.flush()
     for ev in drain():
@@ -721,3 +736,18 @@ async def delete_thread(
 ):
     await _delete_thread(_owned_thread(thread_id, org_id, user_id))
     return {"status": "ok"}
+
+
+@router.get("/traces")
+async def list_traces(response: Response, org_id: str = Depends(organization), user_id: str = Depends(user)):
+    response.headers["Cache-Control"] = "no-store"
+    return {"traces": traces.read(org_id, user_id)}
+
+
+@router.get("/traces/{trace_id}")
+async def trace_detail(trace_id: str, response: Response, org_id: str = Depends(organization), user_id: str = Depends(user)):
+    response.headers["Cache-Control"] = "no-store"
+    rows = traces.read(org_id, user_id, trace_id)
+    if not rows:
+        raise HTTPException(404, "Trace not found in this workspace")
+    return rows[0]

@@ -94,6 +94,41 @@ export function ResearchPage({ identity }: { identity: Identity }) {
   const [thread, setThread] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [stockQuery, setStockQuery] = useState("");
+  const [stocks, setStocks] = useState<
+    { symbol: string; name: string; exchange?: string | null }[]
+  >([]);
+  const [searching, setSearching] = useState(false);
+  const [stockError, setStockError] = useState("");
+  const [searched, setSearched] = useState(false);
+  const stockController = useRef<AbortController | null>(null);
+  useEffect(() => () => stockController.current?.abort(), []);
+  async function searchStocks() {
+    const query = stockQuery.trim();
+    if (!query) return;
+    stockController.current?.abort();
+    const request = new AbortController();
+    stockController.current = request;
+    setSearching(true);
+    setStocks([]);
+    setStockError("");
+    setSearched(false);
+    try {
+      const result = await api<{ symbols: typeof stocks }>(
+        `/portfolio/symbols?query=${encodeURIComponent(query)}`,
+        { signal: request.signal },
+      );
+      if (!request.signal.aborted) {
+        setStocks(result.symbols);
+        setSearched(true);
+      }
+    } catch (error) {
+      if (!request.signal.aborted)
+        setStockError(error instanceof Error ? error.message : "Stock search failed");
+    } finally {
+      if (!request.signal.aborted) setSearching(false);
+    }
+  }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -231,6 +266,50 @@ export function ResearchPage({ identity }: { identity: Identity }) {
           + New conversation
         </button>
       </div>
+      <section className="panel stock-search" aria-label="Stock search">
+        <form className="inline" onSubmit={(event) => {
+          event.preventDefault();
+          void searchStocks();
+        }}>
+          <label htmlFor="research-stock-search">Find a stock</label>
+          <input
+            id="research-stock-search"
+            type="search"
+            placeholder="Ticker, symbol or company name"
+            maxLength={80}
+            value={stockQuery}
+            disabled={busy}
+            onChange={(event) => {
+              stockController.current?.abort();
+              setStockQuery(event.target.value);
+              setStocks([]);
+              setStockError("");
+              setSearched(false);
+              setSearching(false);
+            }}
+          />
+          <button disabled={busy || searching || !stockQuery.trim()}>
+            {searching ? "Searching…" : "Search stocks"}
+          </button>
+        </form>
+        <div aria-live="polite">
+          {stockError && <p className="negative">{stockError}</p>}
+          {searched && !stocks.length && <p>No matching stocks. Try another ticker or company name.</p>}
+        </div>
+        {stocks.length > 0 && <ul className="stock-search-results">
+          {stocks.map((stock) => <li key={stock.symbol}>
+            <button type="button" disabled={busy} onClick={() => {
+              setInput(`Research ${stock.name} (${stock.symbol}).`);
+              setStockQuery(`${stock.symbol} · ${stock.name}`);
+              setStocks([]);
+              setSearched(false);
+            }}>
+              <strong>{stock.symbol}</strong> · {stock.name}
+              {stock.exchange && <span> · {stock.exchange}</span>}
+            </button>
+          </li>)}
+        </ul>}
+      </section>
       <div className="research-layout">
         <aside className="conversations">
           <h2>Conversations</h2>

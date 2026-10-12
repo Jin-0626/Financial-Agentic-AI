@@ -39,7 +39,6 @@ os.environ.update(
     OIDC_AUDIENCE="terminal",
     OIDC_ORG_CLAIM="org_id",
     PORTFOLIO_ENABLED="true",
-    OTEL_ENABLED="false",
 )
 
 

@@ -1,27 +1,16 @@
 use crate::{
-    telemetry::Telemetry,
     types::{self, ToolError, WorkerJob, WorkerReply},
     Config, MAX_FRAME,
 };
 use data_pipeline::SnapshotStore;
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
+use std::sync::Arc;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt, BufReader},
     process::Command,
     sync::Semaphore,
 };
 use tokio_util::sync::CancellationToken;
-use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-struct Queued(opentelemetry::metrics::UpDownCounter<i64>);
-impl Drop for Queued {
-    fn drop(&mut self) {
-        self.0.add(-1, &[]);
-    }
-}
 fn failure(code: &str, message: &str) -> WorkerReply {
     types::error_reply(ToolError::new("runtime", code, message))
 }
@@ -29,30 +18,23 @@ pub struct Execution<'a> {
     pub config: &'a Config,
     pub store: &'a SnapshotStore,
     pub workers: Arc<Semaphore>,
-    pub telemetry: Arc<Telemetry>,
-    pub recovery: Arc<AtomicBool>,
 }
 pub async fn execute(
     context: Execution<'_>,
     name: &str,
     args: serde_json::Value,
     cancel: CancellationToken,
-    span: &tracing::Span,
 ) -> WorkerReply {
     let Execution {
         config,
         store,
         workers,
-        telemetry,
-        recovery,
     } = context;
-    let queued = Queued(telemetry.queue.clone());
     let deadline = tokio::time::Instant::now() + config.deadline;
     let admission = tokio::select! {
-        _ = cancel.cancelled() => { drop(queued); return failure("cancelled", "Calculation cancelled"); }
+        _ = cancel.cancelled() => { return failure("cancelled", "Calculation cancelled"); }
         permit = tokio::time::timeout_at(deadline, workers.acquire_owned()) => permit,
     };
-    drop(queued);
     let _permit = match admission {
         Ok(Ok(permit)) => permit,
         _ => {
@@ -62,15 +44,10 @@ pub async fn execute(
             )
         }
     };
-    telemetry.active.add(1, &[]);
-    let _active = Queued(telemetry.active.clone());
-    let mut job = match types::prepare(store, name, &args) {
+    let job = match types::prepare(store, name, &args) {
         Ok(job) => job,
         Err(error) => return types::error_reply(error),
     };
-    let carrier = crate::telemetry::carrier(span);
-    job.traceparent = carrier.get("traceparent").cloned();
-    job.tracestate = carrier.get("tracestate").cloned();
     let bytes = match serde_json::to_vec(&job) {
         Ok(bytes) if bytes.len() < MAX_FRAME => bytes,
         _ => return failure("invalid_job", "Worker job exceeds bounded protocol"),
@@ -98,9 +75,6 @@ pub async fn execute(
         Ok(child) => child,
         Err(_) => return failure("worker_start", "Worker could not be started"),
     };
-    if recovery.swap(false, Ordering::SeqCst) {
-        telemetry.restarts.add(1, &[]);
-    }
     let mut input = Some(match child.stdin.take() {
         Some(input) => input,
         None => return failure("worker_pipe", "Worker input unavailable"),
@@ -143,10 +117,7 @@ pub async fn execute(
         if !status.success() {
             return Err(());
         }
-        let reply: WorkerReply = {
-            let _guard = tracing::info_span!("result.deserialize").entered();
-            serde_json::from_slice(&response).map_err(|_| ())?
-        };
+        let reply: WorkerReply = serde_json::from_slice(&response).map_err(|_| ())?;
         if !types::validate_output(name, &reply.result)
             || reply.is_error != (reply.result["status"] == "error")
         {
@@ -158,8 +129,8 @@ pub async fn execute(
         _ = cancel.cancelled() => failure("cancelled", "Calculation cancelled"),
         outcome = tokio::time::timeout_at(deadline, execution) => match outcome {
             Ok(Ok(reply)) => reply,
-            Ok(Err(())) => { recovery.store(true, Ordering::SeqCst); failure("worker_crash", "Worker exited without a validated result") }
-            Err(_) => { recovery.store(true, Ordering::SeqCst); failure("worker_timeout", "Calculation deadline exceeded") }
+            Ok(Err(())) => failure("worker_crash", "Worker exited without a validated result"),
+            Err(_) => failure("worker_timeout", "Calculation deadline exceeded"),
         },
     };
     if reply.result["error"]["code"] == "cancelled" {
@@ -180,39 +151,23 @@ pub async fn execute(
     let _ = child.wait().await;
     reply
 }
-pub async fn worker(
-    store: &SnapshotStore,
-    telemetry: &Telemetry,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+pub async fn worker(store: &SnapshotStore) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut reader = BufReader::new(tokio::io::stdin());
     let bytes = crate::read_frame(&mut reader)
         .await?
         .ok_or("worker frame missing")?
         .map_err(|_| "worker frame too large")?;
     let job: WorkerJob = serde_json::from_value(data_pipeline::parse_unique(&bytes)?)?;
-    let parent = telemetry
-        .parent(&serde_json::json!({"traceparent":job.traceparent,"tracestate":job.tracestate}));
-    let span = tracing::info_span!(
-        "quant.compute",
-        tool.name = job.name.as_str(),
-        otel.status_code = tracing::field::Empty
-    );
-    let _ = span.set_parent(parent);
     let cancel = CancellationToken::new();
     let compute_cancel = cancel.clone();
     let compute_store = store.clone();
-    let compute_span = span.clone();
     let mut task = tokio::task::spawn_blocking(move || {
-        let _guard = compute_span.enter();
         match types::compute(&compute_store, &job, &compute_cancel) {
             Ok(result) => WorkerReply {
                 result,
                 is_error: false,
             },
-            Err(error) => {
-                compute_span.record("otel.status_code", "ERROR");
-                types::error_reply(error)
-            }
+            Err(error) => types::error_reply(error),
         }
     });
     let reply = tokio::select! {
@@ -228,7 +183,6 @@ pub async fn worker(
             task.await?
         }
     };
-    drop(span);
     let encoded = serde_json::to_vec(&reply)?;
     if encoded.len() >= MAX_FRAME {
         return Err("worker result too large".into());

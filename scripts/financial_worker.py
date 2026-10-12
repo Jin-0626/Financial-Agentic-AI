@@ -17,22 +17,16 @@ def main():
     path = (root / name).resolve()
     if path.parent != root.resolve() or hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
         raise ValueError("Provider script integrity check failed")
+    if not entry.get("agent_registered"):
+        raise ValueError("Provider script is not registered")
+    shared = next((record for record in records if record["file"] == "financial_providers.py"), None)
+    common = root / "financial_providers.py"
+    if shared is None or hashlib.sha256(common.read_bytes()).hexdigest() != shared["sha256"]:
+        raise ValueError("Shared provider integrity check failed")
+    sys.path.insert(0, str(root))
     spec = importlib.util.spec_from_file_location("financial_provider", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    if name == "sec_data.py":
-        identity = os.getenv("SEC_USER_AGENT", "").strip()
-        if not identity:
-            raise ValueError("Set SEC_USER_AGENT to your application name and contact email")
-        original = module.SECDataWrapper.__init__
-        def initialize(self):
-            original(self)
-            self.session.headers["User-Agent"] = identity
-        module.SECDataWrapper.__init__ = initialize
-    if name == "bnm_data.py":
-        # Preserve certificate verification and the default TLS security level.
-        from requests.adapters import HTTPAdapter
-        module._BnmTlsAdapter = HTTPAdapter
     sys.argv = [str(path), *sys.argv[2:]]
     module.main()
 

@@ -43,3 +43,6 @@ pub fn validate_returns(returns: &[f64]) -> Result<(), QuantError> {
     }
     Ok(())
 }
+
+mod options;
+pub use options::*;

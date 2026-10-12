@@ -15,8 +15,6 @@ from .config import DB_URL
 from .auth import router as auth_router, validate_config, production
 from .routes import router, set_globals
 from .portfolio_routes import router as portfolio_router, set_repository
-from orchestrator.telemetry import initialize_telemetry
-from orchestrator.telemetry.http import ResearchTelemetryMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +29,6 @@ async def _ensure_agents_memory(store):
 async def lifespan(app):
     if production():
         validate_config()
-    telemetry = initialize_telemetry()
     engine = None
     try:
         engine = NativeEngine()
@@ -58,15 +55,11 @@ async def lifespan(app):
         set_globals(None, None, None)
         set_repository(None)
         set_engine(None)
-        try:
-            if engine is not None:
-                await engine.close()
-        finally:
-            telemetry.release()
+        if engine is not None:
+            await engine.close()
 
 
 app = FastAPI(title="Financial Research Terminal", lifespan=lifespan)
-app.add_middleware(ResearchTelemetryMiddleware)
 _origins = [
     value.strip()
     for value in os.getenv("OIDC_CLIENT_ORIGINS", "").split(",")

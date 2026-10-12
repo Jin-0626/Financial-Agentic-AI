@@ -13,6 +13,9 @@ const PortfolioPage = lazy(() =>
 const ResearchPage = lazy(() =>
   import("./research").then((module) => ({ default: module.ResearchPage })),
 );
+const TracesPage = lazy(() =>
+  import("./traces").then((module) => ({ default: module.TracesPage })),
+);
 import "./style.css";
 import { Session, logout } from "./session";
 import { ModulesPage, modules } from "./modules";
@@ -43,6 +46,7 @@ function App({ authenticated }: { authenticated: Identity | null }) {
               {m.id === "ai_chat" ? "Research" : m.label}
             </NavLink>
           ))}
+        <NavLink to="/traces">Traces</NavLink>
         <NavLink to="/modules">Terminal modules</NavLink>
         {desktop && (
           <button
@@ -120,6 +124,15 @@ function App({ authenticated }: { authenticated: Identity | null }) {
               path="/research"
               element={
                 <ResearchPage
+                  key={JSON.stringify([identity.org, identity.user])}
+                  identity={identity}
+                />
+              }
+            />
+            <Route
+              path="/traces"
+              element={
+                <TracesPage
                   key={JSON.stringify([identity.org, identity.user])}
                   identity={identity}
                 />

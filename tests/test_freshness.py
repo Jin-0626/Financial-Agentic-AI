@@ -228,3 +228,21 @@ class FreshnessTests(unittest.TestCase):
         self.assertTrue(
             all("Previous conversation answers" in prompt for prompt in seen)
         )
+
+
+class RetryContextTests(unittest.TestCase):
+    def test_identical_retry_drops_prior_loop_but_keeps_current_evidence(self):
+        from langchain.agents.middleware.types import ModelRequest
+        from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+        from agent_fixtures import ToolModel
+        from orchestrator.freshness import ResearchFreshness
+        current=HumanMessage(content="Research 5326.KL")
+        fresh=ToolMessage(content="Fresh financials",name="task",tool_call_id="new")
+        observations=HumanMessage(content="Recovered evidence",additional_kwargs={"synthesis_observation":True})
+        messages=[HumanMessage(content="Research 5326.KL"),ToolMessage(content="Admission closed",name="task",tool_call_id="old"),AIMessage(content="Data unavailable"),current,fresh,observations]
+        request=ModelRequest(model=ToolModel(responses=[]),messages=messages,state={})
+        bounded=ResearchFreshness.current(request)
+        self.assertEqual(bounded.messages,[current,fresh,observations])
+        self.assertEqual(len(request.messages),6)
+        changed=request.override(messages=[*messages[:3],HumanMessage(content="Compare this with another stock")])
+        self.assertEqual(ResearchFreshness.current(changed).messages,changed.messages)

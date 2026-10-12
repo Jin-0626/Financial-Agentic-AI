@@ -489,12 +489,32 @@ async def import_preview(repo, org, user, pid, request):
             raise ValueError("Trade ID conflict")
         by_id.setdefault(t["id"], t)
     merged = sorted(by_id.values(), key=lambda t: t["date"])
-    for symbol in dict.fromkeys(t["symbol"] for t in trades):
-        q = await asyncio.to_thread(providers.quote, symbol)
-        if q["currency"] != doc["portfolio"]["currency"]:
-            raise ValueError(
-                "Import quote currency differs; FX conversion is not available"
-            )
+    symbols = list(dict.fromkeys(t["symbol"] for t in trades))
+    for offset in range(0, len(symbols), 4):
+        quotes = asyncio.gather(
+            *(
+                asyncio.to_thread(providers.quote, symbol)
+                for symbol in symbols[offset : offset + 4]
+            ),
+            return_exceptions=True,
+        )
+        try:
+            results = await asyncio.shield(quotes)
+        except asyncio.CancelledError:
+            # Threaded provider calls cannot be stopped; drain this batch before leaving.
+            while not quotes.done():
+                try:
+                    await asyncio.shield(quotes)
+                except asyncio.CancelledError:
+                    continue
+            raise
+        for q in results:
+            if isinstance(q, BaseException):
+                raise q
+            if q["currency"] != doc["portfolio"]["currency"]:
+                raise ValueError(
+                    "Import quote currency differs; FX conversion is not available"
+                )
     result = await ledger(org, doc, merged)
     fingerprint = hashlib.sha256(
         json.dumps(

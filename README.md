@@ -11,6 +11,7 @@ Copy `.env.example` to `.env` and configure DB_URL and the model/provider settin
 
 ```powershell
 uv sync --frozen
+uv run --frozen python scripts/setup_analytics.py
 rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
 cargo +1.99.0 build --locked
 npm --prefix frontend ci
@@ -142,11 +143,9 @@ npm run test:production
 ```
 
 Set ENGINE_TEST_COMMAND to a JSON executable argument array for Rust integration tests,
-TEST_DB_URL for isolated PostgreSQL tests, and TRACE_FIXTURE_COMMAND for the optional
-native telemetry fixture. Build the fixture with
-`cargo +1.99.0 build --locked --manifest-path fixtures/trace-context/Cargo.toml`.
+and TEST_DB_URL for isolated PostgreSQL tests.
 On Windows, executable paths end in `.exe`; on Linux, they do not. Set
-`PYTHON_DOTENV_DISABLED=1` and `OTEL_ENABLED=false` for isolated test runs.
+`PYTHON_DOTENV_DISABLED=1` for isolated test runs.
 Tests requiring unconfigured integration services are skipped.
 `PLAYWRIGHT_CHANNEL=chrome` uses installed Chrome locally.
 CI runs Rust checks on Linux and Windows, database integration on Linux, and React browser
@@ -154,3 +153,55 @@ tests against both mocked APIs and the production build. The production fixture 
 real PostgreSQL/Rust with deterministic model/provider responses. CI also checks
 Python dependency consistency and runs Tauri tests, formatting and strict Clippy
 on Windows. These checks do not verify live model or financial-provider availability.
+
+## Built-in traces
+
+Open **Traces** in the frontend sidebar to inspect recent research runs. Select a
+run and a tool or model call to see its input, output, status, and elapsed time.
+Nested subagent calls retain their parent relationships. The view refreshes every
+three seconds and can filter calls by type and name, including failed calls.
+
+Trace payloads stay in the backend process and are scoped to the same verified
+workspace identity as research. No LangSmith account is required; this view follows
+[LangSmith's trace inspection approach](https://docs.langchain.com/langsmith/trace-deep-agents).
+Credentials are redacted before storage; financial research content remains visible
+to its workspace. Built-in traces do not require an external collector or telemetry exporter.
+
+Retention is bounded to 50 recent runs, 500 calls per run, 16 KiB of text per payload,
+and 512 KiB of payload text per run. Limits are disclosed in the inspector. Traces
+from before this feature was enabled are unavailable, and a backend restart clears
+trace history. This initial recorder is process-local: use a single backend worker
+to keep recording and inspection in the same process. Research checkpoints remain
+independent of trace retention.
+
+Ollama model calls retry a transient server failure once after a one-second delay,
+but only before any response chunk has been emitted. Partial streams, validation
+and authentication failures, and cancellation are not retried. Repeated provider
+failures still leave research incomplete; recovery does not change the model or
+rerun tools. Both failed and successful model attempts appear in the trace view.
+
+## Offline analytics
+
+`analytics_catalog` discovers reviewed operations and their exact Pydantic input
+schemas. `run_analytics` executes only registered operations; specialist role
+policies enforce the allowed financial categories. The coordinator receives bounded
+results with provenance in its own workspace. Built-in Traces captures tool calls.
+
+The default setup also installs the separately locked Python 3.12 environment in
+`analytics-runtime/.venv`; it avoids conflicts with the application's pandas version.
+Workers have four slots, a 60-second deadline including queue time, restricted
+credentials, disabled socket access and bounded JSON input/output. No strategy code,
+module names, filesystem paths, broker connections or live orders are accepted.
+
+Offline backtesting supports buy-and-hold, moving-average crossover and RSI. Discover
+parameters from the catalog; signals execute at the next close with transaction
+costs and fractional long-only shares. Monetary outputs remain decimal strings.
+European CRR option pricing uses the existing native service after measured release
+benchmarks met the migration threshold. Run `python scripts/benchmark_analytics.py`
+with the application environment and built release engine to reproduce measurements.
+
+Coverage is tracked in `evaluation/analytics_coverage.json`. Registration of a reviewed
+operation does not imply every reference helper is integrated. Most reference entries
+still require validated contracts and numerical tests. See
+`evaluation/analytics_sample_review.md` and `evaluation/analytics_performance.md` for
+architectural findings, measured results and remaining verification limitations.

@@ -1,6 +1,5 @@
 //! Private stdio server with bounded framing, admission, and isolated workers.
 mod supervisor;
-mod telemetry;
 mod types;
 use data_pipeline::SnapshotStore;
 use serde::Deserialize;
@@ -12,8 +11,6 @@ use tokio::{
     task::JoinSet,
 };
 use tokio_util::sync::CancellationToken;
-use tracing::Instrument;
-use tracing_opentelemetry::OpenTelemetrySpanExt;
 use types::{ToolError, WorkerReply};
 
 const MAX_FRAME: usize = 1_048_576;
@@ -59,7 +56,7 @@ struct Call {
     name: String,
     arguments: Value,
     #[serde(rename = "_meta")]
-    meta: Option<serde_json::Map<String, Value>>,
+    _meta: Option<serde_json::Map<String, Value>>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -206,24 +203,19 @@ async fn run(mode: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>>
         println!("{}", json!({"snapshot_id":id}));
         return Ok(());
     }
-    let telemetry = Arc::new(telemetry::Telemetry::new()?);
-    let outcome = match mode {
-        "worker" => supervisor::worker(&store, &telemetry).await,
-        "serve" => serve(config, store, telemetry.clone()).await,
+    match mode {
+        "worker" => supervisor::worker(&store).await,
+        "serve" => serve(config, store).await,
         _ => Err("unsupported engine mode".into()),
-    };
-    telemetry.shutdown();
-    outcome
+    }
 }
 async fn serve(
     config: Config,
     store: SnapshotStore,
-    telemetry: Arc<telemetry::Telemetry>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let shutdown = CancellationToken::new();
     let output_shutdown = shutdown.clone();
     let (tx, mut rx) = mpsc::channel::<Value>(64);
-    let writer_telemetry = telemetry.clone();
     let writer = tokio::spawn(async move {
         let mut stdout = tokio::io::stdout();
         while let Some(message) = rx.recv().await {
@@ -236,7 +228,6 @@ async fn serve(
                 break;
             }
             bytes.push(b'\n');
-            let start = std::time::Instant::now();
             let write = async {
                 stdout.write_all(&bytes).await?;
                 stdout.flush().await
@@ -248,16 +239,12 @@ async fn serve(
                 output_shutdown.cancel();
                 break;
             }
-            writer_telemetry
-                .writes
-                .record(start.elapsed().as_secs_f64(), &[]);
         }
     });
     let mut reader = BufReader::new(tokio::io::stdin());
     let mut frame_state = FrameState::default();
     let admission = Arc::new(Semaphore::new(68));
     let workers = Arc::new(Semaphore::new(4));
-    let recovery = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let mut tasks = JoinSet::new();
     let mut pending = std::collections::HashMap::<String, CancellationToken>::new();
     let mut initialized = false;
@@ -487,80 +474,28 @@ async fn serve(
                 continue;
             }
         };
-        let span = tracing::info_span!(
-            "mcp.tools.handle",
-            otel.kind = "server",
-            tool.name = call.name.as_str(),
-            otel.status_code = tracing::field::Empty,
-            error.category = tracing::field::Empty
-        );
-        let _ =
-            span.set_parent(telemetry.parent(&call.meta.map(Value::Object).unwrap_or(Value::Null)));
         let token = shutdown.child_token();
         pending.insert(key.clone(), token.clone());
-        telemetry.queue.add(1, &[]);
         let task_tx = tx.clone();
         let task_store = store.clone();
         let task_config = config.clone();
         let task_workers = workers.clone();
-        let task_telemetry = telemetry.clone();
-        let task_recovery = recovery.clone();
-        let task_span = span.clone();
-        tasks.spawn(
-            async move {
-                let _slot = slot;
-                let start = std::time::Instant::now();
-                let reply = supervisor::execute(
-                    supervisor::Execution {
-                        config: &task_config,
-                        store: &task_store,
-                        workers: task_workers,
-                        telemetry: task_telemetry.clone(),
-                        recovery: task_recovery,
-                    },
-                    &call.name,
-                    call.arguments,
-                    token,
-                    &task_span,
-                )
-                .await;
-                task_telemetry.duration.record(
-                    start.elapsed().as_secs_f64(),
-                    &[opentelemetry::KeyValue::new("tool.name", call.name.clone())],
-                );
-                if reply.result["error"]["code"] == "worker_timeout" {
-                    task_telemetry.budget.add(
-                        1,
-                        &[opentelemetry::KeyValue::new("budget.kind", "deadline")],
-                    );
-                }
-                if reply.is_error {
-                    task_telemetry.errors.add(
-                        1,
-                        &[
-                            opentelemetry::KeyValue::new("tool.name", call.name.clone()),
-                            opentelemetry::KeyValue::new(
-                                "error.category",
-                                reply.result["error"]["category"]
-                                    .as_str()
-                                    .unwrap_or("runtime")
-                                    .to_string(),
-                            ),
-                        ],
-                    );
-                    task_span.record("otel.status_code", "ERROR");
-                    task_span.record(
-                        "error.category",
-                        reply.result["error"]["category"]
-                            .as_str()
-                            .unwrap_or("runtime"),
-                    );
-                }
-                let _ = send(&task_tx, result(id, reply)).await;
-                key
-            }
-            .instrument(span),
-        );
+        tasks.spawn(async move {
+            let _slot = slot;
+            let reply = supervisor::execute(
+                supervisor::Execution {
+                    config: &task_config,
+                    store: &task_store,
+                    workers: task_workers,
+                },
+                &call.name,
+                call.arguments,
+                token,
+            )
+            .await;
+            let _ = send(&task_tx, result(id, reply)).await;
+            key
+        });
     }
     shutdown.cancel();
     while tasks.join_next().await.is_some() {}
@@ -605,7 +540,8 @@ mod tests {
     fn strict_tool_arguments_and_output_schemas() {
         let schema = types::tools();
         if let Some(tools) = schema.as_array() {
-            assert_eq!(tools.len(), 9);
+            assert_eq!(tools.len(), 10);
+            assert!(tools.iter().any(|tool| tool["name"] == "binomial_option"));
             for tool in tools {
                 assert!(jsonschema::validator_for(&tool["inputSchema"]).is_ok());
                 assert!(jsonschema::validator_for(&tool["outputSchema"]).is_ok());

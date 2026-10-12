@@ -60,7 +60,7 @@ class NativeEngineTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp=tempfile.TemporaryDirectory(prefix="native-engine-")
-        cls.env=dict(os.environ, ENGINE_DATA_ROOT=cls.temp.name, ENGINE_ORG_ID="native-test", OTEL_ENABLED="false")
+        cls.env=dict(os.environ, ENGINE_DATA_ROOT=cls.temp.name, ENGINE_ORG_ID="native-test")
         cls.base=json.loads(COMMAND)
         cls.ids={}
         common={"schema_version":1,"org_id":"native-test","ticker":"0157.KL","currency":"MYR",
@@ -96,7 +96,8 @@ class NativeEngineTests(unittest.TestCase):
         return self.session.request(id,"tools/call",{"name":name,"arguments":args})
     def test_four_tools_schemas_and_independent_results(self):
         listing=self.session.request(2,"tools/list")["result"]["tools"]
-        self.assertEqual(len(listing),9)
+        self.assertEqual(len(listing),10)
+        self.assertIn("binomial_option", {item["name"] for item in listing})
         for tool in listing: self.assertFalse(tool["inputSchema"]["additionalProperties"])
         risk=self.call("calculate_historical_var",{"ticker":"0157.KL","lookback_days":4,"confidence_level":0.75},3)
         self.assertFalse(risk["result"]["isError"],risk)
@@ -108,6 +109,28 @@ class NativeEngineTests(unittest.TestCase):
         dcf=self.call("compute_discounted_cash_flow",{"ticker":"0157.KL","wacc":0.1,"terminal_growth_rate":0,"historical_years":1,"forecast_id":self.ids["forecast"]},5)
         self.assertFalse(dcf["result"]["isError"],dcf)
         self.assertAlmostEqual(float(dcf["result"]["structuredContent"]["data"]["equity_value"]),950,places=5)
+    def test_binomial_python_parity_and_invalid_arguments(self):
+        from decimal import Decimal
+        from financial_analytics.registry import validate
+        from financial_analytics.calculations import calculate
+        base={"spot":"100","strike":"95","years":1,"rate":0.05,"dividend_yield":0.02,"volatility":0.2,"side":"call","steps":100}
+        scenarios=[base,{**base,"side":"put"},{**base,"years":0},{**base,"rate":-0.01},
+                   {**base,"steps":1000},{**base,"strike":"120","volatility":0.5}]
+        for index,args in enumerate(scenarios,20):
+            with self.subTest(args=args):
+                expected=calculate("binomial_option",validate("binomial_option",args))["price"]
+                result=self.call("binomial_option",args,index)["result"]
+                self.assertFalse(result["isError"],result)
+                price=result["structuredContent"]["price"]
+                self.assertIsInstance(price,str)
+                self.assertLessEqual(abs(Decimal(price)-Decimal(expected)),Decimal("0.00000001"))
+        for index,args in enumerate(({**base,"steps":0},{**base,"unexpected":"private-input"},
+                                    {**base,"steps":1,"volatility":0.0001},
+                                    {**base,"years":30,"volatility":5,"steps":2000}),40):
+            result=self.call("binomial_option",args,index)["result"]
+            self.assertTrue(result["isError"],result)
+            self.assertNotIn("private-input",json.dumps(result))
+
     def test_existing_python_ratio_parity(self):
         from datetime import date
         from scripts.financialanalysis.data_processor import DataProcessor, DataSource, CompanyInfo, FinancialPeriod, ReportingStandard
@@ -219,17 +242,16 @@ class NativeEngineTests(unittest.TestCase):
             if killer and killer.poll() is None: killer.kill(); killer.communicate()
             isolated.close()
 
-    def test_missing_and_malformed_trace_context_remain_nonfatal(self):
+    def test_optional_mcp_metadata_remains_nonfatal(self):
         args={"ticker":"0157.KL","lookback_days":4,"confidence_level":0.95}
-        for id,meta in enumerate([{}, {"traceparent":"malformed"}, {"traceparent":123},
-                                  {"traceparent":"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01","tracestate":"bad"}],2):
+        for id,meta in enumerate([{}, {"custom":"value"}, {"custom":123}],2):
             result=self.session.request(id,"tools/call",{"name":"calculate_historical_var","arguments":args,"_meta":meta})
             self.assertFalse(result["result"]["isError"],result)
 
     def test_internal_worker_cooperative_cancel(self):
         worker=Session(self.command("worker"),self.env)
         try:
-            job={"name":"run_monte_carlo_simulation","arguments":{"ticker":"0157.KL","simulations":100000,"horizon_days":2520,"seed":42,"lookback_days":4},"snapshot_id":self.ids["prices"],"traceparent":None,"tracestate":None}
+            job={"name":"run_monte_carlo_simulation","arguments":{"ticker":"0157.KL","simulations":100000,"horizon_days":2520,"seed":42,"lookback_days":4},"snapshot_id":self.ids["prices"]}
             worker.raw(json.dumps(job).encode()+b"\n"+b'{"cancel":true}\n')
             result=worker.receive()
             self.assertTrue(result["is_error"],result)

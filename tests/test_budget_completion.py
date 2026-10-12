@@ -86,3 +86,66 @@ class BudgetCompletionTests(unittest.TestCase):
             self.assertTrue(budget.admit_tool("write_todos", {"todos": [{"content": str(i)}]}))
         self.assertFalse(budget.admit_tool("write_todos", {"todos": []}))
         self.assertEqual(budget.phase, "synthesis")
+
+
+class SynthesisLoopTests(unittest.TestCase):
+    def request(self):
+        from langchain_core.messages import SystemMessage, AIMessage
+        context = MemoryContext()
+        context.run_budget.phase = "synthesis"
+        request = ModelRequest(model=ToolModel(responses=[]),
+            messages=[HumanMessage(content="Research 5326.KL"),
+                AIMessage(content="", tool_calls=[{"name":"task","args":{},"id":"old"}]),
+                ToolMessage(content="Provider unavailable", name="task", tool_call_id="old")],
+            system_message=SystemMessage(content="Always delegate to specialists"),
+            runtime=SimpleNamespace(context=context), state={})
+        return request, context
+
+    def response(self, calls=False):
+        from langchain.agents.middleware.types import ModelResponse
+        from langchain_core.messages import AIMessage
+        return ModelResponse(result=[AIMessage(content="I will delegate more." if calls else "## Findings\n\nProvider unavailable; verified company data is missing.",
+            tool_calls=[{"name":"task","args":{"subagent_type":"market_data"},"id":"again"}] if calls else [],
+            usage_metadata={"input_tokens":10,"output_tokens":10,"total_tokens":20})])
+
+    def test_sync_retries_synthesis_once_without_tool_protocol(self):
+        from unittest.mock import Mock
+        request, context = self.request()
+        handler = Mock(side_effect=[self.response(True),self.response()])
+        result = ExecutionLimits().wrap_model_call(request, handler)
+        self.assertFalse(result.result[-1].tool_calls)
+        self.assertIn("Findings",result.result[-1].text)
+        self.assertNotIn("I will delegate more",result.result[-1].text)
+        self.assertEqual(handler.call_count,2)
+        for call in handler.call_args_list:
+            bounded = call.args[0]
+            self.assertEqual(bounded.tools,[])
+            self.assertNotIn("Always delegate",bounded.system_message.text)
+            self.assertFalse(any(isinstance(m,ToolMessage) or getattr(m,"tool_calls",[]) for m in bounded.messages))
+            self.assertIn("Provider unavailable",str(bounded.messages))
+            self.assertIn("Research 5326.KL",str(bounded.messages))
+        self.assertEqual(context.run_budget.reserved,0)
+        self.assertEqual(context.run_budget.tokens,40)
+
+    def test_async_refusal_to_synthesize_fails_after_two_calls(self):
+        request, context = self.request()
+        handler = AsyncMock(return_value=self.response(True))
+        with self.assertRaisesRegex(RuntimeError,"without a completed report"):
+            asyncio.run(ExecutionLimits().awrap_model_call(request, handler))
+        self.assertEqual(handler.await_count,2)
+        self.assertEqual(context.run_budget.reserved,0)
+        self.assertEqual(context.run_budget.steps,0)
+
+    def test_real_graph_finishes_without_dispatching_hallucinated_task(self):
+        from langchain_core.messages import AIMessage
+        from langgraph.store.memory import InMemoryStore
+        from unittest.mock import patch
+        from orchestrator import agent
+        request, context = self.request()
+        model = ToolModel(responses=[self.response(True).result[0],self.response().result[0]])
+        with patch.object(agent,"MODEL_NAME",model):
+            graph=agent.create_agent(None,InMemoryStore())
+            state=graph.invoke({"messages":[HumanMessage(content="Research 5326.KL")]},context=context)
+        self.assertFalse(any(isinstance(m,ToolMessage) for m in state["messages"]))
+        self.assertIn("Findings",state["messages"][-1].text)
+        self.assertEqual(context.run_budget.steps,0)

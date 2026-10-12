@@ -50,6 +50,18 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(output[0]["type"], "token")
         self.assertNotIn("report", [e["type"] for e in output])
 
+    async def test_report_layout_matches_json_stream_and_history(self):
+        from app.research_output import REPORT_SECTIONS
+        state={"messages":[HumanMessage(content="Research company"),
+                           AIMessage(content="### Risks\n\nEvidence is limited.\n\n## Executive Summary\n\nVerified identity only.\n\n## Sources\n\nCompany filing.")]}
+        with patch.object(routes,"_agent",agent(state)), patch.object(routes,"_ensure_user_habits",AsyncMock()):
+            result=await routes._chat("Research company","t","u","o")
+            output=await events()
+        headings=[line[3:] for line in result["result"].splitlines() if line.startswith("## ")]
+        self.assertEqual(headings,list(REPORT_SECTIONS))
+        self.assertEqual(output[-1]["result"],result["result"])
+        self.assertEqual(routes._get_messages_from_state(state)[-1].content,result["result"])
+
     async def test_failure_and_unfinished_run_never_complete(self):
         incomplete = {
             "messages": [
@@ -69,6 +81,23 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
                     (await routes._chat("Research", "t", "u", "o"))["success"]
                 )
                 self.assertEqual([e["type"] for e in await events()], ["error"])
+
+    async def test_ollama_stream_failure_is_explicit_in_json_and_sse(self):
+        from ollama import ResponseError
+
+        failure = ResponseError("Internal Server Error (ref: example-reference)")
+        with (
+            patch.object(routes, "_agent", agent(error=failure)),
+            patch.object(routes, "_ensure_user_habits", AsyncMock()),
+        ):
+            result = await routes._chat("Research", "t", "u", "o")
+            output = await events()
+        self.assertFalse(result["success"])
+        self.assertEqual([event["type"] for event in output], ["error"])
+        self.assertEqual(output[0]["message"], result["error"])
+        self.assertIn("Ollama", result["error"])
+        self.assertIn("Research did not finish", result["error"])
+        self.assertIn("example-reference", result["error"])
 
     async def test_interrupt_is_not_completed_report(self):
         with (

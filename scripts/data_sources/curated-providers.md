@@ -1,61 +1,31 @@
-# Curated Financial financial data scripts
+# Curated Financial Deep Agents providers
 
-Five curated provider scripts adapted for Financial Deep Agents. The application exposes these files read-only through /scripts/ and registers a
-curated run_script tool. Read /scripts/AGENTS.md for supported commands and limits.
+The five active command interfaces are `bnm_data.py`, `fred_data.py`,
+`worldbank_data.py`, `treasury_data.py` and `sec_data.py`. They now delegate to
+independently implemented bounded API clients in `financial_providers.py`.
+Supported commands and examples are in `/scripts/AGENTS.md`.
 
-| Script | Adds | Key | Integration priority |
-| --- | --- | --- | --- |
-| bnm_data.py | Malaysian FX, OPR and lending rates | None | High; default TLS adapter enforced by worker |
-| fred_data.py | US macroeconomic time series and search | FRED_API_KEY | High |
-| worldbank_data.py | Country indicators and comparisons | None | High |
-| treasury_data.py | US debt and fiscal interest/exchange-rate records | None | Medium |
-| sec_data.py | US filings and company facts | None | High; set SEC_USER_AGENT |
+FRED requires `FRED_API_KEY`. SEC requires `SEC_USER_AGENT` containing the application
+name and contact email, including metadata commands. All clients use requests with
+certificate verification, explicit connection/read timeouts and an 8 MiB response
+limit. The outer provider worker limits stdout/stderr to 64 KiB each; request narrow
+windows and small limits. Large SEC fact collections may exceed that outer limit.
 
-All five use requests. SEC also uses pandas and optionally beautifulsoup4 for HTML
-parsing. requests and pandas are already declared by this project. No dependencies,
-credentials, provider endpoints, or agent capabilities were changed while gathering.
+The manifest distinguishes these registered clients from retained reference scripts.
+Before execution, the worker verifies both the selected entry and shared client
+hashes. Unregistered scripts and arbitrary URLs cannot execute through `run_script`.
+Retained upstream-derived reference content retains its applicable licensing;
+independent runtime clients do not assert authorship of that reference library.
 
-## Provenance
+The read-only script workspace supports discovery through the Deep Agents filesystem.
+Role policy, workspace evidence receipts and built-in Traces cover provider calls.
+There are four execution slots, a 60-second deadline and process cleanup on failure.
+Provider failures remain explicit. Live endpoint coverage has not been verified by
+the metadata-only and mocked regression checks.
 
-Sources are byte-for-byte copies. manifest.json records relative upstream paths,
-SHA-256 hashes, dependencies, API-key configuration and integration notes. The complete
-upstream AGPL license is included in LICENSE; preserve it and source attribution.
-
-## Usage examples
-
-From the project root, with its virtual environment:
-
-```powershell
-.venv/Scripts/python.exe scripts/data_sources/bnm_data.py available
-.venv/Scripts/python.exe scripts/data_sources/bnm_data.py currency USD
-.venv/Scripts/python.exe scripts/data_sources/fred_data.py series CPIAUCSL 2024-01-01 2026-10-08
-.venv/Scripts/python.exe scripts/data_sources/worldbank_data.py economic_snapshot MYS
-.venv/Scripts/python.exe scripts/data_sources/treasury_data.py debt 2026-01-01 2026-10-08
-```
-
-Only the first example is metadata-only; the other examples make provider requests.
-The run_script worker requires SEC_USER_AGENT and sets that contact identity. Do not expose arbitrary URLs or
-all upstream commands as unrestricted agent tools.
-
-## Active Deep Agent integration
-
-CompositeBackend maps /scripts/ to a read-only FilesystemBackend. The agent reads
-/scripts/AGENTS.md for discovery, then calls run_script with an allowlisted command.
-Parent/research dispatch policies, tool receipts and telemetry include this runner.
-The worker verifies the current provider manifest hashes, sets SEC_USER_AGENT and replaces the BNM
-TLS adapter with requests' default adapter while preserving bounded, read-only runtime access.
-
-Execution is limited to four concurrent processes, 60 seconds per invocation and
-64 KiB per output stream. Broad commands and arbitrary filing URLs are excluded.
-Errors stay explicit. Live provider coverage has not been verified; the integration
-checks include metadata-only execution, real graph discovery, read-only operations
-and denial/output-limit behavior. Prefer narrow date ranges and filing limits.
-
-## Deliberately excluded
-
-- yfinance_data.py: overlaps existing yf_data.py and includes terminal/daemon machinery.
-- economic_calendar.py: requires browser automation and scraping rather than a small API wrapper.
-- compute_technicals.py: depends on a larger technicals package; existing Rust indicators
-  are a better starting point for bounded, verified calculations.
-- Broker/execution scripts: outside the current research-only capability policy.
-- Hundreds of specialized regional/alternative feeds: add only for a defined research need.
+Official API documentation:
+- Bank Negara Malaysia: https://api.bnm.gov.my/
+- FRED: https://fred.stlouisfed.org/docs/api/fred/
+- World Bank: https://datahelpdesk.worldbank.org/knowledgebase/articles/889392
+- FiscalData: https://fiscaldata.treasury.gov/api-documentation/
+- SEC: https://www.sec.gov/search-filings/edgar-application-programming-interfaces

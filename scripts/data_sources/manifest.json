@@ -1,7 +1,6 @@
 {
-  "upstream": "https://github.com/Fincept-Corporation/FinceptTerminal",
-  "license": "AGPL-3.0-or-later; upstream license: https://github.com/Fincept-Corporation/FinceptTerminal/blob/main/LICENSE",
-  "runtime_source": "local files only; external sample folder not required",
+  "license": "AGPL-3.0-or-later for retained reference library; active curated clients are independent replacements",
+  "runtime_source": "Local hash-verified independent curated clients; reference library is not executable by agents",
   "scripts": [
     {
       "file": "abs_data.py",
@@ -763,19 +762,12 @@
     },
     {
       "file": "bnm_data.py",
-      "sha256": "c9012fbe7b8f3262475f9bfaa12dd39285e481483e57b97caca24d9a41cd933f",
+      "sha256": "6520de8a963094107caffeb3edfb790d11d6eb175cef8a254ef1c7a2443bf89c",
       "imports": [
-        "datetime",
-        "json",
-        "requests",
-        "ssl",
-        "sys",
-        "traceback",
-        "typing"
+        "financial_providers"
       ],
       "agent_registered": true,
-      "status": "curated provider; bounded execution",
-      "source_path": "fincept-qt\\scripts\\bnm_data.py",
+      "status": "independently implemented curated client",
       "purpose": "Malaysia FX, OPR and lending rates",
       "dependencies": [
         "requests"
@@ -788,7 +780,10 @@
       ],
       "integration_notes": "Review _BnmTlsAdapter: upstream reduces TLS security level. Preserve reported unit multipliers; do not confuse per-100-unit quotes with per-unit quotes.",
       "upstream_sha256": "9a18fefb259ea2168bf0114ddae1c2402abe57d0fbc9480518a06b79ce3834cf",
-      "adapted_for": "Financial Deep Agents"
+      "adapted_for": "Financial Deep Agents",
+      "runtime_dependencies": [
+        "financial_providers.py"
+      ]
     },
     {
       "file": "bnr_data.py",
@@ -2417,20 +2412,12 @@
     },
     {
       "file": "fred_data.py",
-      "sha256": "182906ddaef44fff341e082b1504b1a78883461a3354f461a81f1f578b998c85",
+      "sha256": "28fe5c2105feee3b7e58a1814574269627b0deb6c28bb04ed593062a944b5353",
       "imports": [
-        "concurrent",
-        "datetime",
-        "json",
-        "os",
-        "re",
-        "requests",
-        "sys",
-        "typing"
+        "financial_providers"
       ],
       "agent_registered": true,
-      "status": "curated provider; bounded execution",
-      "source_path": "fincept-qt\\scripts\\fred_data.py",
+      "status": "independently implemented curated client",
       "purpose": "US inflation, employment, rates and macro time series",
       "dependencies": [
         "requests"
@@ -2443,7 +2430,10 @@
       ],
       "integration_notes": "Key is read at import time. Reload/restart after configuration changes. Bound bulk series counts and returned observations.",
       "upstream_sha256": "cae3c28b58901dfc50eaca2353d7dc847fffa2fa718f3a93e265696cf9190dbd",
-      "adapted_for": "Financial Deep Agents"
+      "adapted_for": "Financial Deep Agents",
+      "runtime_dependencies": [
+        "financial_providers.py"
+      ]
     },
     {
       "file": "fred_economic_data.py",
@@ -4112,22 +4102,12 @@
     },
     {
       "file": "sec_data.py",
-      "sha256": "fff886a819497c89f84c44e5d96fb26f93f2e3028b066c37c782cf647afaf696",
+      "sha256": "9bdc61827787d9e9736ffaeec6b860d48abdd36fd7e054b27e433825eddf6270",
       "imports": [
-        "bs4",
-        "datetime",
-        "json",
-        "pandas",
-        "re",
-        "requests",
-        "sys",
-        "time",
-        "traceback",
-        "typing"
+        "financial_providers"
       ],
       "agent_registered": true,
-      "status": "curated provider; bounded execution",
-      "source_path": "fincept-qt\\scripts\\sec_data.py",
+      "status": "independently implemented curated client",
       "purpose": "US filings, company facts, insider and institutional disclosures",
       "dependencies": [
         "requests",
@@ -4142,7 +4122,10 @@
       ],
       "integration_notes": "Replace the upstream Financial User-Agent/contact in an integration adapter. Allowlist SEC hosts before exposing filing_content; bound document sizes and result counts. SEC does not cover Bursa filings.",
       "upstream_sha256": "84ca15e108cefe4016daf074e9b2a32317a5d2f0a5baa47f85741951f65114b7",
-      "adapted_for": "Financial Deep Agents"
+      "adapted_for": "Financial Deep Agents",
+      "runtime_dependencies": [
+        "financial_providers.py"
+      ]
     },
     {
       "file": "sec_xbrl_data.py",
@@ -4463,17 +4446,12 @@
     },
     {
       "file": "treasury_data.py",
-      "sha256": "d1f3bd37e6d53919a69e3c4ccf9d47805a07f26739df4983dbf32289a29cdb1f",
+      "sha256": "8f48b3010f99d0a90df27ebd0c0771fe119534b6ba29a16c6197e12021eb02b8",
       "imports": [
-        "json",
-        "os",
-        "requests",
-        "sys",
-        "typing"
+        "financial_providers"
       ],
       "agent_registered": true,
-      "status": "curated provider; bounded execution",
-      "source_path": "fincept-qt\\scripts\\treasury_data.py",
+      "status": "independently implemented curated client",
       "purpose": "US debt, fiscal exchange rates and debt interest data",
       "dependencies": [
         "requests"
@@ -4484,7 +4462,10 @@
         "get_interest_rates",
         "get_exchange_rates"
       ],
-      "integration_notes": "FiscalData interest rates are not a replacement for live market Treasury yield quotes. Preserve record dates and security types."
+      "integration_notes": "FiscalData interest rates are not a replacement for live market Treasury yield quotes. Preserve record dates and security types.",
+      "runtime_dependencies": [
+        "financial_providers.py"
+      ]
     },
     {
       "file": "twelve_data.py",
@@ -4951,18 +4932,12 @@
     },
     {
       "file": "worldbank_data.py",
-      "sha256": "463d50e944e68201bac57e197360c660381cfb6c2261e30bb5fb8d0a58e35665",
+      "sha256": "ba118d96da6b3989e81d74213d6f8d45926216354b02cdd9242b7020a96f54e3",
       "imports": [
-        "datetime",
-        "json",
-        "os",
-        "requests",
-        "sys",
-        "typing"
+        "financial_providers"
       ],
       "agent_registered": true,
-      "status": "curated provider; bounded execution",
-      "source_path": "fincept-qt\\scripts\\worldbank_data.py",
+      "status": "independently implemented curated client",
       "purpose": "Country GDP, development and cross-country comparisons",
       "dependencies": [
         "requests"
@@ -4975,7 +4950,10 @@
       ],
       "integration_notes": "Indicators may be annual or stale. Preserve year and units; do not label observations as live market data. Bound pagination.",
       "upstream_sha256": "f022b29ba1c7482d07c0262af32b415ad5d5271c0c3f85a356b203823638d989",
-      "adapted_for": "Financial Deep Agents"
+      "adapted_for": "Financial Deep Agents",
+      "runtime_dependencies": [
+        "financial_providers.py"
+      ]
     },
     {
       "file": "worldbank_health_data.py",
@@ -5129,6 +5107,15 @@
       "agent_registered": false,
       "provenance": "local implementation; preserves migrated fixes",
       "imports": []
+    },
+    {
+      "file": "financial_providers.py",
+      "sha256": "d37d23b8cceb1255ee419fd145fcba7506c74c68e006c3ed3c874b2e14400333",
+      "agent_registered": false,
+      "status": "independent shared curated API clients",
+      "imports": [
+        "requests"
+      ]
     }
   ],
   "syntax_errors": [],

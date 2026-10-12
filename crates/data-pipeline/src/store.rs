@@ -120,7 +120,6 @@ impl SnapshotStore {
         ))
     }
     pub fn import(&self, snapshot: Snapshot) -> Result<String, PipelineError> {
-        let _span = tracing::info_span!("artifact.commit").entered();
         snapshot.validate()?;
         if snapshot.org_id != self.org_id {
             return Err(PipelineError::InvalidData);
@@ -177,7 +176,6 @@ impl SnapshotStore {
         Ok(id)
     }
     pub fn commit_artifact(&self, value: &serde_json::Value) -> Result<String, PipelineError> {
-        let _span = tracing::info_span!("artifact.commit").entered();
         let bytes = serde_json::to_vec(value).map_err(|_| PipelineError::InvalidData)?;
         if bytes.len() as u64 > MAX_RECORD {
             return Err(PipelineError::InvalidData);
@@ -213,7 +211,6 @@ impl SnapshotStore {
         Ok(id)
     }
     pub fn load(&self, id: &str, ticker: &str, kind: &str) -> Result<Snapshot, PipelineError> {
-        let _span = tracing::info_span!("data.fetch").entered();
         if !valid_id(id) {
             return Err(PipelineError::InvalidData);
         }

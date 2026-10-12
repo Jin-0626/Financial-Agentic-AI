@@ -8,6 +8,7 @@ PUBLIC_PROVIDER_TOOLS = frozenset(
 
 ROLE_TOOLS = {
     "orchestrator": {
+        "analytics_catalog",
         "company_search",
         "market_data",
         "financial_news",
@@ -18,7 +19,9 @@ ROLE_TOOLS = {
         "run_script",
     },
     "research": {
+        "run_analytics",
         "write_todos",
+        "analytics_catalog",
         "company_search",
         "market_data",
         "financial_news",
@@ -26,7 +29,9 @@ ROLE_TOOLS = {
         "run_script",
     },
     "valuation": {
+        "run_analytics",
         "write_todos",
+        "analytics_catalog",
         "company_search",
         "market_data",
         "run_script",
@@ -35,7 +40,9 @@ ROLE_TOOLS = {
         "register_forecast",
     },
     "risk": {
+        "run_analytics",
         "write_todos",
+        "analytics_catalog",
         "company_search",
         "market_data",
         "run_script",

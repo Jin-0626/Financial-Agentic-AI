@@ -38,16 +38,14 @@ jobs:
           python-version: '3.12'
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
       - run: rustup toolchain install 1.99.0 --profile minimal
-      - run: cargo +1.99.0 build --locked --manifest-path fixtures/trace-context/Cargo.toml
       - run: cargo +1.99.0 build --locked -j 2
       - run: uv sync --frozen
+      - run: uv run --frozen python scripts/setup_analytics.py
       - run: uv run --frozen python -B -m unittest discover -s tests -v
         env:
           ENGINE_TEST_COMMAND: '["target/debug/financial-engine"]'
-          TRACE_FIXTURE_COMMAND: '["fixtures/trace-context/target/debug/trace-context-fixture"]'
           TEST_DB_URL: postgresql://postgres:test@127.0.0.1:5432/terminal_test
           PYTHON_DOTENV_DISABLED: '1'
-          OTEL_ENABLED: 'false'
       - run: uv pip check --python .venv/bin/python
       - uses: actions/setup-node@v4
         with:
@@ -64,7 +62,6 @@ jobs:
           TEST_DB_URL: postgresql://postgres:test@127.0.0.1:5432/terminal_test
           ENGINE_COMMAND: '["${{ github.workspace }}/target/debug/financial-engine"]'
           PYTHON_DOTENV_DISABLED: '1'
-          OTEL_ENABLED: 'false'
 
   desktop:
     runs-on: windows-latest

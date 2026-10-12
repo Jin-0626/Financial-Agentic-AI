@@ -47,6 +47,11 @@ class CapabilityPolicy(AgentMiddleware):
             )
         if name not in ROLE_TOOLS[self.role]:
             return False
+        if name == "run_analytics":
+            from financial_analytics.registry import OPERATIONS, CATEGORY_ROLES
+            operation = args.get("operation")
+            specification = OPERATIONS.get(operation) if isinstance(operation, str) else None
+            return specification is not None and self.role in CATEGORY_ROLES[specification.category]
         if name == "market_data":
             kind = str(args.get("data_type", "quote")).strip().lower()
             if self.role == "research":

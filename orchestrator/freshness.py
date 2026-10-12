@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from langchain.agents.middleware import AgentMiddleware
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 
 
 def now_utc():
@@ -38,7 +38,15 @@ class ResearchFreshness(AgentMiddleware):
             if request.system_message
             else []
         )
+        messages = list(request.messages)
+        turns = [i for i, message in enumerate(messages)
+                 if isinstance(message, HumanMessage)
+                 and not message.additional_kwargs.get("synthesis_observation")]
+        if len(turns) >= 2 and messages[turns[-1]].content == messages[turns[-2]].content:
+            # An explicit retry of the same question must not inherit its failed tool loop.
+            messages = messages[turns[-1]:]
         return request.override(
+            messages=messages,
             system_message=SystemMessage(
                 content=[*blocks, {"type": "text", "text": text}]
             )

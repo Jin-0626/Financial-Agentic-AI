@@ -19,15 +19,16 @@ from app.context_type import MemoryContext
 from app.namespace_router import user_namespace
 from .policy import CapabilityPolicy, ROLE_TOOLS, SPECIALIST_ROLES
 from .budgets import ExecutionLimits
+from .model_recovery import ModelRecovery
 from .freshness import ResearchFreshness
 from app.financial_tools import build_financial_tools
+from app.analytics_tools import analytics_catalog, run_analytics
 from app.script_access import ReadOnlyScriptsBackend, run_script, SCRIPTS_ROOT
-from orchestrator.telemetry.middleware import ResearchTelemetry
 
 logger = logging.getLogger(__name__)
 
 
-tools = [*build_financial_tools(), run_script]
+tools = [*build_financial_tools(), run_script, analytics_catalog, run_analytics]
 
 # Global workspace and memory conventions refreshed in PostgreSQL at startup.
 AGENTS_MEMORY = """# Financial research memory and workspace conventions
@@ -184,7 +185,7 @@ def create_agent(
             TodoListMiddleware(),
             CapabilityPolicy("orchestrator"),
             ExecutionLimits(),
-            ResearchTelemetry(),
+            ModelRecovery(),
             ResearchTools(),
             ResearchFreshness(),
         ],
@@ -206,7 +207,7 @@ def create_agent(
                     *spec.get("middleware", []),
                     CapabilityPolicy(SPECIALIST_ROLES[spec["name"]]),
                     ExecutionLimits("specialist"),
-                    ResearchTelemetry(),
+                    ModelRecovery(),
                     ResearchTools(),
                     SpecialistEvidence(),
                     ResearchFreshness(),

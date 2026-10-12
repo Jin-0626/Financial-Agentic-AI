@@ -160,8 +160,6 @@ pub struct WorkerJob {
     pub name: String,
     pub arguments: Value,
     pub snapshot_id: String,
-    pub traceparent: Option<String>,
-    pub tracestate: Option<String>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -184,6 +182,7 @@ pub fn schemas() -> Value {
 }
 pub fn tools() -> Value {
     let mut listed = json!([
+        {"name":"binomial_option", "description":"Offline European CRR option tree from explicit inputs", "inputSchema":schema_for!(BinomialInput), "outputSchema":schema_for!(BinomialResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"recover_opening_positions", "description":"Recover and replay-check undated legacy opening holdings", "inputSchema":schema_for!(RecoveryInput), "outputSchema":schema_for!(RecoveryResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"portfolio_ledger", "description":"Decimal weighted-average accounting for BUY/SELL/DIVIDEND; no persistence", "inputSchema":schema_for!(LedgerInput), "outputSchema":schema_for!(LedgerResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"portfolio_summary", "description":"Decimal valuation; exact symbols and same currency required", "inputSchema":schema_for!(SummaryInput), "outputSchema":schema_for!(PortfolioSummary), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
@@ -209,8 +208,12 @@ pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<Worker
             | "portfolio_summary"
             | "portfolio_performance"
             | "register_snapshot"
+            | "binomial_option"
     ) {
         match name {
+            "binomial_option" => {
+                let _: BinomialInput = parse(args)?;
+            }
             "recover_opening_positions" => {
                 let _: RecoveryInput = parse(args)?;
             }
@@ -233,8 +236,6 @@ pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<Worker
             name: name.into(),
             arguments: args.clone(),
             snapshot_id: String::new(),
-            traceparent: None,
-            tracestate: None,
         });
     }
     let (ticker, kind, explicit) = match name {
@@ -295,8 +296,6 @@ pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<Worker
         name: name.into(),
         arguments: args.clone(),
         snapshot_id,
-        traceparent: None,
-        tracestate: None,
     })
 }
 fn provenance(snapshot: &data_pipeline::Snapshot, ids: Vec<String>) -> Provenance {
@@ -325,6 +324,10 @@ pub fn compute(
     cancel: &CancellationToken,
 ) -> Result<Value, ToolError> {
     match job.name.as_str() {
+        "binomial_option" => {
+            serde_json::to_value(european_binomial(&parse(&job.arguments)?, cancel)?)
+                .map_err(|_| invalid())
+        }
         "recover_opening_positions" => {
             serde_json::to_value(recover_opening_positions(&parse(&job.arguments)?)?)
                 .map_err(|_| invalid())

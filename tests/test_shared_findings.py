@@ -56,3 +56,56 @@ class SharedFindingsTests(unittest.TestCase):
         row["content"] = json.dumps({**data, "net_income": 1})
         text = ResearchTools.shared_assignment(request).tool_call["args"]["description"]
         self.assertNotIn("Verified public provider data", text)
+
+
+class CoordinatorEvidenceTests(unittest.TestCase):
+    def request(self, payload):
+        import json
+        from langchain.agents.middleware.types import ModelRequest
+        from app.evidence import receipt
+        from agent_fixtures import ToolModel
+        meta=receipt("market_data","provider",{"symbol":"5326.KL"},payload)
+        row={"tool":"market_data","call_id":"provider","status":"success",
+             "content":json.dumps(payload),"artifact":{"research_evidence":meta}}
+        task=ToolMessage(name="task",content="Research capacity reserved for coordinator synthesis.",tool_call_id="delegate",
+            artifact={"specialist_evidence":{"kind":"research_evidence_v1","summary":"Capacity reserved","evidence":[row]}})
+        messages=[HumanMessage(content="Research 5326.KL"),task]
+        return ModelRequest(model=ToolModel(responses=[]),messages=messages,state={"messages":messages}),row
+
+    def test_financial_data_survives_placeholder_summary_and_compaction(self):
+        payload={"symbol":"5326.KL","currency":"MYR","frequency":"annual","source":"Yahoo Finance",
+            "income_statement":{"2025-12-31":{"Total Revenue":10000000000,"Net Income":607285000,
+                "unneeded_detail":"x"*15000}}}
+        request,row=self.request(payload)
+        changed=ResearchTools.coordinator_evidence(request)
+        text=changed.messages[-1].text
+        self.assertIn('"Total Revenue": 10000000000',text)
+        self.assertIn('"Net Income": 607285000',text)
+        self.assertIn("2025-12-31",text)
+        self.assertNotIn("unneeded_detail",text)
+        self.assertIn("unneeded_detail",row["content"])
+        again=ResearchTools.coordinator_evidence(changed)
+        self.assertEqual(len(again.messages),len(changed.messages))
+
+    def test_old_turn_and_tampered_evidence_are_not_promoted(self):
+        import json
+        request,row=self.request({"symbol":"5326.KL","currency":"MYR"})
+        changed=request.override(state={"messages":[*request.messages,HumanMessage(content="Research another company")]})
+        self.assertIs(ResearchTools.coordinator_evidence(changed),changed)
+        row["content"]=json.dumps({"symbol":"OTHER"})
+        self.assertIs(ResearchTools.coordinator_evidence(request),request)
+
+    def test_synthesis_estimates_and_receives_the_recovered_data(self):
+        from types import SimpleNamespace
+        from app.context_type import MemoryContext
+        from orchestrator.budgets import ExecutionLimits
+        context=MemoryContext();context.run_budget.phase="synthesis"
+        request,_=self.request({"symbol":"5326.KL","currency":"MYR","income_statement":{"2026-06-30":{"Total Revenue":3000000000}}})
+        request=request.override(runtime=SimpleNamespace(context=context))
+        bounded,amount=ExecutionLimits().prepared(request,context.run_budget)
+        try:
+            self.assertIn("3000000000",str(bounded.messages))
+            self.assertIn("Research 5326.KL",str(bounded.messages))
+            self.assertGreater(amount,4096)
+        finally:
+            context.run_budget.release(amount)

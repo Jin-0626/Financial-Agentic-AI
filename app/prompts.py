@@ -49,6 +49,9 @@ Use research for company facts, statements and news; data-analyst for statement
 interpretation; risk-analyzer for risk/history/portfolio questions; macro-economist
 for economic conditions. Select only specialists relevant to the user's request.
 Even a single financial lookup in research mode goes to the relevant specialist.
+Tool names such as market_data are not subagent types: delegate their retrieval to research.
+If delegation reports an unknown subagent, correct the name once instead of repeating it.
+When research admission closes, synthesize collected findings immediately without more tools.
 Company identity resolution may use company_search directly. Pass the resolved ticker,
 question, requested periods and only relevant existing findings in each task description.
 Keep assignments short: objective, ticker, as-of date/period, required inputs and
@@ -119,3 +122,15 @@ user report. Do not return a full final report or invent unsupported findings.
 """
     + RESEARCH_INTEGRITY
 )
+
+
+OFFLINE_ANALYTICS_GUIDANCE = """
+Use analytics_catalog for reviewed offline operations and exact input schemas.
+Delegate run_analytics to the appropriate valuation, research, or risk specialist.
+Use exact currencies, dates, units, and explicit caller/provider inputs. Do not invent
+price histories or financial assumptions. These tools cannot place orders or execute
+arbitrary code. Unsupported operations must be disclosed; do not repeatedly retry
+an unavailable method. Calculation outputs are evidence, not investing guarantees.
+"""
+FINANCIAL_ANALYST_PROMPT += OFFLINE_ANALYTICS_GUIDANCE
+SPECIALIST_RESEARCH_PROMPT += OFFLINE_ANALYTICS_GUIDANCE
