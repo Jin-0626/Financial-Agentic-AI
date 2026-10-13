@@ -97,8 +97,8 @@ async function mock(page: Page) {
 }
 test("saved portfolio loads automatically and views work", async ({ page }) => {
   await mock(page);
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await expect(page).toHaveURL(/portfolio/);
+  await page.goto("/portfolio", { waitUntil: "domcontentloaded" });
+  await expect(page).toHaveURL(/terminal.*portfolio/);
   await expect(page.getByLabel("Selected portfolio")).toHaveValue("saved");
   await expect(page.getByText("Apple", { exact: true })).toBeVisible();
   await expect(

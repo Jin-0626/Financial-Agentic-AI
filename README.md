@@ -1,8 +1,10 @@
 # Financial Research Terminal
 
-React + FastAPI + Deep Agents + Rust. Portfolio and Research have independent sidebar
-pages in a shared terminal shell. `/` opens Portfolio and automatically selects the
-previously selected or first saved portfolio for the current organization/user.
+React + FastAPI + Deep Agents + Rust. `/` opens the customizable Financial terminal. Drag, resize and pin chart, quote,
+watchlist, news, screener, heatmap, options, crypto, macro, portfolio and calendar
+panels. Research is a persistent sidebar; Traces remains separately accessible.
+Legacy Portfolio and Research links open focused terminal views. Portfolio records
+and research conversations retain their existing PostgreSQL persistence.
 
 ## Run locally
 
@@ -205,3 +207,18 @@ operation does not imply every reference helper is integrated. Most reference en
 still require validated contracts and numerical tests. See
 `evaluation/analytics_sample_review.md` and `evaluation/analytics_performance.md` for
 architectural findings, measured results and remaining verification limitations.
+
+## Terminal workspace
+
+Use Ctrl/Cmd+K for stocks, ETFs, crypto and `>` workspace commands. Alt+1–8 adds
+panels and Alt+9 toggles Research. Layouts, chart controls and watchlists restore
+per organization/user. Public context is snapshotted when research is submitted;
+private portfolio context requires the explicit Include selected portfolio action.
+
+Public endpoints may be delayed or unavailable. The screener reports its provider
+universe, and the heatmap is explicitly the largest 250 matches rather than full-market
+coverage. Listed options are unavailable for Bursa through the current adapter.
+Official Treasury yields require FRED_API_KEY; crypto supports optional
+COINGECKO_DEMO_API_KEY. No new account or paid service is required for the public defaults.
+See [terminal capabilities and contracts](docs/terminal.md) for refresh intervals,
+indicator conventions, calendar limits, source attribution and API behavior.

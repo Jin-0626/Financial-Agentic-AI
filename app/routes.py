@@ -243,7 +243,7 @@ def _build_env_footer(org_id: str) -> str:
 
 
 async def _chat(
-    message, thread_id, user_id, org_id, response_schema="financial", resume=None
+    message, thread_id, user_id, org_id, response_schema="financial", resume=None, terminal_context=None
 ):
     trace = traces.begin(org_id, user_id, thread_id, message)
     try:
@@ -253,7 +253,7 @@ async def _chat(
             if resume is not None
             else {"messages": [{"role": "user", "content": message}], "todos": []},
             context=MemoryContext(
-                user_id=user_id, org_id=org_id, response_schema=response_schema
+                user_id=user_id, org_id=org_id, response_schema=response_schema, terminal_context=terminal_context
             ),
             config=RunnableConfig(
                 configurable={"thread_id": thread_id},
@@ -466,6 +466,7 @@ async def _stream_sse(
     file_id: Optional[str] = None,
     response_schema="financial",
     resume=None,
+    terminal_context=None,
 ) -> Any:
     """Async graph stream with specialist activity and one final parent narrative."""
     reasoning_parts: List[str] = []
@@ -508,7 +509,7 @@ async def _stream_sse(
             callbacks=[trace],
         )
         context = MemoryContext(
-            user_id=user_id, org_id=org_id, response_schema=response_schema
+            user_id=user_id, org_id=org_id, response_schema=response_schema, terminal_context=terminal_context
         )
 
         graph_stream = _agent.astream(
@@ -638,7 +639,7 @@ async def chat(body: ChatRequest, identity=Depends(authenticated_identity)):
 
         result = await asyncio.wait_for(
             _chat(
-                message, thread_id, user_id, org_id, response_schema, data.get("resume")
+                message, thread_id, user_id, org_id, response_schema, data.get("resume"), data.get("terminal_context")
             ),
             timeout=120.0,
         )
@@ -699,6 +700,7 @@ async def chat_stream(body: ChatRequest, identity=Depends(authenticated_identity
             org_id,
             response_schema=response_schema,
             resume=data.get("resume"),
+            terminal_context=data.get("terminal_context"),
         ),
         media_type="text/event-stream",
         headers=_stream_headers(),

@@ -87,7 +87,7 @@ function StatementTables({ companies }: { companies: Statements[] }) {
     </>
   );
 }
-export function ResearchPage({ identity }: { identity: Identity }) {
+export function ResearchPage({ identity, embedded = false, terminalContext }: { identity: Identity; embedded?: boolean; terminalContext?: Record<string, unknown> }) {
   const [threads, setThreads] = useState<
     { thread_id: string; last_message?: string }[]
   >([]);
@@ -154,7 +154,11 @@ export function ResearchPage({ identity }: { identity: Identity }) {
       .then(setThreads)
       .catch((e) => setError(e.message));
   useEffect(() => {
-    newThread();
+    const linkedThread = new URLSearchParams(window.location.search).get("thread_id");
+    if (linkedThread) {
+      setThread(linkedThread);
+      void api<{messages: Message[]}>(`/history/${encodeURIComponent(linkedThread)}?${scope(identity)}`).then(value=>setMessages(value.messages)).catch(e=>setError(e.message));
+    } else newThread();
     void loadThreads();
     return () => controller.current?.abort();
   }, [identity]);
@@ -186,6 +190,7 @@ export function ResearchPage({ identity }: { identity: Identity }) {
           user_id: identity.user,
           org_id: identity.org,
           response_schema: "financial",
+          ...(!resume && terminalContext ? { terminal_context: terminalContext } : {}),
           ...(resume ? { resume } : {}),
         },
         (event) => {
@@ -256,7 +261,7 @@ export function ResearchPage({ identity }: { identity: Identity }) {
     }
   }
   return (
-    <main>
+    <main className={embedded ? "embedded-research" : undefined}>
       <div className="page-title">
         <div>
           <span className="eyebrow">DEEP AGENTS</span>

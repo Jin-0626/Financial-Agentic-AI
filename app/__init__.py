@@ -12,6 +12,8 @@ from app.native_engine import NativeEngine, set_engine
 from app.portfolio_repository import PortfolioRepository
 from app.checkpoint_migration import migrate_checkpoint_contract
 from .config import DB_URL
+from .market_routes import router as market_router
+from .market_service import market_service
 from .auth import router as auth_router, validate_config, production
 from .routes import router, set_globals
 from .portfolio_routes import router as portfolio_router, set_repository
@@ -52,6 +54,7 @@ async def lifespan(app):
             set_globals(store, checkpointer, AgentRuntime(checkpointer, store, engine))
             yield
     finally:
+        market_service.close()
         set_globals(None, None, None)
         set_repository(None)
         set_engine(None)
@@ -80,6 +83,7 @@ if _origins:
 app.include_router(auth_router, prefix="/api")
 app.include_router(router, prefix="/api")
 app.include_router(portfolio_router, prefix="/api")
+app.include_router(market_router, prefix="/api")
 _frontend = Path(__file__).resolve().parents[1] / "frontend" / "dist"
 if (_frontend / "assets").exists():
     app.mount("/assets", StaticFiles(directory=_frontend / "assets"), name="assets")
