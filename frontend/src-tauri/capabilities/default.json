@@ -1,0 +1,13 @@
+{
+  "identifier": "workspace",
+  "description": "Local workspace commands only; no shell or arbitrary filesystem commands.",
+  "windows": [
+    "main",
+    "workspace-*"
+  ],
+  "permissions": [
+    "core:window:allow-close",
+    "allow-open-workspace",
+    "allow-open-portfolio-file"
+  ]
+}

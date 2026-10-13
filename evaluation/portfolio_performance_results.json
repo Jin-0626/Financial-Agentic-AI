@@ -1,0 +1,226 @@
+{
+  "before": {
+    "method": "median of 5 warmed runs (3 for previews); provider mock sleeps 10 ms/call",
+    "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "engine": "D:\\Learning\\Project\\analysis_deepagent\\target\\release\\financial-engine.exe",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "source_revision": "d5105fe4b62347985a2bb7f1bf518ef1bb973987",
+    "baseline": true,
+    "normalization": [
+      {
+        "symbols": 10,
+        "points": 252,
+        "python_normalization_ms": 7.805,
+        "dataframe_value_extraction_ms": 2.129,
+        "json_roundtrip_ms": 1.388,
+        "normalized_json_bytes": 108590,
+        "normalized_json_under_1mib": true
+      },
+      {
+        "symbols": 10,
+        "points": 2520,
+        "python_normalization_ms": 55.56,
+        "dataframe_value_extraction_ms": 8.786,
+        "json_roundtrip_ms": 14.226,
+        "normalized_json_bytes": 1098010,
+        "normalized_json_under_1mib": false
+      },
+      {
+        "symbols": 100,
+        "points": 252,
+        "python_normalization_ms": 79.906,
+        "dataframe_value_extraction_ms": 23.44,
+        "json_roundtrip_ms": 15.227,
+        "normalized_json_bytes": 1085990,
+        "normalized_json_under_1mib": false
+      },
+      {
+        "symbols": 100,
+        "points": 2520,
+        "python_normalization_ms": 657.302,
+        "dataframe_value_extraction_ms": 91.483,
+        "json_roundtrip_ms": 153.271,
+        "normalized_json_bytes": 10980190,
+        "normalized_json_under_1mib": false
+      }
+    ],
+    "imports": [
+      {
+        "transactions": 100,
+        "symbols": 10,
+        "python_validation_ms": 1.04,
+        "json_roundtrip_ms": 0.146,
+        "native_mcp_worker_ms": 44.944,
+        "rust_compute_ms": 0.0764,
+        "preview_with_provider_wait_ms": 152.95,
+        "provider_wait_wall_ms": 105.684,
+        "sequential_provider_wait_floor_ms": 100
+      },
+      {
+        "transactions": 100,
+        "symbols": 50,
+        "python_validation_ms": 1.004,
+        "json_roundtrip_ms": 0.141,
+        "native_mcp_worker_ms": 46.212,
+        "rust_compute_ms": 0.0996,
+        "preview_with_provider_wait_ms": 577.707,
+        "provider_wait_wall_ms": 528.945,
+        "sequential_provider_wait_floor_ms": 500
+      },
+      {
+        "transactions": 2000,
+        "symbols": 10,
+        "python_validation_ms": 20.644,
+        "json_roundtrip_ms": 2.775,
+        "native_mcp_worker_ms": 207.909,
+        "rust_compute_ms": 1.4282,
+        "preview_with_provider_wait_ms": 357.978,
+        "provider_wait_wall_ms": 104.826,
+        "sequential_provider_wait_floor_ms": 100
+      },
+      {
+        "transactions": 2000,
+        "symbols": 50,
+        "python_validation_ms": 20.87,
+        "json_roundtrip_ms": 3.075,
+        "native_mcp_worker_ms": 212.323,
+        "rust_compute_ms": 1.4516,
+        "preview_with_provider_wait_ms": 791.843,
+        "provider_wait_wall_ms": 527.877,
+        "sequential_provider_wait_floor_ms": 500
+      }
+    ],
+    "summaries": [
+      {
+        "symbols": 10,
+        "native_mcp_worker_ms": 37.379,
+        "summary_with_provider_wait_ms": 48.564,
+        "provider_wait_wall_ms": 10.993,
+        "rust_compute_ms": 0.0042,
+        "json_roundtrip_ms": 0.018
+      },
+      {
+        "symbols": 50,
+        "native_mcp_worker_ms": 39.338,
+        "summary_with_provider_wait_ms": 74.894,
+        "provider_wait_wall_ms": 32.154,
+        "rust_compute_ms": 0.0335,
+        "json_roundtrip_ms": 0.114
+      }
+    ],
+    "connection_startup_ms": 1442.637,
+    "first_native_call_ms": 156.979
+  },
+  "after": {
+    "method": "median of 5 warmed runs (3 for previews); provider mock sleeps 10 ms/call",
+    "python": "3.13.15 (tags/v3.13.15:4061bc4, Aug  5 2026, 13:05:39) [MSC v.1944 64 bit (AMD64)]",
+    "engine": "D:\\Learning\\Project\\analysis_deepagent\\target\\release\\financial-engine.exe",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "source_revision": "d5105fe4b62347985a2bb7f1bf518ef1bb973987",
+    "baseline": false,
+    "normalization": [
+      {
+        "symbols": 10,
+        "points": 252,
+        "python_normalization_ms": 7.888,
+        "dataframe_value_extraction_ms": 2.151,
+        "json_roundtrip_ms": 1.35,
+        "normalized_json_bytes": 108590,
+        "normalized_json_under_1mib": true
+      },
+      {
+        "symbols": 10,
+        "points": 2520,
+        "python_normalization_ms": 54.444,
+        "dataframe_value_extraction_ms": 8.766,
+        "json_roundtrip_ms": 14.451,
+        "normalized_json_bytes": 1098010,
+        "normalized_json_under_1mib": false
+      },
+      {
+        "symbols": 100,
+        "points": 252,
+        "python_normalization_ms": 82.868,
+        "dataframe_value_extraction_ms": 23.715,
+        "json_roundtrip_ms": 14.529,
+        "normalized_json_bytes": 1085990,
+        "normalized_json_under_1mib": false
+      },
+      {
+        "symbols": 100,
+        "points": 2520,
+        "python_normalization_ms": 641.232,
+        "dataframe_value_extraction_ms": 90.227,
+        "json_roundtrip_ms": 153.166,
+        "normalized_json_bytes": 10980190,
+        "normalized_json_under_1mib": false
+      }
+    ],
+    "imports": [
+      {
+        "transactions": 100,
+        "symbols": 10,
+        "python_validation_ms": 1.061,
+        "json_roundtrip_ms": 0.146,
+        "native_mcp_worker_ms": 44.781,
+        "rust_compute_ms": 0.0736,
+        "preview_with_provider_wait_ms": 77.356,
+        "provider_wait_wall_ms": 32.574,
+        "sequential_provider_wait_floor_ms": 100
+      },
+      {
+        "transactions": 100,
+        "symbols": 50,
+        "python_validation_ms": 1.045,
+        "json_roundtrip_ms": 0.147,
+        "native_mcp_worker_ms": 44.569,
+        "rust_compute_ms": 0.0777,
+        "preview_with_provider_wait_ms": 189.294,
+        "provider_wait_wall_ms": 140.995,
+        "sequential_provider_wait_floor_ms": 500
+      },
+      {
+        "transactions": 2000,
+        "symbols": 10,
+        "python_validation_ms": 21.08,
+        "json_roundtrip_ms": 2.901,
+        "native_mcp_worker_ms": 208.015,
+        "rust_compute_ms": 1.4464000000000001,
+        "preview_with_provider_wait_ms": 283.777,
+        "provider_wait_wall_ms": 40.623,
+        "sequential_provider_wait_floor_ms": 100
+      },
+      {
+        "transactions": 2000,
+        "symbols": 50,
+        "python_validation_ms": 21.84,
+        "json_roundtrip_ms": 2.843,
+        "native_mcp_worker_ms": 212.365,
+        "rust_compute_ms": 1.5334999999999999,
+        "preview_with_provider_wait_ms": 395.635,
+        "provider_wait_wall_ms": 144.462,
+        "sequential_provider_wait_floor_ms": 500
+      }
+    ],
+    "summaries": [
+      {
+        "symbols": 10,
+        "native_mcp_worker_ms": 35.169,
+        "summary_with_provider_wait_ms": 47.055,
+        "provider_wait_wall_ms": 10.865,
+        "rust_compute_ms": 0.0044,
+        "json_roundtrip_ms": 0.019
+      },
+      {
+        "symbols": 50,
+        "native_mcp_worker_ms": 38.938,
+        "summary_with_provider_wait_ms": 71.768,
+        "provider_wait_wall_ms": 32.082,
+        "rust_compute_ms": 0.0214,
+        "json_roundtrip_ms": 0.115
+      }
+    ],
+    "connection_startup_ms": 1021.953,
+    "first_native_call_ms": 115.043
+  }
+}

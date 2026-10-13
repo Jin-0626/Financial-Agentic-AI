@@ -1,0 +1,2 @@
+# Provider integrity hashes must match on Windows and Linux.
+scripts/data_sources/*.py text eol=lf

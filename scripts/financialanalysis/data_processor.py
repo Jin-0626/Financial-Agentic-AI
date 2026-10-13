@@ -9,8 +9,7 @@ from enum import Enum
 import logging
 import math
 import re
-from typing import Any, Dict, List, Optional, Union
-import numpy as np
+from typing import Any, Dict, List, Optional
 import pandas as pd
 
 
@@ -19,12 +18,6 @@ class ReportingStandard(Enum):
   IFRS = "IFRS"
   US_GAAP = "US_GAAP"
   LOCAL_GAAP = "LOCAL_GAAP"
-
-
-class CurrencyType(Enum):
-  PRESENTATION = "presentation"
-  FUNCTIONAL = "functional"
-  LOCAL = "local"
 
 
 class DataSource(Enum):

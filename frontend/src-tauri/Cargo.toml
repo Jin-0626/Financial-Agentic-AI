@@ -1,0 +1,33 @@
+[package]
+name = "financial-terminal-desktop"
+version = "0.1.0"
+description = "Windows desktop shell for the managed Financial Research Terminal"
+license = "AGPL-3.0-or-later"
+edition = "2024"
+rust-version = "1.99"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.1" }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "2.12.1" }
+tauri-plugin-dialog = "2"
+
+[workspace]
+
+[lints.rust]
+unsafe_code = "forbid"
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[dev-dependencies]
+tempfile = "3"

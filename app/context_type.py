@@ -1,8 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from orchestrator.budgets import RunBudget
 
 
 @dataclass(frozen=True)
 class MemoryContext:
     user_id: str = "local-user"
     org_id: str = "default-org"
-    response_schema: str | None = "analysis_report"
+    response_schema: str | None = "financial"
+    terminal_context: dict | None = field(default=None, repr=False, compare=False)
+    run_budget: RunBudget = field(default_factory=RunBudget, repr=False, compare=False)
