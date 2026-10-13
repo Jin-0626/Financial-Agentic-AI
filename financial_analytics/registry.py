@@ -56,7 +56,7 @@ OPERATIONS = {
     "pyportfolioopt_allocation": Operation("optimization", s.Optimization, "PyPortfolioOpt mean-variance allocation", ("pypfopt",)),
     "skfolio_allocation": Operation("optimization", s.Optimization, "skfolio mean-variance allocation", ("skfolio",)),
     "riskfolio_allocation": Operation("optimization", s.Optimization, "Riskfolio historical allocation", ("riskfolio",)),
-    "offline_backtest": Operation("backtesting", s.Backtest, "Three long-only next-bar strategies with transaction costs"),
+    "offline_backtest": Operation("backtesting", s.Backtest, "Three long-only next-bar strategies with transaction costs", native_tool="offline_backtest"),
 }
 CATEGORY_ROLES = {
     "valuation": {"valuation"}, "corporate_finance": {"valuation"}, "financial_statements": {"valuation"},

@@ -184,9 +184,15 @@ pub async fn worker(store: &SnapshotStore) -> Result<(), Box<dyn std::error::Err
         }
     };
     let encoded = serde_json::to_vec(&reply)?;
-    if encoded.len() >= MAX_FRAME {
-        return Err("worker result too large".into());
-    }
+    let encoded = if encoded.len() >= MAX_FRAME {
+        serde_json::to_vec(&types::error_reply(ToolError::new(
+            "runtime",
+            "result_too_large",
+            "Result exceeds frame limit; reduce the workload",
+        )))?
+    } else {
+        encoded
+    };
     let mut stdout = tokio::io::stdout();
     stdout.write_all(&encoded).await?;
     stdout.write_all(b"\n").await?;

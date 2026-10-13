@@ -96,7 +96,7 @@ class NativeEngineTests(unittest.TestCase):
         return self.session.request(id,"tools/call",{"name":name,"arguments":args})
     def test_four_tools_schemas_and_independent_results(self):
         listing=self.session.request(2,"tools/list")["result"]["tools"]
-        self.assertEqual(len(listing),10)
+        self.assertEqual(len(listing),11)
         self.assertIn("binomial_option", {item["name"] for item in listing})
         for tool in listing: self.assertFalse(tool["inputSchema"]["additionalProperties"])
         risk=self.call("calculate_historical_var",{"ticker":"0157.KL","lookback_days":4,"confidence_level":0.75},3)
@@ -109,6 +109,75 @@ class NativeEngineTests(unittest.TestCase):
         dcf=self.call("compute_discounted_cash_flow",{"ticker":"0157.KL","wacc":0.1,"terminal_growth_rate":0,"historical_years":1,"forecast_id":self.ids["forecast"]},5)
         self.assertFalse(dcf["result"]["isError"],dcf)
         self.assertAlmostEqual(float(dcf["result"]["structuredContent"]["data"]["equity_value"]),950,places=5)
+    def test_backtest_python_parity_and_invalid_arguments(self):
+        import math
+        from datetime import date, timedelta
+        from decimal import Decimal
+        from financial_analytics.registry import validate
+        from financial_analytics.calculations import calculate
+        for strategy in ("buy_and_hold", "moving_average_crossover", "rsi"):
+            for count in (30, 1000, 10000):
+                args = validate("offline_backtest", {"prices": [100 + 12 * math.sin(i / 9) + i * 0.002 for i in range(count)],
+                    "dates": [(date(2000, 1, 1) + timedelta(days=i)).isoformat() for i in range(count)],
+                    "strategy": strategy, "initial_cash": "10000", "cost_bps": 15.5, "currency": "MYR"})
+                expected = calculate("offline_backtest", args)
+                response = self.call("offline_backtest", args.model_dump(mode="json"), 80)["result"]
+                self.assertFalse(response["isError"], response)
+                actual = response["structuredContent"]
+                with self.subTest(strategy=strategy, count=count):
+                    self.assertEqual(actual["assumptions"], expected["assumptions"])
+                    self.assertEqual(len(actual["trades"]), len(expected["trades"]))
+                    for a, b in zip(actual["trades"], expected["trades"]):
+                        self.assertEqual((a["date"], a["side"]), (b["date"], b["side"]))
+                        for field in ("quantity", "price", "cost"):
+                            self.assertLessEqual(abs(Decimal(a[field]) - Decimal(b[field])), Decimal("0.00000001"))
+                    for a, b in zip(actual["equity"], expected["equity"]):
+                        self.assertEqual(a["date"], b["date"])
+                        self.assertLessEqual(abs(Decimal(a["equity"]) - Decimal(b["equity"])), Decimal("0.00000001"))
+                    self.assertLessEqual(abs(Decimal(actual["final_equity"]) - Decimal(expected["final_equity"])), Decimal("0.00000001"))
+                    self.assertAlmostEqual(actual["total_return"], expected["total_return"], places=12)
+                    self.assertEqual(Decimal(actual["metrics"]["total_costs"]), sum((Decimal(trade["cost"]) for trade in expected["trades"]), Decimal(0)))
+                    peak = Decimal(expected["initial_cash"]); drawdown = Decimal(0)
+                    for row in expected["equity"]:
+                        value = Decimal(row["equity"]); peak = max(peak, value); drawdown = min(drawdown, value / peak - 1)
+                    self.assertAlmostEqual(actual["metrics"]["maximum_drawdown"], float(drawdown), places=12)
+        valid = args.model_dump(mode="json")
+        for change in ({"prices": [1, 0, 3]}, {"strategy": "code"}, {"cost_bps": -1}, {"leverage": 2},
+                       {"dates": ["2025-01-01"] * 10000}, {"fast_window": 30, "slow_window": 20}):
+            response = self.call("offline_backtest", {**valid, **change}, 81)["result"]
+            self.assertTrue(response["isError"], response)
+
+    def test_backtest_decimal_and_rsi_degenerate_parity(self):
+        from decimal import Decimal
+        from financial_analytics.registry import validate
+        from financial_analytics.calculations import calculate
+        base = {"prices": [100, 101, 102, 103, 104], "dates": ["2025-01-01", "2025-01-02", "2025-01-03", "2025-01-04", "2025-01-05"]}
+        scenarios = [{"initial_cash": "1e3", "cost_bps": 0}, {"initial_cash": "1000.1234567890", "cost_bps": 1000},
+                     {"strategy": "rsi", "rsi_window": 2, "prices": [100] * 5},
+                     {"strategy": "rsi", "rsi_window": 2, "prices": [104, 103, 102, 101, 100]},
+                     {"strategy": "moving_average_crossover", "fast_window": 2, "slow_window": 3}]
+        for change in scenarios:
+            args = validate("offline_backtest", {**base, **change})
+            expected = calculate("offline_backtest", args)
+            actual = self.call("offline_backtest", args.model_dump(mode="json"), 85)["result"]
+            with self.subTest(change=change):
+                self.assertFalse(actual["isError"], actual)
+                result = actual["structuredContent"]
+                self.assertLessEqual(abs(Decimal(result["final_equity"]) - Decimal(expected["final_equity"])), Decimal("0.00000001"))
+                self.assertEqual(result["trades"], expected["trades"])
+
+    def test_backtest_oversized_result_returns_error_without_closing_connection(self):
+        from datetime import date, timedelta
+        from financial_analytics.registry import validate
+        count = 10000
+        args = validate("offline_backtest", {"strategy": "rsi", "rsi_window": 2, "lower": 49, "upper": 51,
+            "cost_bps": 0, "prices": [100 if i % 2 else 100.0001 for i in range(count)],
+            "dates": [(date(2000, 1, 1) + timedelta(days=i)).isoformat() for i in range(count)]})
+        result = self.call("offline_backtest", args.model_dump(mode="json"), 83)["result"]
+        self.assertTrue(result["isError"], result)
+        self.assertEqual(result["structuredContent"]["error"]["code"], "result_too_large")
+        self.assertEqual(self.session.request(84, "ping")["result"], {})
+
     def test_binomial_python_parity_and_invalid_arguments(self):
         from decimal import Decimal
         from financial_analytics.registry import validate

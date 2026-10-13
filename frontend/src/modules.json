@@ -81,7 +81,7 @@
     "label": "Backtesting",
     "stage": 4,
     "registered": true,
-    "status": "missing"
+    "status": "partial"
   },
   {
     "id": "chat_mode",

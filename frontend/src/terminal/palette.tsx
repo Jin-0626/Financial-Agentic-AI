@@ -18,6 +18,7 @@ export function InstrumentPalette() {
     { name: "Portfolio", path: "/terminal?widget=portfolio&focus=portfolio" },
     { name: "Research", path: "/terminal?research=1&focus=research" },
     { name: "Traces", path: "/traces" },
+    { name: "Backtesting", path: "/backtesting" },
     { name: "Terminal modules", path: "/modules" },
   ].filter((c) =>
     c.name.toLowerCase().includes(query.slice(1).trim().toLowerCase()),

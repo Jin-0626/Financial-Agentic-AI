@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 export const modules = records.map((module) => ({
   ...module,
   path: module.id === "ai_chat" ? "/research" : `/${module.id}`,
-  available: ["portfolio", "ai_chat"].includes(module.id),
+  available: ["portfolio", "ai_chat", "backtesting"].includes(module.id),
 }));
 export function ModulesPage() {
   return (

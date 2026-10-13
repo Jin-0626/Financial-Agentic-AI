@@ -6,6 +6,7 @@ import os
 import shutil
 from pathlib import Path
 from langchain_core.tools import StructuredTool, ToolException
+from langchain_core.messages import ToolMessage
 from app.diagnostics import sanitize_error
 
 from orchestrator.tool_registry import NATIVE_TOOLS
@@ -127,9 +128,23 @@ class NativeEngine:
             if name not in tools:
                 raise ValueError("Native tool unavailable")
             try:
-                result = await asyncio.wait_for(tools[name].ainvoke(arguments), 35)
+                invocation = (
+                    {"name": name, "args": arguments, "id": "native-backtest", "type": "tool_call"}
+                    if name == "offline_backtest"
+                    else arguments
+                )
+                result = await asyncio.wait_for(tools[name].ainvoke(invocation), 35)
             except ToolException as error:
                 raise ValueError(sanitize_error(error)) from None
+            if isinstance(result, ToolMessage):
+                if result.status == "error":
+                    raise ValueError(sanitize_error(result.content))
+                artifact = result.artifact
+                result = (
+                    artifact["structured_content"]
+                    if isinstance(artifact, dict) and "structured_content" in artifact
+                    else result.content
+                )
             if isinstance(result, tuple):
                 result = result[0]
             if isinstance(result, list):

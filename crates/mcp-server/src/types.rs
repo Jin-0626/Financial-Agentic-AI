@@ -182,6 +182,7 @@ pub fn schemas() -> Value {
 }
 pub fn tools() -> Value {
     let mut listed = json!([
+        {"name":"offline_backtest", "description":"Offline prior-close buy-and-hold, moving-average crossover and RSI strategies", "inputSchema":schema_for!(BacktestInput), "outputSchema":schema_for!(BacktestResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"binomial_option", "description":"Offline European CRR option tree from explicit inputs", "inputSchema":schema_for!(BinomialInput), "outputSchema":schema_for!(BinomialResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"recover_opening_positions", "description":"Recover and replay-check undated legacy opening holdings", "inputSchema":schema_for!(RecoveryInput), "outputSchema":schema_for!(RecoveryResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"portfolio_ledger", "description":"Decimal weighted-average accounting for BUY/SELL/DIVIDEND; no persistence", "inputSchema":schema_for!(LedgerInput), "outputSchema":schema_for!(LedgerResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
@@ -209,8 +210,13 @@ pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<Worker
             | "portfolio_performance"
             | "register_snapshot"
             | "binomial_option"
+            | "offline_backtest"
     ) {
         match name {
+            "offline_backtest" => {
+                let input: BacktestInput = parse(args)?;
+                input.validate()?;
+            }
             "binomial_option" => {
                 let _: BinomialInput = parse(args)?;
             }
@@ -324,6 +330,10 @@ pub fn compute(
     cancel: &CancellationToken,
 ) -> Result<Value, ToolError> {
     match job.name.as_str() {
+        "offline_backtest" => {
+            serde_json::to_value(offline_backtest(&parse(&job.arguments)?, cancel)?)
+                .map_err(|_| invalid())
+        }
         "binomial_option" => {
             serde_json::to_value(european_binomial(&parse(&job.arguments)?, cancel)?)
                 .map_err(|_| invalid())

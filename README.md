@@ -222,3 +222,36 @@ Official Treasury yields require FRED_API_KEY; crypto supports optional
 COINGECKO_DEMO_API_KEY. No new account or paid service is required for the public defaults.
 See [terminal capabilities and contracts](docs/terminal.md) for refresh intervals,
 indicator conventions, calendar limits, source attribution and API behavior.
+
+
+## Backtesting workspace
+
+Open **Backtesting** from the workspace navigation or `/backtesting`. The core
+workflow follows the sibling sample's configuration and results layout:
+
+- Import or paste a CSV with `date,close` columns, or load Yahoo Finance daily
+  history for one symbol and an inclusive date range. CSV dates must be unique,
+  increasing ISO dates; 3–10,000 observations are supported. Extra unquoted
+  columns are ignored. Yahoo prices are adjusted; verify adjustments for CSV data.
+- Choose buy-and-hold, moving-average crossover, or RSI. Strategy parameters come
+  from the backend catalog. Configure currency, initial capital and trade costs
+  in basis points (10 bps = 0.10%). Signals use the prior close and execute at the
+  next close, with fractional long-only holdings and no leverage.
+- Run through the Rust engine. See Summary, Equity Curve
+  (including drawdown), Metrics, Trades and Raw JSON. Export the completed run
+  with its original inputs and data-source description as JSON, or trades as CSV.
+  Final holdings are marked to market without forced liquidation.
+
+Build the native engine with `cargo +1.99.0 build --release --locked`. Set
+`ENGINE_COMMAND` to the release executable's JSON argument list (for example,
+`["target/release/financial-engine.exe"]` on Windows) and restart the backend.
+Backtesting runs in Rust and does not require the separate analytics Python runtime.
+The API's overall deadline is 60 seconds; the native service retains its four-worker
+bound, 30-second computation deadline and 1 MiB frames. All three
+`/api/backtesting` endpoints use the application's authentication.
+
+Run `python scripts/benchmark_backtest.py` after building the release examples with
+`cargo +1.99.0 build --release --locked --workspace --bins --examples`. This comparison
+also requires the analytics Python runtime for the retained reference baseline.
+The core screen does not yet expose the sample's multiple engines, optimization,
+walk-forward analysis, ML labels or CV splits; module parity remains partial.

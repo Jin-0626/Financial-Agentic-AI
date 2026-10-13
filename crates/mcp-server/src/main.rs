@@ -123,8 +123,21 @@ fn protocol_error(id: Value, code: i32, message: &str) -> Value {
     json!({"jsonrpc":"2.0", "id":id,"error":{"code":code,"message":message}})
 }
 fn result(id: Value, reply: WorkerReply) -> Value {
-    let text = reply.result.to_string();
-    json!({"jsonrpc":"2.0","id":id,"result":{"content":[{"type":"text","text":text}],"structuredContent":reply.result,"isError":reply.is_error}})
+    let text = if reply.result["equity"].is_array() && reply.result["strategy"].is_string() {
+        json!({"strategy": reply.result["strategy"], "final_equity": reply.result["final_equity"], "metrics": reply.result["metrics"]}).to_string()
+    } else {
+        reply.result.to_string()
+    };
+    let message = json!({"jsonrpc":"2.0","id":id,"result":{"content":[{"type":"text","text":text}],"structuredContent":reply.result,"isError":reply.is_error}});
+    if serde_json::to_vec(&message).map_or(true, |bytes| bytes.len() > MAX_FRAME) {
+        let error = types::error_reply(types::ToolError::new(
+            "runtime",
+            "result_too_large",
+            "Result exceeds frame limit; reduce the workload",
+        ));
+        return json!({"jsonrpc":"2.0","id":id,"result":{"content":[{"type":"text","text":error.result.to_string()}],"structuredContent":error.result,"isError":true}});
+    }
+    message
 }
 fn valid_id(value: &Value) -> bool {
     value.as_str().is_some_and(|s| s.len() <= 256)
@@ -537,10 +550,25 @@ mod tests {
         Ok(())
     }
     #[test]
+    fn oversized_rpc_result_becomes_a_bounded_error() {
+        let reply = WorkerReply {
+            result: json!({"rows": "x".repeat(MAX_FRAME)}),
+            is_error: false,
+        };
+        let response = result(json!(42), reply);
+        assert_eq!(response["id"], json!(42));
+        assert_eq!(response["result"]["isError"], json!(true));
+        assert_eq!(
+            response["result"]["structuredContent"]["error"]["code"],
+            json!("result_too_large")
+        );
+        assert!(serde_json::to_vec(&response).is_ok_and(|bytes| bytes.len() < MAX_FRAME));
+    }
+    #[test]
     fn strict_tool_arguments_and_output_schemas() {
         let schema = types::tools();
         if let Some(tools) = schema.as_array() {
-            assert_eq!(tools.len(), 10);
+            assert_eq!(tools.len(), 11);
             assert!(tools.iter().any(|tool| tool["name"] == "binomial_option"));
             for tool in tools {
                 assert!(jsonschema::validator_for(&tool["inputSchema"]).is_ok());

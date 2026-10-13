@@ -96,7 +96,10 @@ async def run_analytics(operation: str, inputs: dict, runtime: ToolRuntime) -> s
     try:
         validated=validate(operation,inputs).model_dump(mode="json")
         specification=OPERATIONS[operation]
-        if specification.native_tool:
+        if operation == "offline_backtest":
+            from .backtest_service import execute_backtest
+            result = await execute_backtest(runtime.context.org_id, validated)
+        elif specification.native_tool:
             from .native_engine import calculate
             if operation == "binomial_option":
                 currency = validated.pop("currency", None)

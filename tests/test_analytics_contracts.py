@@ -75,6 +75,20 @@ class AnalyticsContractsTests(unittest.TestCase):
 
 
 class AnalyticsNativeRoutingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_backtest_uses_native_service_without_python_worker(self):
+        from types import SimpleNamespace
+        from unittest.mock import AsyncMock, patch
+        from app.analytics_tools import run_analytics
+        inputs = {"prices": [100, 110, 90], "dates": ["2025-01-01", "2025-01-02", "2025-01-03"], "currency": "MYR"}
+        with patch("app.backtest_service.calculate", new_callable=AsyncMock, return_value={"final_equity": "818.18181818"}) as native, patch("app.analytics_tools.execute_python", new_callable=AsyncMock) as python:
+            result = json.loads(await run_analytics.coroutine("offline_backtest", inputs, SimpleNamespace(context=SimpleNamespace(org_id="private"))))
+        native.assert_awaited_once()
+        self.assertEqual(native.call_args.args[:2], ("private", "offline_backtest"))
+        self.assertEqual(native.call_args.args[2]["currency"], "MYR")
+        python.assert_not_awaited()
+        self.assertEqual(result["provenance"]["engine"], "rust")
+        self.assertEqual(result["provenance"]["currency"], "MYR")
+
     async def test_native_route_preserves_currency_and_decimal_strings(self):
         from types import SimpleNamespace
         from unittest.mock import AsyncMock, patch

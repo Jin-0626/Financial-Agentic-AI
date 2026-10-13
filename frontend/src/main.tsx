@@ -16,11 +16,17 @@ import { Session, logout } from "./session";
 import { ModulesPage } from "./modules";
 import { Identity } from "./api";
 import { desktop, openWorkspace } from "./desktop";
+const BacktestingPage = lazy(() =>
+  import("./backtesting").then((module) => ({
+    default: module.BacktestingPage,
+  })),
+);
 const workspaceLinks = [
   { path: "/terminal", label: "Terminal" },
   { path: "/portfolio", label: "Portfolio" },
   { path: "/research", label: "Research" },
   { path: "/traces", label: "Traces" },
+  { path: "/backtesting", label: "Backtesting" },
   { path: "/modules", label: "Terminal modules" },
 ];
 const TerminalPage = lazy(() =>
@@ -136,6 +142,15 @@ function App({ authenticated }: { authenticated: Identity | null }) {
           <Suspense fallback={<main>Loading workspace…</main>}>
             <Routes>
               <Route path="/modules" element={<ModulesPage />} />
+              <Route
+                path="/backtesting"
+                element={
+                  <BacktestingPage
+                    key={JSON.stringify([identity.org, identity.user])}
+                    identity={identity}
+                  />
+                }
+              />
               <Route path="/" element={<Navigate to="/terminal" replace />} />
               <Route
                 path="/terminal"
