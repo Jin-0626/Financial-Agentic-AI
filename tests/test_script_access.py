@@ -19,6 +19,18 @@ class ToolModel(FakeMessagesListChatModel):
 
 
 class ScriptAccessTests(unittest.TestCase):
+    def test_registered_provider_hashes_match_lf_checkout(self):
+        import hashlib
+
+        root = SCRIPTS_ROOT / "data_sources"
+        records = json.loads((root / "manifest.json").read_text(encoding="utf-8"))["scripts"]
+        for record in records:
+            if record.get("agent_registered") or record["file"] == "financial_providers.py":
+                with self.subTest(script=record["file"]):
+                    data = (root / record["file"]).read_bytes()
+                    self.assertNotIn(b"\r\n", data)
+                    self.assertEqual(hashlib.sha256(data).hexdigest(), record["sha256"])
+
     def test_real_factory_lists_reads_and_runs_script(self):
         model = ToolModel(
             responses=[

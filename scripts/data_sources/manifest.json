@@ -762,7 +762,7 @@
     },
     {
       "file": "bnm_data.py",
-      "sha256": "6520de8a963094107caffeb3edfb790d11d6eb175cef8a254ef1c7a2443bf89c",
+      "sha256": "61a19f1c0f74df1ead3cb0280586470d8053a50ec0daf03c3a79d48fb4ecfedd",
       "imports": [
         "financial_providers"
       ],
@@ -2412,7 +2412,7 @@
     },
     {
       "file": "fred_data.py",
-      "sha256": "28fe5c2105feee3b7e58a1814574269627b0deb6c28bb04ed593062a944b5353",
+      "sha256": "ec505043da60f26cdf253991dba9a22fc02b7203fbde4d4e7f7d1b597097fdad",
       "imports": [
         "financial_providers"
       ],
@@ -4102,7 +4102,7 @@
     },
     {
       "file": "sec_data.py",
-      "sha256": "9bdc61827787d9e9736ffaeec6b860d48abdd36fd7e054b27e433825eddf6270",
+      "sha256": "6e4d884b284512a5cce7631d84db51e9a33cc1576ace374e09623e78af1f7bf9",
       "imports": [
         "financial_providers"
       ],
@@ -4446,7 +4446,7 @@
     },
     {
       "file": "treasury_data.py",
-      "sha256": "8f48b3010f99d0a90df27ebd0c0771fe119534b6ba29a16c6197e12021eb02b8",
+      "sha256": "7d04957e259f58dc4ca8ec6c510275449265335565e0e9c4f0ccbb92961d6096",
       "imports": [
         "financial_providers"
       ],
@@ -4932,7 +4932,7 @@
     },
     {
       "file": "worldbank_data.py",
-      "sha256": "ba118d96da6b3989e81d74213d6f8d45926216354b02cdd9242b7020a96f54e3",
+      "sha256": "49e809dc9ea064802fa8f1b1f9a74675790e0ce25ea71a1329fe907996b393c5",
       "imports": [
         "financial_providers"
       ],
@@ -5110,7 +5110,7 @@
     },
     {
       "file": "financial_providers.py",
-      "sha256": "d37d23b8cceb1255ee419fd145fcba7506c74c68e006c3ed3c874b2e14400333",
+      "sha256": "8a6ab6951e52867a6e5041f16ae07893463681ab835d820e0a96b126a71c01dd",
       "agent_registered": false,
       "status": "independent shared curated API clients",
       "imports": [
