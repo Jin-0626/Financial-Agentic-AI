@@ -15,13 +15,12 @@ Build the release engine and calculation benchmark from the repository root:
 ```powershell
 cargo +1.99.0 build --release --locked -j 2
 cargo +1.99.0 build --release --locked -p quant-engine --example portfolio_benchmark
-uv run --frozen python -B evaluation/benchmark_portfolio.py --baseline
 uv run --frozen python -B evaluation/benchmark_portfolio.py
 ```
 
-`--baseline` loads the committed import-preview implementation from HEAD in memory.
-Use it before committing the optimization; after committing, HEAD is no longer the
-original baseline. Neither run changes portfolio records or calls live providers.
+Historical pre-optimization timings remain in `portfolio_performance.md`. The harness
+now measures the current implementation without importing an obsolete HEAD module.
+Runs do not change saved portfolio records or call live providers.
 Quotes have a deterministic 10 ms delay. The harness reports median warmed timings,
 connection startup, Python validation/normalization, JSON round trips, in-process
 release Rust computation, and native MCP calls including per-call worker startup.
@@ -40,3 +39,11 @@ normalized payload sizes; large history cases can exceed this existing boundary.
 A future Rust normalization migration must include raw extraction, serialization,
 MCP/worker overhead, and output transfer, and respect the frame limit. No Rust
 normalization implementation or measured speedup is claimed by this benchmark.
+
+## Native analytics comparison baselines
+
+`evaluation/baselines` contains independent Python backtest and CRR formulas solely
+for parity tests and offline performance comparisons. Production workers do not
+execute them. Run `python scripts/benchmark_backtest.py` or
+`python scripts/benchmark_analytics.py` after building release binaries and examples.
+These comparisons require the separately installed analytics Python runtime.

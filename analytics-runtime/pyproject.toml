@@ -3,10 +3,19 @@ name = "financial-analytics-runtime"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
 dependencies = [
- "pydantic>=2.13.5", "numpy>=1.26,<3", "pandas>=2.2,<3", "scipy>=1.13",
- "scikit-learn>=1.5", "statsmodels>=0.14", "cvxpy>=1.6", "PyPortfolioOpt>=1.5",
- "skfolio>=0.10", "riskfolio-lib>=7", "quantstats>=0.0.77", "ffn>=1.1",
- "arch>=7", "pmdarima>=2", "tsmoothie>=1", "backtesting>=0.6", "vectorbt>=0.28",
- "bt>=1.1", "fast-trade>=0.1", "py-vollib>=1.0", "functime>=0.9", "gluonts>=0.16",
- "gs-quant>=1.0", "fortitudo-tech>=0.0",
+    "pydantic>=2.13.5",
+    "numpy>=1.26,<3",
+    "pandas>=2.2,<3",
+    "scipy>=1.13",
+    "scikit-learn>=1.5",
+    "statsmodels>=0.14",
+    "PyPortfolioOpt>=1.5",
+    "skfolio>=0.10",
+    "riskfolio-lib>=7",
+    "arch>=7",
+    "pmdarima>=2",
+    "tsmoothie>=1",
+    "gluonts>=0.16",
+    "gs-quant>=1.0",
+    "fortitudo-tech>=0.0",
 ]

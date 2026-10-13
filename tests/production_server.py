@@ -19,8 +19,9 @@ from psycopg.conninfo import make_conninfo
 from cryptography.hazmat.primitives.asymmetric import rsa
 from langchain_core.messages import AIMessage
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
-import app
-from app import auth, providers
+import app.bootstrap.application as app
+import app.infrastructure.auth as auth
+import app.infrastructure.providers as providers
 from orchestrator import agent
 
 

@@ -3,7 +3,7 @@
 Run from the repository root: python -B evaluation/benchmark_portfolio.py
 Requires cargo +1.99.0 build --release --locked and
 cargo +1.99.0 build --release --locked -p quant-engine --example portfolio_benchmark.
-Use --baseline to load import_preview from HEAD without changing working files.
+Benchmarks the current implementation; historical comparisons are recorded separately.
 """
 import asyncio
 import json
@@ -22,9 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 os.environ["PYTHON_DOTENV_DISABLED"] = "1"
 import pandas as pd
-from app import portfolio_service as service, providers
-from app.native_engine import NativeEngine
-from app.portfolio_repository import MemoryPortfolioRepository
+import app.portfolio.service as service
+import app.infrastructure.providers as providers
+from app.infrastructure.native_engine import NativeEngine
+from tests.support.portfolio import MemoryPortfolioRepository
 
 
 def measure(fn, repeats=5):
@@ -88,11 +89,7 @@ def rust_compute(name, arguments):
 
 async def main():
     if "--baseline" in sys.argv:
-        source = subprocess.check_output(["git", "show", "HEAD:app/portfolio_service.py"]).decode()
-        namespace = {"__name__": "portfolio_baseline"}
-        exec(compile(source, "portfolio_baseline", "exec"), namespace)
-        namespace["ledger"] = service.ledger
-        service.import_preview = namespace["import_preview"]
+        raise SystemExit("Historical portfolio baseline retired; consult evaluation/portfolio_performance.md for the recorded comparison")
     engine_path = ROOT / "target/release" / ("financial-engine.exe" if os.name == "nt" else "financial-engine")
     if not engine_path.is_file():
         raise SystemExit("Build the release engine before benchmarking")

@@ -2,9 +2,9 @@
 
 React + FastAPI + Deep Agents + Rust. `/` opens the customizable Financial terminal. Drag, resize and pin chart, quote,
 watchlist, news, screener, heatmap, options, crypto, macro, portfolio and calendar
-panels. Research is a persistent sidebar; Traces remains separately accessible.
-Legacy Portfolio and Research links open focused terminal views. Portfolio records
-and research conversations retain their existing PostgreSQL persistence.
+panels. Research is a persistent sidebar; Traces and Rust Backtesting have separate
+workspaces. Portfolio and Research navigation open focused terminal views. Current
+portfolio records and research conversations use PostgreSQL persistence.
 
 ## Run locally
 
@@ -52,11 +52,35 @@ async driver. The graph and MCP execution remain asynchronous and cancellable.
 - Deep Agents uses native planning/delegation and isolated specialists. `/scripts/` is
   a shared read-only folder with curated, bounded script execution. Skills are explicitly
   supplied to specialists. Existing script limits and hash checks remain in force.
-- Checkpoints use org/user-prefixed thread IDs. Memory uses `(memories,org,user)`;
-  ambiguous old user-only memory remains preserved and is not copied across organizations.
-  Retired report channel references are archived in checkpoint_legacy_contracts; original
-  checkpoint blobs and messages remain intact. Historical scoped thread IDs receive
-  ownership metadata so history listings do not deserialize other workspaces.
+- Checkpoints use org/user-prefixed thread IDs. Memory uses `(memories,org,user)`.
+  Authentication and organization boundaries apply to research, portfolios and native tools.
+
+### Module layout
+
+| Location | Responsibility |
+| --- | --- |
+| `app/bootstrap` | ASGI composition, resource lifecycle and SPA serving |
+| `app/research`, `app/market`, `app/portfolio`, `app/backtesting` | Feature routes, services and contracts |
+| `app/infrastructure` | Authentication, configuration, providers, PostgreSQL, traces and native transport |
+| `orchestrator` | Deep Agent configuration, specialists, policy, budgets and capability-specific tools |
+| `contracts` | Shared context, evidence and namespace contracts without HTTP dependencies |
+| `financial_analytics` | Reviewed schemas/catalog and isolated Python-only calculations |
+| `crates` | Rust data pipeline, quantitative engine and MCP server |
+| `frontend/src/features`, `frontend/src/shared` | Feature pages/components and shared client utilities |
+| `tests/unit`, `tests/integration`, `tests/support` | Feature-grouped tests and common fixtures |
+| `evaluation/baselines` | Independent Rust comparison formulas and offline benchmark workers |
+
+Keep HTTP wiring in the bootstrap and route modules. Production packages must not
+import evaluation code or sample libraries; agent modules must not import HTTP routes.
+See [the maintenance guide](docs/maintainability.md) for dependency rules and checks.
+
+### Fresh-install compatibility
+
+This version targets fresh installations. It does not import old LangGraph portfolio
+records, recover undated legacy holdings, migrate retired checkpoint channels, or accept
+`analysis_report` as a response selector. Use a new empty database configured through
+`DB_URL`; startup creates current tables. Existing databases are not reset or deleted,
+but old-format data is unsupported. Back up an older installation before upgrading.
 
 ## Portfolio contract
 
@@ -66,11 +90,7 @@ and amount per share. Repeating a transaction ID is idempotent; conflicting deta
 The UI refreshes quotes every five minutes while visible and supports manual refresh.
 
 PostgreSQL portfolio documents use transactional row/advisory locks and revisions.
-Existing LangGraph portfolio records retain IDs and are copied non-destructively with
-SQL backups and migration markers. Undated opening holdings stay explicitly identified;
-Rust recovers/checks their ledger when possible without inventing purchase dates. To
-export an undated legacy opening position, create a new portfolio from transactions
-with your actual purchase dates. Original records remain available as a reference.
+Holdings and exports derive from recorded transactions and current portfolio documents.
 
 JSON imports use the Financial export contract: `format_version`, `portfolio_name`, `owner`,
 `currency`, `export_date`, `transactions` with date/symbol/type/quantity/price/notes.
@@ -94,13 +114,13 @@ Set `PORTFOLIO_ENABLED=true` to enable portfolio routes.
 
 ## Research contract
 
-`response_schema` defaults to `financial`; `analysis_report` is a compatibility alias.
+`response_schema` defaults to `financial`, the only supported response selector.
 `/api/chat` returns `{success,result,todos,files,thread_id,error}`. `result` is readable
 Markdown. SSE `/api/chat/stream` emits progress, tool activity, financial_statements and
 one final `done` envelope. A missing final answer or truncated stream is not success.
 Internal evidence receipts stay in message artifacts; provider/native receipt integrity,
 role restrictions and token/tool limits remain enforced. No AnalysisReport model or
-schema completion tool is used. Saved legacy JSON is rendered as readable text.
+schema completion tool is used. Current text and evidence envelopes render as readable text.
 
 DCF uses explicit registered forecast assumptions and validated historical snapshots.
 Risk/ratio tools fetch exact-symbol normalized snapshots or reuse supplied snapshot IDs.
@@ -135,7 +155,7 @@ an NSIS installer; the backend and PostgreSQL run separately.
 cargo +1.99.0 test --locked
 cargo +1.99.0 fmt --all --check
 cargo +1.99.0 clippy --locked --workspace --all-targets -- -D warnings
-uv run --frozen python -B -m unittest discover -s tests -v
+uv run --frozen python -B -m unittest discover -s tests -t . -v
 npm --prefix frontend run build
 cd frontend
 npx playwright install chromium
@@ -191,7 +211,7 @@ results with provenance in its own workspace. Built-in Traces captures tool call
 
 The default setup also installs the separately locked Python 3.12 environment in
 `analytics-runtime/.venv`; it avoids conflicts with the application's pandas version.
-Workers have four slots, a 60-second deadline including queue time, restricted
+Python workers have four slots, a 60-second deadline including queue time, restricted
 credentials, disabled socket access and bounded JSON input/output. No strategy code,
 module names, filesystem paths, broker connections or live orders are accepted.
 
@@ -202,11 +222,12 @@ European CRR option pricing uses the existing native service after measured rele
 benchmarks met the migration threshold. Run `python scripts/benchmark_analytics.py`
 with the application environment and built release engine to reproduce measurements.
 
-Coverage is tracked in `evaluation/analytics_coverage.json`. Registration of a reviewed
-operation does not imply every reference helper is integrated. Most reference entries
-still require validated contracts and numerical tests. See
-`evaluation/analytics_sample_review.md` and `evaluation/analytics_performance.md` for
-architectural findings, measured results and remaining verification limitations.
+The catalog is the source of truth for supported operations. Unused bundled sample
+libraries and strategy templates have been removed. Python implementations replaced
+by Rust are available only under `evaluation/baselines` for independent comparisons;
+production workers reject native-only operations. See
+[option benchmarks](evaluation/analytics_performance.md) and
+[backtest benchmarks](evaluation/backtest_performance.md).
 
 ## Terminal workspace
 
@@ -255,3 +276,30 @@ Run `python scripts/benchmark_backtest.py` after building the release examples w
 also requires the analytics Python runtime for the retained reference baseline.
 The core screen does not yet expose the sample's multiple engines, optimization,
 walk-forward analysis, ML labels or CV splits; module parity remains partial.
+
+The three authenticated backtest endpoints are `GET /api/backtesting/catalog`,
+`POST /api/backtesting/history`, and `POST /api/backtesting/run`. Native computation
+has four worker slots, a 30-second computation deadline and a 1 MiB frame limit;
+the API has a 60-second overall deadline. Large trade-heavy results can exceed the
+frame limit even within the 10,000-observation input limit.
+
+Release benchmarks measured 83–92% lower warmed latency for 30–1,000 bars and
+16–18% for 10,000 bars against the isolated Python baseline. Cold connection startup
+is separate; see [the full backtest report](evaluation/backtest_performance.md).
+
+For an optimized Windows backend, build and select the release executable before startup:
+
+```powershell
+cargo +1.99.0 build --release --locked
+$env:ENGINE_COMMAND='["target/release/financial-engine.exe"]'
+uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11
+```
+
+On Linux, use `target/release/financial-engine` in the JSON array. Restart the backend
+after rebuilding; Windows cannot replace an executable held by a running process.
+To reproduce offline backtest measurements, build the examples and run:
+
+```powershell
+cargo +1.99.0 build --release --locked --workspace --bins --examples
+uv run --frozen python scripts/benchmark_backtest.py
+```

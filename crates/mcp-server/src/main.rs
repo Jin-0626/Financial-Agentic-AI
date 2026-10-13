@@ -568,7 +568,7 @@ mod tests {
     fn strict_tool_arguments_and_output_schemas() {
         let schema = types::tools();
         if let Some(tools) = schema.as_array() {
-            assert_eq!(tools.len(), 11);
+            assert_eq!(tools.len(), 10);
             assert!(tools.iter().any(|tool| tool["name"] == "binomial_option"));
             for tool in tools {
                 assert!(jsonschema::validator_for(&tool["inputSchema"]).is_ok());

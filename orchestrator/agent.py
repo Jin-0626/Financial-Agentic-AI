@@ -11,19 +11,19 @@ from deepagents.backends import (
 )
 from langgraph.store.postgres import PostgresStore
 from langgraph.checkpoint.postgres import PostgresSaver
-from app.subagents import get_subagents_for_type
-from app.prompts import FINANCIAL_ANALYST_PROMPT, SPECIALIST_RESEARCH_PROMPT
-from app.research_tools import ResearchTools, SpecialistEvidence
-from app.config import MODEL_NAME, LOCAL_SKILLS_DIR, OLLAMA_URL
-from app.context_type import MemoryContext
-from app.namespace_router import user_namespace
-from .policy import CapabilityPolicy, ROLE_TOOLS, SPECIALIST_ROLES
-from .budgets import ExecutionLimits
-from .model_recovery import ModelRecovery
-from .freshness import ResearchFreshness
-from app.financial_tools import build_financial_tools
-from app.analytics_tools import analytics_catalog, run_analytics
-from app.script_access import ReadOnlyScriptsBackend, run_script, SCRIPTS_ROOT
+from orchestrator.specialists import get_subagents_for_type
+from orchestrator.prompts import FINANCIAL_ANALYST_PROMPT, SPECIALIST_RESEARCH_PROMPT
+from orchestrator.tools.research import ResearchTools, SpecialistEvidence
+from app.infrastructure.config import MODEL_NAME, LOCAL_SKILLS_DIR, OLLAMA_URL
+from contracts.context import MemoryContext
+from contracts.namespaces import user_namespace
+from orchestrator.policy import CapabilityPolicy, ROLE_TOOLS, SPECIALIST_ROLES
+from orchestrator.budgets import ExecutionLimits
+from orchestrator.model_recovery import ModelRecovery
+from orchestrator.freshness import ResearchFreshness
+from orchestrator.tools.providers import build_financial_tools
+from orchestrator.tools.analytics import analytics_catalog, run_analytics
+from orchestrator.tools.scripts import ReadOnlyScriptsBackend, run_script, SCRIPTS_ROOT
 
 logger = logging.getLogger(__name__)
 

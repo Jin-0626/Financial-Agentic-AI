@@ -12,9 +12,9 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from financial_analytics.registry import validate
-from financial_analytics.calculations import calculate
-from app.analytics_tools import execute_python
-from app.native_engine import NativeEngine
+from evaluation.baselines.native import calculate
+from evaluation.baselines.runtime import execute_python
+from app.infrastructure.native_engine import NativeEngine
 
 
 def timed(fn):

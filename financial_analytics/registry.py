@@ -1,6 +1,6 @@
 """Explicit operation catalog: model input can never select a Python import."""
 from dataclasses import dataclass
-from . import schemas as s
+from financial_analytics import schemas as s
 
 @dataclass(frozen=True)
 class Operation:

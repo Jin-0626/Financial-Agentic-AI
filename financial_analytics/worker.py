@@ -4,8 +4,8 @@ import json
 import socket
 import sys
 from pydantic import ValidationError
-from .registry import validate
-from .calculations import calculate
+from financial_analytics.registry import validate
+from financial_analytics.calculations import calculate
 
 MAX_FRAME = 1048576
 
@@ -33,6 +33,9 @@ def main():
         job=json.loads(raw,object_pairs_hook=unique,parse_constant=lambda value: (_ for _ in ()).throw(ValueError("Nonfinite JSON")))
         if set(job)!={"operation","inputs"}: raise ValueError("Invalid analytics request")
         args=validate(job["operation"],job["inputs"])
+        from financial_analytics.registry import OPERATIONS
+        if OPERATIONS[job["operation"]].native_tool:
+            raise ValueError("Operation requires the Rust engine")
         with contextlib.redirect_stdout(sys.stderr): result=calculate(job["operation"],args)
         response={"status":"success","operation":job["operation"],"result":result,"provenance":{"engine":"isolated_python","method_version":"financial-analytics-v1","data_source":"caller-supplied observations","offline":True,"currency":getattr(args,"currency",None),"limitations":["Monetary units are unspecified when currency is absent; do not infer an exchange rate"]}}
         encoded=json.dumps(response,allow_nan=False,separators=(",",":"))

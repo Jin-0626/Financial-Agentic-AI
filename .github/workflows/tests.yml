@@ -41,7 +41,7 @@ jobs:
       - run: cargo +1.99.0 build --locked -j 2
       - run: uv sync --frozen
       - run: uv run --frozen python scripts/setup_analytics.py
-      - run: uv run --frozen python -B -m unittest discover -s tests -v
+      - run: uv run --frozen python -B -m unittest discover -s tests -t . -v
         env:
           ENGINE_TEST_COMMAND: '["target/debug/financial-engine"]'
           TEST_DB_URL: postgresql://postgres:test@127.0.0.1:5432/terminal_test

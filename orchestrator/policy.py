@@ -6,7 +6,7 @@ from pathlib import PurePosixPath
 from langchain.agents.middleware import AgentMiddleware
 from langchain_core.messages import ToolMessage
 
-from .tool_registry import ROLE_TOOLS, SPECIALIST_ROLES, NATIVE_TOOLS
+from orchestrator.tool_registry import ROLE_TOOLS, SPECIALIST_ROLES, NATIVE_TOOLS
 
 
 class CapabilityPolicy(AgentMiddleware):

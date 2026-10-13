@@ -24,5 +24,5 @@ units, fiscal periods, provider record dates, and returned source URLs.
 SEC covers US filings rather than Bursa companies. Treasury FiscalData rates are
 not live Treasury yield quotes. Disclose missing evidence instead of inventing it.
 
-The /scripts/analytics/ library contains supporting financial analysis code. Files
-there and unregistered providers are not automatically executable by agents.
+Only curated providers are agent-executable. Offline analytics are discovered through
+analytics_catalog and run_analytics; native-only operations execute in Rust.

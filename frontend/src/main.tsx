@@ -9,15 +9,17 @@ import {
   Routes,
 } from "react-router-dom";
 const TracesPage = lazy(() =>
-  import("./traces").then((module) => ({ default: module.TracesPage })),
+  import("./features/traces/page").then((module) => ({
+    default: module.TracesPage,
+  })),
 );
 import "./style.css";
-import { Session, logout } from "./session";
-import { ModulesPage } from "./modules";
-import { Identity } from "./api";
-import { desktop, openWorkspace } from "./desktop";
+import { Session, logout } from "./shared/session";
+import { ModulesPage } from "./features/modules/page";
+import { Identity } from "./shared/api";
+import { desktop, openWorkspace } from "./shared/desktop";
 const BacktestingPage = lazy(() =>
-  import("./backtesting").then((module) => ({
+  import("./features/backtesting/page").then((module) => ({
     default: module.BacktestingPage,
   })),
 );
@@ -30,10 +32,12 @@ const workspaceLinks = [
   { path: "/modules", label: "Terminal modules" },
 ];
 const TerminalPage = lazy(() =>
-  import("./terminal").then((module) => ({ default: module.TerminalPage })),
+  import("./features/terminal/index").then((module) => ({
+    default: module.TerminalPage,
+  })),
 );
-import { TerminalProvider } from "./terminal/state";
-import { InstrumentPalette } from "./terminal/palette";
+import { TerminalProvider } from "./features/terminal/state";
+import { InstrumentPalette } from "./features/terminal/palette";
 function LegacyWorkspace({ type }: { type: "portfolio" | "research" }) {
   const location = useLocation();
   const query = new URLSearchParams(location.search);

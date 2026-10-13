@@ -178,7 +178,7 @@ class ExecutionLimits(AgentMiddleware):
         overrides = {}
         if budget and budget.phase == "synthesis":
             from langchain_core.messages import HumanMessage, ToolMessage
-            from app.research_integrity import RESEARCH_INTEGRITY
+            from orchestrator.integrity import RESEARCH_INTEGRITY
 
             overrides["tools"] = []
             if isinstance(model, ChatOllama):
@@ -264,7 +264,7 @@ class ExecutionLimits(AgentMiddleware):
                 if budget.model_calls >= 48:
                     budget.phase = "synthesis"
         if self.role == "orchestrator":
-            from app.research_tools import ResearchTools
+            from orchestrator.tools.research import ResearchTools
             request = ResearchTools.coordinator_evidence(request)
         bounded = self.bounded_request(request, budget)
         amount = self.estimate(bounded)

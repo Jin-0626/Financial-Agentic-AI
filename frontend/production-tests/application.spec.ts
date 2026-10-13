@@ -109,3 +109,36 @@ test("production research streams and survives history reload", async ({
     page.getByRole("heading", { name: "Production fixture report" }),
   ).toBeVisible();
 });
+
+test("fresh installation exposes market capabilities and runs the Rust backtest workflow", async ({
+  page,
+  request,
+}) => {
+  const session = await (await request.get("/fixture/session")).json();
+  const headers = { Authorization: `Bearer ${session.access_token}` };
+  const market = await request.get("/api/market/capabilities", { headers });
+  expect(market.ok()).toBeTruthy();
+  expect((await market.json()).widgets).toContain("quote");
+  await page.addInitScript((session) => {
+    sessionStorage.setItem(
+      "oidc.user:https://fixture.invalid:terminal-e2e",
+      JSON.stringify(session),
+    );
+  }, session);
+  await page.goto("/backtesting");
+  await page
+    .getByLabel("Price CSV", { exact: true })
+    .fill("date,close\n2026-01-01,10\n2026-01-02,20\n2026-01-03,30");
+  await page.getByRole("button", { name: "Validate CSV" }).click();
+  await page.getByLabel("Initial capital", { exact: true }).fill("1000");
+  await page.getByLabel("Cost per trade (basis points)").fill("0");
+  await page.getByRole("button", { name: "Run backtest", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("COMPLETED");
+  await expect(page.getByRole("tabpanel")).toContainText("$1,500.00");
+  await page.getByRole("tab", { name: "Raw JSON" }).click();
+  await expect(page.getByRole("tabpanel")).toContainText('"engine": "rust"');
+  await page.getByRole("tab", { name: "Trades", exact: true }).click();
+  await expect(
+    page.getByRole("cell", { name: "BUY", exact: true }),
+  ).toBeVisible();
+});

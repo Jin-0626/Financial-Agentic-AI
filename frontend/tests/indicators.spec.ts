@@ -7,7 +7,7 @@ import {
   vwap,
   macd,
   Candle,
-} from "../src/terminal/indicators";
+} from "../src/features/terminal/indicators";
 const candles = (values: number[]) =>
   values.map(
     (close, i) =>

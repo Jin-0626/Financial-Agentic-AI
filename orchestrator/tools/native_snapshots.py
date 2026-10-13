@@ -129,7 +129,7 @@ def fetch_yahoo_snapshot(
     kind: str, *, org_id: str, ticker: str, lookback_days: int = 252
 ) -> dict:
     """Administrative ingestion using the existing Yahoo provider dependency."""
-    from app.providers import ticker_info, refresh_statement_cache
+    from app.infrastructure.providers import ticker_info, refresh_statement_cache
 
     if kind == "statements":
         refresh_statement_cache()

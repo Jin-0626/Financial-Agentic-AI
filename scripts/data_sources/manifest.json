@@ -5078,7 +5078,7 @@
     },
     {
       "file": "yf_data.py",
-      "sha256": "f8526ac6d3545c0570b67968cb1816e7ef942e22b1f62719fc4d194917c42bdf",
+      "sha256": "8d74ecf4240ec86e1ee459382724ad17a4a3d67d5b87ab358683bf3b2cf4d4d3",
       "status": "active local adapter",
       "agent_registered": false,
       "provenance": "local implementation; preserves migrated fixes",

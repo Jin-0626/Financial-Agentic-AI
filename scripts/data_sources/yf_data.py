@@ -88,7 +88,7 @@ def _sanitize(obj: Any) -> Any:
 
 def get_quote(symbol: str) -> Dict[str, Any]:
     """Fetch real-time snapshot quote for a single symbol."""
-    from app.providers import quote
+    from app.infrastructure.providers import quote
 
     try:
         result = quote(symbol)
@@ -175,7 +175,7 @@ def get_batch_quotes(symbols: List[str]) -> List[Dict[str, Any]]:
 def get_info(symbol: str) -> Dict[str, Any]:
     """Fetch company fundamentals, valuation ratios, and corporate profile."""
     try:
-        from app.providers import ticker_info
+        from app.infrastructure.providers import ticker_info
 
         ticker, info = ticker_info(symbol)
         return _sanitize(
@@ -224,7 +224,7 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
     try:
         if frequency not in {"latest", "annual", "quarterly"}:
             raise ValueError("Use latest, annual or quarterly financial statements")
-        from app.providers import ticker_info, refresh_statement_cache
+        from app.infrastructure.providers import ticker_info, refresh_statement_cache
 
         refresh_statement_cache()
         ticker, info = ticker_info(symbol)
@@ -324,8 +324,8 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
 def replay_portfolio_transactions(transactions: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Compatibility CLI: Rust decimal ledger; never invent a historical NAV."""
     import asyncio
-    from app.native_engine import NativeEngine
-    from app.portfolio_service import import_trades
+    from app.infrastructure.native_engine import NativeEngine
+    from app.portfolio.service import import_trades
 
     async def calculate():
         engine = NativeEngine()

@@ -184,7 +184,6 @@ pub fn tools() -> Value {
     let mut listed = json!([
         {"name":"offline_backtest", "description":"Offline prior-close buy-and-hold, moving-average crossover and RSI strategies", "inputSchema":schema_for!(BacktestInput), "outputSchema":schema_for!(BacktestResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"binomial_option", "description":"Offline European CRR option tree from explicit inputs", "inputSchema":schema_for!(BinomialInput), "outputSchema":schema_for!(BinomialResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
-        {"name":"recover_opening_positions", "description":"Recover and replay-check undated legacy opening holdings", "inputSchema":schema_for!(RecoveryInput), "outputSchema":schema_for!(RecoveryResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"portfolio_ledger", "description":"Decimal weighted-average accounting for BUY/SELL/DIVIDEND; no persistence", "inputSchema":schema_for!(LedgerInput), "outputSchema":schema_for!(LedgerResult), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"portfolio_summary", "description":"Decimal valuation; exact symbols and same currency required", "inputSchema":schema_for!(SummaryInput), "outputSchema":schema_for!(PortfolioSummary), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
         {"name":"portfolio_performance", "description":"Recorded snapshot performance or explicitly labelled fixed-holdings projection", "inputSchema":schema_for!(PerformanceInput), "outputSchema":schema_for!(PortfolioPerformance), "annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}},
@@ -202,16 +201,12 @@ pub fn tools() -> Value {
     listed
 }
 pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<WorkerJob, ToolError> {
-    if matches!(
-        name,
-        "recover_opening_positions"
-            | "portfolio_ledger"
-            | "portfolio_summary"
-            | "portfolio_performance"
-            | "register_snapshot"
-            | "binomial_option"
-            | "offline_backtest"
-    ) {
+    if matches!(name, |"portfolio_ledger"| "portfolio_summary"
+        | "portfolio_performance"
+        | "register_snapshot"
+        | "binomial_option"
+        | "offline_backtest")
+    {
         match name {
             "offline_backtest" => {
                 let input: BacktestInput = parse(args)?;
@@ -219,9 +214,6 @@ pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<Worker
             }
             "binomial_option" => {
                 let _: BinomialInput = parse(args)?;
-            }
-            "recover_opening_positions" => {
-                let _: RecoveryInput = parse(args)?;
             }
             "portfolio_ledger" => {
                 let _: LedgerInput = parse(args)?;
@@ -336,10 +328,6 @@ pub fn compute(
         }
         "binomial_option" => {
             serde_json::to_value(european_binomial(&parse(&job.arguments)?, cancel)?)
-                .map_err(|_| invalid())
-        }
-        "recover_opening_positions" => {
-            serde_json::to_value(recover_opening_positions(&parse(&job.arguments)?)?)
                 .map_err(|_| invalid())
         }
         "portfolio_ledger" => Ok(

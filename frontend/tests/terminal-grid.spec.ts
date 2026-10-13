@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { restore, defaults } from "../src/terminal/state";
+import { restore, defaults } from "../src/features/terminal/state";
 const key = 'financial-terminal:v1:["default-org","local-user"]';
 const asset = {
   id: "yahoo:5326.KL",
