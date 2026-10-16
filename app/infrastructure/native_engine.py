@@ -130,7 +130,7 @@ class NativeEngine:
             try:
                 invocation = (
                     {"name": name, "args": arguments, "id": "native-backtest", "type": "tool_call"}
-                    if name == "offline_backtest"
+                    if name.startswith("offline_")
                     else arguments
                 )
                 result = await asyncio.wait_for(tools[name].ainvoke(invocation), 35)

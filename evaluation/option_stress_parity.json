@@ -1,0 +1,118 @@
+{
+  "cases": 24,
+  "seed": 19,
+  "erf_implementation": "libm 0.2.16",
+  "money_tolerance": "1e-8",
+  "failures": [
+    {
+      "case": 3,
+      "inputs": {
+        "currency": null,
+        "spot": "1633494710767.2305000000",
+        "strike": "1160452023054.9120000000",
+        "years": 9.892229751851538,
+        "rate": 0.07122098039439351,
+        "dividend_yield": 0.0502300954116932,
+        "volatility": 0.35911256964749,
+        "side": "put",
+        "steps": 100
+      },
+      "error": "result.price: 159041915709.17615000 != 159041915709.17620000"
+    },
+    {
+      "case": 7,
+      "inputs": {
+        "currency": null,
+        "spot": "1173872195.9675474000",
+        "strike": "1603099396.5012460000",
+        "years": 4.615788492580854,
+        "rate": -0.009646766688722469,
+        "dividend_yield": 0.06773700696639871,
+        "volatility": 0.13838704154413745,
+        "side": "call",
+        "steps": 100
+      },
+      "error": "result.price: 1499022.46657848 != 1499022.46657857"
+    },
+    {
+      "case": 11,
+      "inputs": {
+        "currency": null,
+        "spot": "815939928.5645989000",
+        "strike": "592315577.2450774000",
+        "years": 7.748216797160489,
+        "rate": 0.09609366995577162,
+        "dividend_yield": 0.02105836649549238,
+        "volatility": 0.43431171643021854,
+        "side": "put",
+        "steps": 100
+      },
+      "error": "result.price: 63534439.18422449 != 63534439.18422453"
+    },
+    {
+      "case": 21,
+      "inputs": {
+        "currency": null,
+        "spot": "1918252605.5332844000",
+        "strike": "574544584662.8977000000",
+        "years": 4.262186121152938,
+        "rate": 0.072872694340503,
+        "dividend_yield": 0.06613022037550241,
+        "volatility": 1.1356879277176901,
+        "side": "call",
+        "steps": 100
+      },
+      "error": "result.price: 84482826.88117164 != 84482826.88117155"
+    }
+  ],
+  "implied_volatility_checks": [
+    {
+      "case": 3,
+      "parity": true,
+      "native": {
+        "implied_volatility": 0.35911256964776306,
+        "method": "European Black-Scholes inversion"
+      },
+      "reference": {
+        "implied_volatility": 0.3591125696467814,
+        "method": "European Black-Scholes inversion"
+      }
+    },
+    {
+      "case": 7,
+      "parity": true,
+      "native": {
+        "implied_volatility": 0.1383870415438872,
+        "method": "European Black-Scholes inversion"
+      },
+      "reference": {
+        "implied_volatility": 0.1383870415261852,
+        "method": "European Black-Scholes inversion"
+      }
+    },
+    {
+      "case": 11,
+      "parity": true,
+      "native": {
+        "implied_volatility": 0.43431171643031197,
+        "method": "European Black-Scholes inversion"
+      },
+      "reference": {
+        "implied_volatility": 0.43431171642352756,
+        "method": "European Black-Scholes inversion"
+      }
+    },
+    {
+      "case": 21,
+      "parity": true,
+      "native": {
+        "implied_volatility": 1.13568792771791,
+        "method": "European Black-Scholes inversion"
+      },
+      "reference": {
+        "implied_volatility": 1.1356879277177276,
+        "method": "European Black-Scholes inversion"
+      }
+    }
+  ]
+}

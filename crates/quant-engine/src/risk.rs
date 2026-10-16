@@ -164,3 +164,30 @@ pub fn portfolio_returns(series: &[Vec<f64>], weights: &[f64]) -> Result<Vec<f64
         })
         .collect()
 }
+
+/// Offline risk contract does not calculate volatility, which is absent from its result.
+pub fn offline_historical_risk(
+    returns: &[f64],
+    level: f64,
+    token: &CancellationToken,
+) -> Result<serde_json::Value, QuantError> {
+    validate_returns(returns)?;
+    confidence(level)?;
+    crate::offline::cancel(token)?;
+    let mut losses: Vec<_> = returns.iter().map(|r| -r).collect();
+    losses.sort_by(f64::total_cmp);
+    let rank = (level * losses.len() as f64).ceil() as usize;
+    let value = *losses
+        .get(rank.saturating_sub(1))
+        .ok_or(QuantError::InvalidInput)?;
+    let tail: Vec<_> = losses
+        .iter()
+        .copied()
+        .filter(|loss| *loss >= value)
+        .collect();
+    let average = finite(crate::offline::sum(tail.iter().copied())? / tail.len() as f64)?;
+    crate::offline::cancel(token)?;
+    Ok(
+        serde_json::json!({"value_at_risk":value.max(0.0),"expected_shortfall":average.max(0.0),"confidence":level,"units":"return fraction","method":"empirical nearest rank; inclusive tail"}),
+    )
+}

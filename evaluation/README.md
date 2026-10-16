@@ -47,3 +47,15 @@ for parity tests and offline performance comparisons. Production workers do not
 execute them. Run `python scripts/benchmark_backtest.py` or
 `python scripts/benchmark_analytics.py` after building release binaries and examples.
 These comparisons require the separately installed analytics Python runtime.
+
+## Offline Rust promotion gates
+
+Build release binaries/examples, then run `python scripts/benchmark_offline.py` with
+the application environment and `python scripts/investigate_rust.py` for evaluation-only
+statistics and normalization probes. Both use seven warmed repetitions and synthetic
+observations. Numerical library references run in the analytics interpreter.
+
+`offline_performance.md` records approved operations, held monetary parity and
+framing limitations. Black–Scholes is not exposed as a production native tool;
+its prior latency measurements do not override the failed monetary stress gate.
+Statistics prototypes live in `evaluation/rust`, outside production dispatch.

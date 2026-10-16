@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
     "build": "tsc -b && vite build",
     "test": "playwright test",
     "desktop:dev": "tauri dev",
@@ -14,15 +15,8 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.12.1",
-    "lightweight-charts": "^5.2.1",
-    "oidc-client-ts": "^3.5.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-grid-layout": "^2.3.0",
-    "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.9.0",
-    "recharts": "^3.2.0",
-    "remark-gfm": "^4.0.1"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

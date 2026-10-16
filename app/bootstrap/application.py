@@ -6,10 +6,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.infrastructure.persistence import AsyncPostgresStore, AsyncPostgresSaver, AsyncConnectionPool
+from app.infrastructure.persistence import AsyncPostgresStore, AsyncPostgresSaver
 from app.research.runtime import AgentRuntime
 from app.infrastructure.native_engine import NativeEngine, set_engine
-from app.portfolio.repository import PortfolioRepository
+from app.portfolio.sqlite_repository import SQLitePortfolioRepository
 from app.infrastructure.config import DB_URL
 from app.market.routes import router as market_router
 from app.backtesting.routes import router as backtest_router
@@ -33,6 +33,7 @@ async def lifespan(app):
     if production():
         validate_config()
     engine = None
+    repository = SQLitePortfolioRepository()
     try:
         engine = NativeEngine()
         async with AsyncExitStack() as stack:
@@ -42,27 +43,32 @@ async def lifespan(app):
             checkpointer = await stack.enter_async_context(
                 AsyncPostgresSaver.from_conn_string(DB_URL)
             )
-            pool = AsyncConnectionPool(DB_URL, open=False, min_size=1, max_size=8)
-            await stack.enter_async_context(pool)
             await store.setup()
             await checkpointer.setup()
-            repository = PortfolioRepository(pool)
             await repository.setup()
             await _ensure_agents_memory(store)
             set_engine(engine)
             set_repository(repository)
             resources.configure(store, checkpointer, AgentRuntime(checkpointer, store, engine))
+            app.state.terminal_full_ready = True
+            app.state.terminal_portfolio_ready = True
             yield
     finally:
+        app.state.terminal_full_ready = False
+        app.state.terminal_portfolio_ready = False
         market_service.close()
         resources.configure(None, None, None)
         set_repository(None)
         set_engine(None)
-        if engine is not None:
-            await engine.close()
+        try:
+            await repository.close()
+        finally:
+            if engine is not None:
+                await engine.close()
 
 
 app = FastAPI(title="Financial Research Terminal", lifespan=lifespan)
+app.state.terminal_service = "research-terminal"
 _origins = [
     value.strip()
     for value in os.getenv("OIDC_CLIENT_ORIGINS", "").split(",")

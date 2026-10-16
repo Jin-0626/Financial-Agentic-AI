@@ -1,7 +1,7 @@
 [package]
 name = "financial-terminal-desktop"
 version = "0.1.0"
-description = "Windows desktop shell for the managed Financial Research Terminal"
+description = "Native financial terminal with a Rust market engine"
 license = "AGPL-3.0-or-later"
 edition = "2024"
 rust-version = "1.99"
@@ -13,12 +13,17 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.7.1" }
+tauri-build = { version = "2.7.1", features = [] }
 
 [dependencies]
 serde_json = "1.0"
-tauri = { version = "2.12.1" }
-tauri-plugin-dialog = "2"
+tauri = { version = "2.12.1", features = [] }
+terminal-core = { path = "../../crates/terminal-core" }
+terminal-providers = { path = "../../crates/terminal-providers" }
+terminal-storage = { path = "../../crates/terminal-storage" }
+terminal-engine = { path = "../../crates/terminal-engine" }
+terminal-ui = { path = "../../crates/terminal-ui" }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
 
 [workspace]
 

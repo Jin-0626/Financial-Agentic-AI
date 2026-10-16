@@ -1,4 +1,7 @@
-"""Transactional portfolio documents, isolated from LangGraph's memory store."""
+"""Legacy PostgreSQL source retained for migration compatibility tests only.
+
+Application bootstraps use SQLitePortfolioRepository instead.
+"""
 
 import copy
 import hashlib

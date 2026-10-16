@@ -38,7 +38,14 @@ async def run_analytics(operation: str, inputs: dict, runtime: ToolRuntime) -> s
             result = await execute_backtest(runtime.context.org_id, validated)
         elif specification.native_tool:
             from app.infrastructure.native_engine import calculate
-            if operation == "binomial_option":
+            if specification.native_tool.startswith("offline_"):
+                currency = validated.get("currency")
+                native = await calculate(runtime.context.org_id, specification.native_tool, validated)
+                result = {"status":"success","operation":operation,"result":native,
+                          "provenance":{"engine":"rust","method_version":"financial-analytics-v1",
+                                        "data_source":"caller-supplied observations","offline":True,"currency":currency,
+                                        "limitations":["Monetary units are unspecified when currency is absent; do not infer an exchange rate"]}}
+            elif operation == "binomial_option":
                 currency = validated.pop("currency", None)
                 native = await calculate(runtime.context.org_id,specification.native_tool,validated)
                 result = {"status":"success","operation":operation,"result":native,

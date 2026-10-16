@@ -1,5 +1,5 @@
 """Explicit operation catalog: model input can never select a Python import."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from financial_analytics import schemas as s
 
 @dataclass(frozen=True)
@@ -58,6 +58,11 @@ OPERATIONS = {
     "riskfolio_allocation": Operation("optimization", s.Optimization, "Riskfolio historical allocation", ("riskfolio",)),
     "offline_backtest": Operation("backtesting", s.Backtest, "Three long-only next-bar strategies with transaction costs", native_tool="offline_backtest"),
 }
+# Explicit promotion list: parity and latency gates are recorded in evaluation/offline_benchmark.json.
+NATIVE_OFFLINE_OPERATIONS = frozenset(('bollinger_bands', 'bond_price_duration', 'compound_growth', 'dividend_discount', 'forward_price', 'historical_risk', 'implied_volatility', 'internal_rate_of_return', 'moving_average', 'net_present_value', 'portfolio_performance', 'private_market_equivalent', 'relative_strength_index', 'statement_ratios', 'weighted_average_cost_of_capital'))
+for _name in NATIVE_OFFLINE_OPERATIONS:
+    OPERATIONS[_name] = replace(OPERATIONS[_name], native_tool="offline_" + _name, dependencies=())
+
 CATEGORY_ROLES = {
     "valuation": {"valuation"}, "corporate_finance": {"valuation"}, "financial_statements": {"valuation"},
     "fixed_income": {"valuation", "risk"}, "derivatives": {"valuation", "risk"},

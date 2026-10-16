@@ -32,7 +32,7 @@ class AsyncLifecycleTests(unittest.IsolatedAsyncioTestCase):
                 )
             )
             engine = Mock(close=AsyncMock())
-            pool = Mock()
+            repository = Mock(setup=AsyncMock(), close=AsyncMock())
 
             def resource(name, value):
                 @asynccontextmanager
@@ -52,10 +52,9 @@ class AsyncLifecycleTests(unittest.IsolatedAsyncioTestCase):
                 patch.object(
                     app.AsyncPostgresSaver, "from_conn_string", resource("saver", saver)
                 ),
-                patch.object(app, "AsyncConnectionPool", resource("pool", pool)),
                 patch.object(app, "NativeEngine", return_value=engine),
                 patch.object(
-                    app, "PortfolioRepository", return_value=Mock(setup=AsyncMock())
+                    app, "SQLitePortfolioRepository", return_value=repository
                 ),
                 patch.object(app, "_ensure_agents_memory", AsyncMock()),
                 patch.object(app, "AgentRuntime", return_value=Mock()),
@@ -67,5 +66,6 @@ class AsyncLifecycleTests(unittest.IsolatedAsyncioTestCase):
                 else:
                     async with app.lifespan(app.app):
                         pass
-            self.assertEqual(events[-3:], ["pool-close", "saver-close", "store-close"])
+            self.assertEqual(events[-2:], ["saver-close", "store-close"])
+            repository.close.assert_awaited_once()
             engine.close.assert_awaited_once()

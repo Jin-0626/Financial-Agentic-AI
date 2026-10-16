@@ -3,12 +3,6 @@ import numpy as np
 
 
 def calculate_advanced(operation, a):
-    if operation == "implied_volatility":
-        from scipy.optimize import brentq
-        from financial_analytics.calculations import black_scholes
-        def objective(v): return float(black_scholes(a.model_copy(update={"volatility":v}))["price"])-float(a.market_price)
-        volatility=brentq(objective,0.00001,5,xtol=1e-10)
-        return {"implied_volatility":volatility,"method":"European Black-Scholes inversion"}
     if operation == "stationarity_tests":
         from statsmodels.tsa.stattools import adfuller,kpss
         if len(a.values)<20 or np.ptp(a.values)==0: raise ValueError("Stationarity tests require 20 nonconstant observations")

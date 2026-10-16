@@ -123,7 +123,9 @@ fn protocol_error(id: Value, code: i32, message: &str) -> Value {
     json!({"jsonrpc":"2.0", "id":id,"error":{"code":code,"message":message}})
 }
 fn result(id: Value, reply: WorkerReply) -> Value {
-    let text = if reply.result["equity"].is_array() && reply.result["strategy"].is_string() {
+    let text = if reply.result["values"].is_array() || reply.result["middle"].is_array() {
+        json!({"observations":reply.result["values"].as_array().or_else(||reply.result["middle"].as_array()).map(Vec::len)}).to_string()
+    } else if reply.result["equity"].is_array() && reply.result["strategy"].is_string() {
         json!({"strategy": reply.result["strategy"], "final_equity": reply.result["final_equity"], "metrics": reply.result["metrics"]}).to_string()
     } else {
         reply.result.to_string()
@@ -568,7 +570,7 @@ mod tests {
     fn strict_tool_arguments_and_output_schemas() {
         let schema = types::tools();
         if let Some(tools) = schema.as_array() {
-            assert_eq!(tools.len(), 10);
+            assert_eq!(tools.len(), 25);
             assert!(tools.iter().any(|tool| tool["name"] == "binomial_option"));
             for tool in tools {
                 assert!(jsonschema::validator_for(&tool["inputSchema"]).is_ok());

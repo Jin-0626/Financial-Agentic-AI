@@ -1,7 +1,7 @@
 """Independent numerical baselines for evaluating Rust; never production dispatch."""
 import math
 from decimal import Decimal
-from financial_analytics.calculations import money, moving_average, rsi, black_scholes
+from evaluation.baselines.offline import money, moving_average, rsi, black_scholes
 
 def binomial(a):
     if a.years == 0: return {"price": black_scholes(a)["price"]}
@@ -54,4 +54,5 @@ def calculate(operation, args):
         return backtest(args)
     if operation == "binomial_option":
         return binomial(args)
-    raise ValueError("No evaluation baseline for operation")
+    from evaluation.baselines.offline import calculate as reference
+    return reference(operation, args)

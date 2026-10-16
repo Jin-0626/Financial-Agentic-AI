@@ -1,0 +1,13 @@
+[package]
+name = "terminal-ui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+[dependencies]
+terminal-core = { path = "../terminal-core" }
+terminal-engine = { path = "../terminal-engine" }
+serde.workspace = true
+
+[lints]
+workspace = true

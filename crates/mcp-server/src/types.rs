@@ -194,6 +194,13 @@ pub fn tools() -> Value {
         {"name":"run_monte_carlo_simulation", "description":"Reproducible seeded GBM terminal scenarios, not price predictions", "inputSchema":schema_for!(SimulationArgs), "outputSchema":schema_for!(Envelope<MonteCarloAnalysis>), "annotations":{"readOnlyHint":false,"destructiveHint":false,"idempotentHint":true}}
     ]);
     if let Some(tools) = listed.as_array_mut() {
+        for operation in offline::OPERATIONS
+            .iter()
+            .filter(|op| **op != "black_scholes")
+        {
+            tools.push(json!({"name":format!("offline_{operation}"),"description":format!("Validated caller-supplied {operation}"),"inputSchema":offline::input_schema(operation),"outputSchema":offline::output_schema(operation),"annotations":{"readOnlyHint":true,"destructiveHint":false,"idempotentHint":true}}));
+        }
+
         for tool in tools {
             tool["outputSchema"]["type"] = json!("object");
         }
@@ -201,6 +208,21 @@ pub fn tools() -> Value {
     listed
 }
 pub fn prepare(store: &SnapshotStore, name: &str, args: &Value) -> Result<WorkerJob, ToolError> {
+    if let Some(operation) = name
+        .strip_prefix("offline_")
+        .filter(|op| offline::OPERATIONS.contains(op) && *op != "black_scholes")
+    {
+        let validator =
+            jsonschema::validator_for(&offline::input_schema(operation)).map_err(|_| invalid())?;
+        if !validator.is_valid(args) {
+            return Err(invalid());
+        }
+        return Ok(WorkerJob {
+            name: name.into(),
+            arguments: args.clone(),
+            snapshot_id: String::new(),
+        });
+    }
     if matches!(name, |"portfolio_ledger"| "portfolio_summary"
         | "portfolio_performance"
         | "register_snapshot"
@@ -321,6 +343,13 @@ pub fn compute(
     job: &WorkerJob,
     cancel: &CancellationToken,
 ) -> Result<Value, ToolError> {
+    if let Some(operation) = job
+        .name
+        .strip_prefix("offline_")
+        .filter(|op| offline::OPERATIONS.contains(op) && *op != "black_scholes")
+    {
+        return offline::execute(operation, &job.arguments, cancel).map_err(ToolError::from);
+    }
     match job.name.as_str() {
         "offline_backtest" => {
             serde_json::to_value(offline_backtest(&parse(&job.arguments)?, cancel)?)

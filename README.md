@@ -1,14 +1,33 @@
 # Financial Research Terminal
+![Market View](image-1.png)
+![Chart](image.png)
 
-React + FastAPI + Deep Agents + Rust. `/` opens the customizable Financial terminal. Drag, resize and pin chart, quote,
-watchlist, news, screener, heatmap, options, crypto, macro, portfolio and calendar
-panels. Research is a persistent sidebar; Traces and Rust Backtesting have separate
-workspaces. Portfolio and Research navigation open focused terminal views. Current
-portfolio records and research conversations use PostgreSQL persistence.
+
+Tauri + React interface with a native Rust market engine. The desktop opens a
+moomoo-inspired dark workspace with an integrated title/search bar, collapsible
+horizontal-label navigation, interactive OHLC charts,
+named watchlists with configurable quote columns and bulk entry, linked/pinned
+panels, two/four-chart presets, and a responsive instrument inspector. Markets
+browses existing MY/US equity and crypto providers with explicit local-watchlist
+add actions. An index ticker, right-side information tools, aligned options chain,
+weekly calendar and contextual controls follow the inspected desktop design.
+See the [reference comparison checklist](docs/desktop-design-checklist.md). It defaults
+to live provider data through the existing FastAPI market services. Synthetic
+data is available only through explicit mock mode.
+Portfolio services use backend SQLite and work with the lightweight gateway.
+Research remains on the full PostgreSQL backend. Existing PostgreSQL portfolio
+records are retained for explicit migration. The previous web interface is
+archived under `frontend/legacy`.
 
 ## Run locally
 
-Python 3.12+, uv, Node 24 (matching CI), Rust 1.99 and PostgreSQL are required.
+Start the live gateway with `uv run --frozen python -m uvicorn app.bootstrap.market_application:app --host 127.0.0.1 --port 8000 --http h11`.
+Then run `npm --prefix frontend ci`, followed by `npm --prefix frontend run desktop:dev`.
+The Ratatui CLI is removed. See the [native terminal guide](docs/rust-terminal.md)
+for HTTP mode, packaging, commands, and local storage. The backend and historical
+web-interface documentation below remain reference material for existing services.
+
+For backend services, Python 3.12+, uv, Node 24 (matching CI), Rust 1.99 and PostgreSQL are required.
 Copy `.env.example` to `.env` and configure DB_URL and the model/provider settings.
 
 ```powershell
@@ -24,9 +43,9 @@ uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h1
 The explicit `--http h11` uses Uvicorn's supported Python HTTP parser and avoids
 automatic selection of an incomplete optional `httptools` installation.
 
-Open [the local terminal](http://127.0.0.1:8000). For development, run `npm --prefix frontend run dev`;
-Vite proxies `/api` to port 8000. The backend serves the built React SPA and returns
-404 for unknown API routes. Streamlit and the retired sandbox are removed.
+The backend remains at [localhost:8000](http://127.0.0.1:8000). Launch the desktop
+with `npm --prefix frontend run desktop:dev`; a plain browser displays a native-runtime
+requirement. The backend still serves static assets and returns 404 for unknown API routes.
 
 On Windows, native compilation needs Visual Studio C++ Build Tools. An existing Linux
 ELF build in `target/debug/financial-engine` can run through installed WSL; the adapter
@@ -39,9 +58,8 @@ async driver. The graph and MCP execution remain asynchronous and cancellable.
 
 ## Architecture
 
-- React owns presentation: command bar, statistics, holdings heatmap/table, performance,
-  sectors, transaction records, history, import/export, research streaming/activity and
-  provider financial statement tables.
+- Tauri + React owns the active market interface; typed IPC connects it to the Rust
+  terminal engine. The previous web workflows are archived under `frontend/legacy`.
 - Python owns exact-symbol provider retrieval, normalization, transactional persistence
   and `create_deep_agent` configuration. No silent exchange suffix guessing or FX conversion.
 - Rust owns decimal ledger accounting, valuation, performance and quantitative tools.
@@ -89,7 +107,10 @@ weighted-average ledger. Sell quantities cannot exceed holdings; dividends use q
 and amount per share. Repeating a transaction ID is idempotent; conflicting details fail.
 The UI refreshes quotes every five minutes while visible and supports manual refresh.
 
-PostgreSQL portfolio documents use transactional row/advisory locks and revisions.
+Portfolio documents use local backend SQLite with transactional writes and revisions.
+The lightweight market backend supports portfolios without PostgreSQL; research
+still uses PostgreSQL. See [SQLite portfolio storage](docs/portfolio-sqlite.md)
+for file locations and the non-destructive migration command for existing records.
 Holdings and exports derive from recorded transactions and current portfolio documents.
 
 JSON imports use the Financial export contract: `format_version`, `portfolio_name`, `owner`,
@@ -147,7 +168,7 @@ npm --prefix frontend run desktop:build
 ```
 
 Desktop compilation requires the Windows C++ build tools. The desktop build produces
-an NSIS installer; the backend and PostgreSQL run separately.
+an NSIS installer; the backend runs separately, with PostgreSQL required for research.
 
 ## Verification
 
@@ -303,3 +324,15 @@ To reproduce offline backtest measurements, build the examples and run:
 cargo +1.99.0 build --release --locked --workspace --bins --examples
 uv run --frozen python scripts/benchmark_backtest.py
 ```
+
+## Native offline analytics migration
+
+Fifteen additional operations now use Rust: moving average, RSI, Bollinger bands,
+return performance, historical VaR/ES, NPV, IRR, private-market equivalent, implied
+volatility, forward pricing, bond metrics, dividend discount, WACC, compound growth
+and statement ratios. Existing operation names, input schemas and result shapes
+are preserved. Native failures remain explicit; there is no Python fallback.
+
+Black–Scholes remains Python because its large-magnitude monetary stress cases fail
+the strict parity gate. Statistics prototypes and price normalization remain
+investigations. See [migration measurements and limitations](evaluation/offline_performance.md).

@@ -2,7 +2,7 @@
 import asyncio, copy
 
 class MemoryPortfolioRepository:
-    """Deterministic test repository; production always uses PostgreSQL."""
+    """Deterministic test repository; production uses backend SQLite."""
 
     def __init__(self):
         self.data = {}

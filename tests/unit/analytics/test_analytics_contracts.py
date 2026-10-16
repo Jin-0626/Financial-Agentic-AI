@@ -6,7 +6,7 @@ import unittest
 from decimal import Decimal
 from pathlib import Path
 
-from financial_analytics.calculations import calculate
+from evaluation.baselines.native import calculate
 from evaluation.baselines.native import calculate as reference
 from financial_analytics.registry import catalog, strategy_catalog, validate
 
@@ -122,3 +122,39 @@ class OfflineExecutionBoundaryTests(unittest.IsolatedAsyncioTestCase):
             response = await execute_worker("offline_backtest", inputs, "evaluation.baselines.worker")
         self.assertEqual(response["status"], "success")
         self.assertEqual(response["result"]["final_equity"], "1500.00000000")
+
+
+class PromotedAnalyticsRoutingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_promoted_operations_keep_envelope_scope_and_provenance(self):
+        from types import SimpleNamespace
+        from unittest.mock import AsyncMock, patch
+        from financial_analytics.registry import NATIVE_OFFLINE_OPERATIONS, catalog
+        from evaluation.offline_workloads import inputs
+        from orchestrator.tools.analytics import run_analytics
+        runtime=SimpleNamespace(context=SimpleNamespace(org_id="private-scope"))
+        for operation in NATIVE_OFFLINE_OPERATIONS:
+            args=inputs(operation,"small")
+            with self.subTest(operation=operation), patch("app.infrastructure.native_engine.calculate",new_callable=AsyncMock,return_value={"checked":"result"}) as native, patch("orchestrator.tools.analytics.execute_python",new_callable=AsyncMock) as python:
+                result=json.loads(await run_analytics.coroutine(operation,args,runtime))
+                self.assertEqual(set(result),{"status","operation","result","provenance"})
+                self.assertEqual(result["status"],"success")
+                self.assertEqual(result["provenance"]["engine"],"rust")
+                self.assertEqual(result["provenance"]["currency"],args.get("currency"))
+                self.assertTrue(result["provenance"]["offline"])
+                self.assertEqual(native.call_args.args,("private-scope","offline_"+operation,args))
+                python.assert_not_awaited()
+                self.assertEqual(catalog(operation=operation)[0]["implementation"],"rust")
+        self.assertEqual(catalog(operation="black_scholes")[0]["implementation"],"isolated_python")
+    async def test_native_failure_and_cancellation_do_not_fall_back(self):
+        from types import SimpleNamespace
+        from unittest.mock import AsyncMock, patch
+        from orchestrator.tools.analytics import run_analytics
+        from evaluation.offline_workloads import inputs
+        runtime=SimpleNamespace(context=SimpleNamespace(org_id="private"))
+        with patch("app.infrastructure.native_engine.calculate",new_callable=AsyncMock,side_effect=RuntimeError("Native unavailable")), patch("orchestrator.tools.analytics.execute_python",new_callable=AsyncMock) as fallback:
+            result=json.loads(await run_analytics.coroutine("moving_average",inputs("moving_average","small"),runtime))
+            self.assertEqual(result["status"],"error");fallback.assert_not_awaited()
+        import asyncio
+        with patch("app.infrastructure.native_engine.calculate",new_callable=AsyncMock,side_effect=asyncio.CancelledError()):
+            with self.assertRaises(asyncio.CancelledError):
+                await run_analytics.coroutine("moving_average",inputs("moving_average","small"),runtime)

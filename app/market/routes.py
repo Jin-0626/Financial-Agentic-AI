@@ -3,7 +3,7 @@
 from datetime import date
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 import app.market.news as data_news
 import app.market.quotes as data_quotes
@@ -34,7 +34,7 @@ async def cached(name, provider, ttl, fn, *args):
 
 
 @router.get("/capabilities")
-async def capabilities():
+async def capabilities(request: Request):
     return {
         "widgets": [
             "chart",
@@ -46,7 +46,6 @@ async def capabilities():
             "options",
             "crypto",
             "macro",
-            "portfolio",
             "calendar",
         ],
         "markets": ["MY", "US", "global search", "crypto"],
@@ -54,6 +53,12 @@ async def capabilities():
         "ranges": list(data_common.RANGES),
         "treasury_requires": "FRED_API_KEY",
         "crypto_optional_key": "COINGECKO_DEMO_API_KEY",
+        "service": getattr(request.app.state, "terminal_service", "market-data"),
+        "features": {
+            "portfolio": getattr(request.app.state, "terminal_portfolio_ready", False),
+            **{name: getattr(request.app.state, "terminal_full_ready", False)
+               for name in ("research", "backtesting", "traces")},
+        },
     }
 
 

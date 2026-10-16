@@ -1,5 +1,8 @@
 # Financial terminal workspace
 
+This document describes the archived web interface in `frontend/legacy/src`.
+For the active Tauri interface, see [the native terminal guide](rust-terminal.md).
+
 The terminal is the landing page. Legacy Portfolio and Research URLs open their
 existing workflows inside the terminal; Traces remains accessible separately.
 Portfolio records and conversations stay in PostgreSQL. Layouts, public instrument

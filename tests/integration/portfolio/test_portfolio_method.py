@@ -2,7 +2,7 @@ import asyncio, json, os, tempfile, unittest
 from unittest.mock import patch
 import app.portfolio.service as service
 import app.infrastructure.providers as providers
-from tests.support.portfolio import MemoryPortfolioRepository
+from app.portfolio.sqlite_repository import SQLitePortfolioRepository
 from app.infrastructure.native_engine import NativeEngine
 
 
@@ -24,12 +24,14 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
         self.engine = NativeEngine()
         self.native = patch.object(service, "calculate", self.engine.call)
         self.native.start()
-        self.repo = MemoryPortfolioRepository()
+        self.repo = SQLitePortfolioRepository(os.path.join(self.temp.name, "portfolios.sqlite3"))
+        await self.repo.setup()
         self.doc = await service.create_portfolio(
             self.repo, "org", "user", service.Portfolio()
         )
 
     async def asyncTearDown(self):
+        await self.repo.close()
         await self.engine.close()
         self.native.stop()
         self.env.stop()

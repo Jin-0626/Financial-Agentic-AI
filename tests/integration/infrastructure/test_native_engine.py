@@ -96,7 +96,7 @@ class NativeEngineTests(unittest.TestCase):
         return self.session.request(id,"tools/call",{"name":name,"arguments":args})
     def test_four_tools_schemas_and_independent_results(self):
         listing=self.session.request(2,"tools/list")["result"]["tools"]
-        self.assertEqual(len(listing),10)
+        self.assertEqual(len(listing),25)
         self.assertIn("binomial_option", {item["name"] for item in listing})
         for tool in listing: self.assertFalse(tool["inputSchema"]["additionalProperties"])
         risk=self.call("calculate_historical_var",{"ticker":"0157.KL","lookback_days":4,"confidence_level":0.75},3)

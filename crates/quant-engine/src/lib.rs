@@ -49,3 +49,9 @@ pub use options::*;
 
 mod backtest;
 pub use backtest::*;
+
+pub mod cashflows;
+pub mod fundamental_analytics;
+pub mod offline;
+pub mod option_analytics;
+pub mod performance;

@@ -1,13 +1,31 @@
 {
   "identifier": "workspace",
-  "description": "Local workspace commands only; no shell or arbitrary filesystem commands.",
+  "description": "Native terminal commands and engine snapshot subscriptions.",
   "windows": [
-    "main",
-    "workspace-*"
+    "main"
   ],
   "permissions": [
+    "core:event:allow-listen",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized",
     "core:window:allow-close",
-    "allow-open-workspace",
-    "allow-open-portfolio-file"
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "core:event:allow-unlisten",
+    "allow-terminal-start",
+    "allow-terminal-connection",
+    "allow-terminal-subscribe",
+    "allow-terminal-unsubscribe",
+    "allow-terminal-resource-recover",
+    "allow-terminal-snapshot",
+    "allow-terminal-action",
+    "allow-terminal-watchlist",
+    "allow-terminal-chart",
+    "allow-terminal-browser",
+    "allow-terminal-watchlist-preview",
+    "allow-terminal-resource",
+    "allow-terminal-service",
+    "allow-terminal-research"
   ]
 }
