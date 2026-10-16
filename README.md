@@ -4,7 +4,7 @@
 
 
 Tauri + React interface with a native Rust market engine. The desktop opens a
-moomoo-inspired dark workspace with an integrated title/search bar, collapsible
+dark workspace with an integrated title/search bar, collapsible
 horizontal-label navigation, interactive OHLC charts,
 named watchlists with configurable quote columns and bulk entry, linked/pinned
 panels, two/four-chart presets, and a responsive instrument inspector. Markets
@@ -12,12 +12,8 @@ browses existing MY/US equity and crypto providers with explicit local-watchlist
 add actions. An index ticker, right-side information tools, aligned options chain,
 weekly calendar and contextual controls follow the inspected desktop design.
 See the [reference comparison checklist](docs/desktop-design-checklist.md). It defaults
-to live provider data through the existing FastAPI market services. Synthetic
-data is available only through explicit mock mode.
+to live provider data through the existing FastAPI market services. 
 Portfolio services use backend SQLite and work with the lightweight gateway.
-Research remains on the full PostgreSQL backend. Existing PostgreSQL portfolio
-records are retained for explicit migration. The previous web interface is
-archived under `frontend/legacy`.
 
 ## Run locally
 
