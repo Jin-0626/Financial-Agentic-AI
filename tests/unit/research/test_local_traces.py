@@ -26,8 +26,12 @@ class LocalTraceTests(unittest.TestCase):
         recorder = store.begin("o", "u", "thread", "Research")
         parent, child = uuid4(), uuid4()
         recorder.on_chain_start(None, {}, run_id=parent, name="research")
-        recorder.on_tool_start({"name": "quote"}, '{"symbol":"5326.KL"}', run_id=child, parent_run_id=parent)
-        recorder.on_tool_end(ToolMessage(content="provider failed", status="error", tool_call_id="t"), run_id=child)
+        recorder.on_tool_start(
+            {"name": "quote"}, '{"symbol":"5326.KL"}', run_id=child, parent_run_id=parent
+        )
+        recorder.on_tool_end(
+            ToolMessage(content="provider failed", status="error", tool_call_id="t"), run_id=child
+        )
         recorder.on_chain_error(RuntimeError("failure"), run_id=parent)
         recorder.finish("error", RuntimeError("failure"))
         row = store.read("o", "u", recorder.trace_id)[0]
@@ -42,9 +46,14 @@ class LocalTraceTests(unittest.TestCase):
 
     def test_redaction_and_payload_limits(self):
         with patch.dict("os.environ", {"PROVIDER_API_KEY": "super-private-value"}):
-            safe = payload({"api_key": "another-secret", "nested": {"Authorization": "Bearer private"},
-                            "json_content": '{"api_key": "json-secret", "token_usage": 42}',
-                            "content": "super-private-value https://user:pass@example.com"})
+            safe = payload(
+                {
+                    "api_key": "another-secret",
+                    "nested": {"Authorization": "Bearer private"},
+                    "json_content": '{"api_key": "json-secret", "token_usage": 42}',
+                    "content": "super-private-value https://user:pass@example.com",
+                }
+            )
         self.assertNotIn("json-secret", json.dumps(safe))
         self.assertEqual(safe["json_content"]["token_usage"], 42)
         self.assertNotIn("another-secret", json.dumps(safe))
@@ -79,28 +88,43 @@ class LocalTraceTests(unittest.TestCase):
             response = client.get("/traces?org_id=o&user_id=u")
             self.assertEqual(response.headers["Cache-Control"], "no-store")
             self.assertEqual(len(response.json()["traces"]), 1)
-            self.assertEqual(client.get(f"/traces/{recorder.trace_id}?org_id=o&user_id=u").status_code, 200)
-            self.assertEqual(client.get(f"/traces/{recorder.trace_id}?org_id=o&user_id=other").status_code, 404)
+            self.assertEqual(
+                client.get(f"/traces/{recorder.trace_id}?org_id=o&user_id=u").status_code, 200
+            )
+            self.assertEqual(
+                client.get(f"/traces/{recorder.trace_id}?org_id=o&user_id=other").status_code, 404
+            )
             self.assertEqual(client.get("/traces?org_id=other&user_id=u").json()["traces"], [])
             app.dependency_overrides[authenticated_identity] = lambda: Identity("o", "u")
-            self.assertEqual(len(client.get("/traces?org_id=spoofed&user_id=spoofed").json()["traces"]), 1)
+            self.assertEqual(
+                len(client.get("/traces?org_id=spoofed&user_id=spoofed").json()["traces"]), 1
+            )
 
     def test_real_agent_propagates_tool_callbacks(self):
         @tool
         def quote(symbol: str) -> dict:
             """Retrieve a deterministic quote."""
             return {"symbol": symbol, "price": "10.00"}
+
         class ToolModel(FakeMessagesListChatModel):
             def bind_tools(self, tools, **kwargs):
                 return self
 
-        model = ToolModel(responses=[
-            AIMessage(content="", tool_calls=[{"name": "quote", "args": {"symbol": "5326.KL"}, "id": "q"}]),
-            AIMessage(content="Complete")])
+        model = ToolModel(
+            responses=[
+                AIMessage(
+                    content="",
+                    tool_calls=[{"name": "quote", "args": {"symbol": "5326.KL"}, "id": "q"}],
+                ),
+                AIMessage(content="Complete"),
+            ]
+        )
         graph = create_agent(model, tools=[quote])
         store = TraceStore()
         recorder = store.begin("o", "u", "t", "Research")
-        graph.invoke({"messages": [{"role": "user", "content": "Research"}]}, {"callbacks": [recorder]})
+        graph.invoke(
+            {"messages": [{"role": "user", "content": "Research"}]}, {"callbacks": [recorder]}
+        )
         recorder.finish()
         row = store.read("o", "u", recorder.trace_id)[0]
         tools = [call for call in row["calls"] if call["kind"] == "tool"]
@@ -114,10 +138,19 @@ class LocalTraceTests(unittest.TestCase):
 class TraceLifecycleTests(unittest.IsolatedAsyncioTestCase):
     async def test_chat_exception_and_cancellation_close_traces(self):
         store = TraceStore()
+
         async def cancelled(*args, **kwargs):
             raise asyncio.CancelledError()
-        for invoke, status in [(AsyncMock(side_effect=RuntimeError("model failed")), "error"), (cancelled, "interrupted")]:
-            with patch.object(routes_resources, "traces", store), patch.object(routes_resources, "_ensure_user_habits", AsyncMock()), patch.object(research_resources.resources, "agent", Mock(ainvoke=invoke)):
+
+        for invoke, status in [
+            (AsyncMock(side_effect=RuntimeError("model failed")), "error"),
+            (cancelled, "interrupted"),
+        ]:
+            with (
+                patch.object(routes_resources, "traces", store),
+                patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
+                patch.object(research_resources.resources, "agent", Mock(ainvoke=invoke)),
+            ):
                 try:
                     await routes_service._chat("Research", "t", "u", "o")
                 except asyncio.CancelledError:

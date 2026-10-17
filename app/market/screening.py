@@ -1,60 +1,24 @@
-import logging
 from app.market import common
 from app.market import transport
 
-logger = logging.getLogger(__name__)
 
-@transport.yahoo_bound
-def screener(
-    market, sector, min_cap, min_change, min_volume, sort, descending, offset, limit
-):
-    fields = {
-        "market_cap": "intradaymarketcap",
-        "change_percent": "percentchange",
-        "volume": "dayvolume",
-        "symbol": "ticker",
-        "price": "intradayprice",
-    }
-    queries = [transport.yf.EquityQuery("eq", ["region", "my" if market == "MY" else "us"])]
-    if sector:
-        queries.append(transport.yf.EquityQuery("eq", ["sector", sector]))
-    for field, value in (
-        ("intradaymarketcap", min_cap),
-        ("percentchange", min_change),
-        ("dayvolume", min_volume),
-    ):
-        if value is not None:
-            queries.append(transport.yf.EquityQuery("gte", [field, value]))
-    query = queries[0] if len(queries) == 1 else transport.yf.EquityQuery("and", queries)
-    raw = transport.yf.screen(
-        query, offset=offset, size=limit, sortField=fields[sort], sortAsc=not descending
-    )
-    rows = []
-    for item in raw.get("quotes", []):
-        if not item.get("symbol"):
-            continue
-        rows.append(
-            {
-                "instrument": common.instrument(item["symbol"], item),
-                "currency": item.get("currency"),
-                "sector": item.get("sector") or "Unclassified",
-                "market_cap": common.number(item.get("marketCap")),
-                "price": common.decimal(item.get("regularMarketPrice")),
-                "volume": common.number(item.get("regularMarketVolume")),
-                "change_percent": common.number(item.get("regularMarketChangePercent")),
-            }
+def snapshot(market):
+    """Expose complete provider data without applying a native client's filters."""
+    return screener(market, None, None, None, None, "symbol", False, 0, 20000)
+
+
+def screener(market, sector, min_cap, min_change, min_volume, sort, descending, offset, limit):
+    if market == "MY":
+        from app.market.malaysia import screener as malaysia_screener
+
+        return malaysia_screener(
+            sector, min_cap, min_change, min_volume, sort, descending, offset, limit
         )
-    return common.result(
-        rows,
-        "Yahoo Finance screener",
-        "Provider-listed "
-        + market
-        + " equity universe; not verified as every listed issuer",
-        total=raw.get("total"),
-        offset=offset,
-        limit=limit,
-        market=market,
-    )
+    if market != "US":
+        raise ValueError("Unsupported screener market")
+    from app.market.us import screener as us_screener
+
+    return us_screener(sector, min_cap, min_change, min_volume, sort, descending, offset, limit)
 
 
 def nasdaq_universe():
@@ -77,4 +41,3 @@ def nasdaq_universe():
         "Provider directory snapshot; endpoint-dependent US coverage",
         total=(raw.get("data") or {}).get("totalrecords"),
     )
-

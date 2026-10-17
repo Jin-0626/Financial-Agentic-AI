@@ -10,6 +10,7 @@ from langchain_core.messages import ToolMessage
 from app.infrastructure.diagnostics import sanitize_error
 
 from orchestrator.tool_registry import NATIVE_TOOLS
+from datetime import UTC
 
 QUANT_TOOLS = NATIVE_TOOLS - {"register_forecast"}
 
@@ -28,12 +29,7 @@ class NativeEngine:
         )
         command = [str(default)]
         linux = default.with_suffix("")
-        if (
-            os.name == "nt"
-            and not default.exists()
-            and linux.exists()
-            and shutil.which("wsl.exe")
-        ):
+        if os.name == "nt" and not default.exists() and linux.exists() and shutil.which("wsl.exe"):
             with linux.open("rb") as stream:
                 is_elf = stream.read(4) == bytes([127, 69, 76, 70])
             if is_elf:
@@ -64,17 +60,14 @@ class NativeEngine:
                             "env": {
                                 "ENGINE_ORG_ID": org_id,
                                 "ENGINE_DATA_ROOT": str(
-                                    Path(
-                                        os.getenv("ENGINE_DATA_ROOT", ".engine-data")
-                                    ).resolve()
+                                    Path(os.getenv("ENGINE_DATA_ROOT", ".engine-data")).resolve()
                                 ),
                                 "ENGINE_COMPUTE_TIMEOUT_MS": "30000",
                                 **(
                                     {
                                         "WSLENV": "ENGINE_ORG_ID:ENGINE_DATA_ROOT/p:ENGINE_COMPUTE_TIMEOUT_MS"
                                     }
-                                    if Path(self.command[0]).name.lower()
-                                    in {"wsl", "wsl.exe"}
+                                    if Path(self.command[0]).name.lower() in {"wsl", "wsl.exe"}
                                     else {}
                                 ),
                             },
@@ -163,9 +156,7 @@ class NativeEngine:
         for _, stop, _ in items:
             stop.set()
         if items:
-            await asyncio.gather(
-                *(task for _, _, task in items), return_exceptions=True
-            )
+            await asyncio.gather(*(task for _, _, task in items), return_exceptions=True)
         self.connections.clear()
 
     async def agent_tools(self, org_id):
@@ -178,8 +169,7 @@ class NativeEngine:
                 try:
                     kind = (
                         "statements"
-                        if _name
-                        in {"compute_discounted_cash_flow", "extract_financial_ratios"}
+                        if _name in {"compute_discounted_cash_flow", "extract_financial_ratios"}
                         else "prices"
                     )
                     if not kwargs.get("snapshot_id"):
@@ -194,9 +184,7 @@ class NativeEngine:
                             ticker=kwargs["ticker"],
                             lookback_days=kwargs.get("lookback_days", 252),
                         )
-                        registered = await self.call(
-                            org_id, "register_snapshot", snapshot
-                        )
+                        registered = await self.call(org_id, "register_snapshot", snapshot)
                         kwargs["snapshot_id"] = registered["snapshot_id"]
                     result = await self.call(org_id, _name, kwargs)
                     return json.dumps(result, allow_nan=False)
@@ -229,7 +217,7 @@ class NativeEngine:
             assumptions: str,
         ):
             """Register an explicit dated DCF forecast with stated assumptions; never infer future cash flows from past statements."""
-            from datetime import datetime, timezone
+            from datetime import datetime
 
             if not assumptions.strip() or len(assumptions) > 2000:
                 raise ValueError("State bounded forecast assumptions")
@@ -243,7 +231,7 @@ class NativeEngine:
                 "unit_multiplier": "1",
                 "provider": "explicit-forecast",
                 "source_reference": "user-supplied-forecast",
-                "retrieved_at": datetime.now(timezone.utc).isoformat(),
+                "retrieved_at": datetime.now(UTC).isoformat(),
                 "as_of": valuation_date,
                 "dataset": {
                     "kind": "forecast",

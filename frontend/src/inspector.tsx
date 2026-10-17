@@ -1,5 +1,6 @@
+import { StockLabel } from "./stock-label";
 import { useState } from "react";
-import { numeric, price, symbol, type Snapshot } from "./bridge";
+import { numeric, price, type Snapshot } from "./bridge";
 import { MarketResource } from "./resources";
 export function Inspector({
   snapshot,
@@ -19,7 +20,13 @@ export function Inspector({
   return (
     <aside className="instrument-inspector" aria-label="Instrument inspector">
       <header>
-        <h3>{selected ? symbol(selected) : "No instrument"}</h3>
+        <h3>
+          {selected ? (
+            <StockLabel code={selected} name={quote?.instrument.name} />
+          ) : (
+            "No instrument"
+          )}
+        </h3>
         <button
           className="inspector-close"
           aria-label="Close inspector"

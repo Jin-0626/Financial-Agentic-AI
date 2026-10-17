@@ -4,7 +4,7 @@ import asyncio
 import json
 import unittest
 from dataclasses import dataclass, replace
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -37,7 +37,11 @@ class Request:
 
 def request(call_id, context=None, name="market_data", args=None):
     return Request(
-        tool_call={"name": name, "id": call_id, "args": args if args is not None else {"symbol": "AAPL"}},
+        tool_call={
+            "name": name,
+            "id": call_id,
+            "args": args if args is not None else {"symbol": "AAPL"},
+        },
         runtime=SimpleNamespace(context=context, state={}),
     )
 
@@ -57,7 +61,10 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
         owner = asyncio.create_task(middleware.awrap_tool_call(request("owner", context), handler))
         self.addAsyncCleanup(self.cancel, owner)
         await asyncio.wait_for(started.wait(), 1)
-        waiters = [asyncio.create_task(middleware.awrap_tool_call(request(str(i), context), handler)) for i in range(2)]
+        waiters = [
+            asyncio.create_task(middleware.awrap_tool_call(request(str(i), context), handler))
+            for i in range(2)
+        ]
         for waiter in waiters:
             self.addAsyncCleanup(self.cancel, waiter)
         await asyncio.sleep(0)
@@ -71,7 +78,11 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_error_outcome_is_shared_but_not_cached(self):
         async def provider(req):
-            return ToolMessage(name="market_data", tool_call_id=req.tool_call["id"], content='{"status":"error","error":"fixture outage"}')
+            return ToolMessage(
+                name="market_data",
+                tool_call_id=req.tool_call["id"],
+                content='{"status":"error","error":"fixture outage"}',
+            )
 
         context, handler, results = await self.concurrent(provider)
         self.assertEqual(handler.await_count, 1)
@@ -112,7 +123,9 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
             calls += 1
             if calls == 1:
                 raise TimeoutError("fixture timeout")
-            return ToolMessage(name="market_data", tool_call_id=req.tool_call["id"], content='{"price":10}')
+            return ToolMessage(
+                name="market_data", tool_call_id=req.tool_call["id"], content='{"price":10}'
+            )
 
         context, handler, results = await self.concurrent(provider)
         self.assertEqual(handler.await_count, 2)
@@ -171,7 +184,9 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
         owner = asyncio.create_task(middleware.awrap_tool_call(request("owner", context), handler))
         self.addAsyncCleanup(self.cancel, owner)
         await asyncio.wait_for(started.wait(), 1)
-        waiter = asyncio.create_task(middleware.awrap_tool_call(request("waiter", context), handler))
+        waiter = asyncio.create_task(
+            middleware.awrap_tool_call(request("waiter", context), handler)
+        )
         self.addAsyncCleanup(self.cancel, waiter)
         await asyncio.sleep(0)
         owner.cancel()
@@ -187,14 +202,18 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
         async def provider(req):
             started.set()
             await finish.wait()
-            return ToolMessage(name="market_data", tool_call_id=req.tool_call["id"], content='{"price":10}')
+            return ToolMessage(
+                name="market_data", tool_call_id=req.tool_call["id"], content='{"price":10}'
+            )
 
         handler = AsyncMock(side_effect=provider)
         middleware = ResearchTools()
         owner = asyncio.create_task(middleware.awrap_tool_call(request("owner", context), handler))
         self.addAsyncCleanup(self.cancel, owner)
         await asyncio.wait_for(started.wait(), 1)
-        waiter = asyncio.create_task(middleware.awrap_tool_call(request("waiter", context), handler))
+        waiter = asyncio.create_task(
+            middleware.awrap_tool_call(request("waiter", context), handler)
+        )
         self.addAsyncCleanup(self.cancel, waiter)
         await asyncio.sleep(0)
         waiter.cancel()
@@ -208,14 +227,28 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(context.run_budget.inflight)
 
     async def test_request_budgets_and_private_tools_are_not_shared(self):
-        handler = AsyncMock(side_effect=lambda req: ToolMessage(name=req.tool_call["name"], tool_call_id=req.tool_call["id"], content='{"value":10}'))
+        handler = AsyncMock(
+            side_effect=lambda req: ToolMessage(
+                name=req.tool_call["name"], tool_call_id=req.tool_call["id"], content='{"value":10}'
+            )
+        )
         middleware = ResearchTools()
-        await asyncio.gather(*(middleware.awrap_tool_call(request(str(i), MemoryContext()), handler) for i in range(2)))
+        await asyncio.gather(
+            *(
+                middleware.awrap_tool_call(request(str(i), MemoryContext()), handler)
+                for i in range(2)
+            )
+        )
         self.assertEqual(handler.await_count, 2)
         context = MemoryContext()
         for name in ("portfolio_analytics", "run_script", "calculate_historical_var"):
             handler.reset_mock()
-            await asyncio.gather(*(middleware.awrap_tool_call(request(str(i), context, name), handler) for i in range(2)))
+            await asyncio.gather(
+                *(
+                    middleware.awrap_tool_call(request(str(i), context, name), handler)
+                    for i in range(2)
+                )
+            )
             self.assertEqual(handler.await_count, 2)
         self.assertFalse(context.run_budget.cache)
         self.assertFalse(context.run_budget.inflight)
@@ -224,7 +257,8 @@ class ProviderReuseTests(unittest.IsolatedAsyncioTestCase):
 class CapabilityParityTests(unittest.IsolatedAsyncioTestCase):
     async def test_dispatch_sync_async_parity_for_all_roles(self):
         cases = [
-            ("ls", {"path": "/"}), ("grep", {"pattern": "financial"}),
+            ("ls", {"path": "/"}),
+            ("grep", {"pattern": "financial"}),
             ("glob", {"path": "/scripts/../memories", "pattern": "*"}),
             ("read_file", {"file_path": "/skills/x/SKILL.md", "limit": 200}),
             ("read_file", {"file_path": "/scripts/x", "limit": True}),
@@ -232,7 +266,9 @@ class CapabilityParityTests(unittest.IsolatedAsyncioTestCase):
             ("write_file", {"file_path": "/memories/habits.md"}),
             ("market_data", {"data_type": "financials"}),
             ("market_data", {"data_type": "history"}),
-            ("task", {}), ("execute", {}), ("write_todos", {}),
+            ("task", {}),
+            ("execute", {}),
+            ("write_todos", {}),
         ]
         for role in ROLE_TOOLS:
             for mode in (None, "financial"):
@@ -240,17 +276,30 @@ class CapabilityParityTests(unittest.IsolatedAsyncioTestCase):
                     with self.subTest(role=role, mode=mode, tool=name, args=args):
                         context = SimpleNamespace(response_schema=mode, run_budget=None)
                         req = request("call", context, name, args)
-                        sync, async_handler = Mock(return_value="allowed"), AsyncMock(return_value="allowed")
+                        sync, async_handler = (
+                            Mock(return_value="allowed"),
+                            AsyncMock(return_value="allowed"),
+                        )
                         policy = CapabilityPolicy(role)
                         a = policy.wrap_tool_call(req, sync)
                         b = await policy.awrap_tool_call(req, async_handler)
                         self.assertEqual(a, b)
                         self.assertEqual(sync.call_count, async_handler.await_count)
                         if sync.called:
-                            self.assertEqual(sync.call_args.args[0], async_handler.call_args.args[0])
+                            self.assertEqual(
+                                sync.call_args.args[0], async_handler.call_args.args[0]
+                            )
 
     async def test_visible_tools_sync_async_parity_for_all_roles(self):
-        names = set().union(*ROLE_TOOLS.values()) | {"read_file", "ls", "glob", "grep", "write_file", "edit_file", "execute"}
+        names = set().union(*ROLE_TOOLS.values()) | {
+            "read_file",
+            "ls",
+            "glob",
+            "grep",
+            "write_file",
+            "edit_file",
+            "execute",
+        }
         tools = tuple(SimpleNamespace(name=name) for name in sorted(names))
         for role in ROLE_TOOLS:
             for mode in (None, "financial"):
@@ -261,7 +310,9 @@ class CapabilityParityTests(unittest.IsolatedAsyncioTestCase):
                     policy = CapabilityPolicy(role)
                     policy.wrap_model_call(req, sync)
                     await policy.awrap_model_call(req, async_handler)
-                    self.assertEqual(sync.call_args.args[0].tools, async_handler.call_args.args[0].tools)
+                    self.assertEqual(
+                        sync.call_args.args[0].tools, async_handler.call_args.args[0].tools
+                    )
                     visible = {tool.name for tool in sync.call_args.args[0].tools}
                     self.assertNotIn("execute", visible)
                     if role == "synthesis":
@@ -293,11 +344,16 @@ class SpecialistCompositionTests(unittest.TestCase):
                 seen.extend(message.text for message in messages if message.type == "system")
                 return super()._generate(messages, **kwargs)
 
-        model = RecordingModel(responses=[AIMessage(content="Hello"), AIMessage(content="Hello again")])
+        model = RecordingModel(
+            responses=[AIMessage(content="Hello"), AIMessage(content="Hello again")]
+        )
         with patch.object(agent, "MODEL_NAME", model):
             graph = agent.create_agent(None, InMemoryStore())
         for day in (9, 10):
-            with patch("orchestrator.freshness.now_utc", return_value=datetime(2026, 10, day, 0, tzinfo=timezone.utc)):
+            with patch(
+                "orchestrator.freshness.now_utc",
+                return_value=datetime(2026, 10, day, 0, tzinfo=UTC),
+            ):
                 graph.invoke({"messages": [HumanMessage(content="Hello")]}, context=MemoryContext())
         self.assertIn("2026-10-09", seen[0])
         self.assertIn("2026-10-10", seen[1])

@@ -12,7 +12,7 @@ RESEARCH_AGENT: dict[str, Any] = {
         "Use when you need to gather information, find data sources, summarize reports, "
         "or investigate a topic thoroughly before analysis."
     ),
-    "system_prompt":(
+    "system_prompt": (
         "You are a financial research specialist for Financial Terminal. "
         "Your role is to gather comprehensive, accurate information on financial topics.\n\n"
         "Responsibilities:\n"
@@ -175,14 +175,14 @@ MACRO_ECONOMIST_AGENT: dict[str, Any] = {
 }
 # CALL ALL AGENT BY NAME
 _ALL_AGENTS: dict[str, dict[str, Any]] = {
-    "research":            RESEARCH_AGENT,
-    "data-analyst":        DATA_ANALYST_AGENT,
-    "trading":             TRADING_AGENT,
-    "risk-analyzer":       RISK_ANALYZER_AGENT,
+    "research": RESEARCH_AGENT,
+    "data-analyst": DATA_ANALYST_AGENT,
+    "trading": TRADING_AGENT,
+    "risk-analyzer": RISK_ANALYZER_AGENT,
     "portfolio-optimizer": PORTFOLIO_OPTIMIZER_AGENT,
-    "backtester":          BACKTESTER_AGENT,
-    "reporter":            REPORTER_AGENT,
-    "macro-economist":     MACRO_ECONOMIST_AGENT,
+    "backtester": BACKTESTER_AGENT,
+    "reporter": REPORTER_AGENT,
+    "macro-economist": MACRO_ECONOMIST_AGENT,
 }
 
 # MAP AGENT_TYPE BY SUBAGENT NAME
@@ -214,6 +214,7 @@ AGENT_SUBAGENTS: dict[str, list[str]] = {
     "general": list(_ALL_AGENTS.keys()),
 }
 
+
 def get_subagents_for_type(agent_type: str) -> list[dict[str, Any]]:
     """Return specialist definitions, falling back to all for unknown types.
 
@@ -225,7 +226,8 @@ def get_subagents_for_type(agent_type: str) -> list[dict[str, Any]]:
         {
             **_ALL_AGENTS[name],
             "system_prompt": _ALL_AGENTS[name]["system_prompt"]
-            + "\n\n" + SPECIALIST_RESEARCH_PROMPT,
+            + "\n\n"
+            + SPECIALIST_RESEARCH_PROMPT,
         }
         for name in names
         if name in _ALL_AGENTS

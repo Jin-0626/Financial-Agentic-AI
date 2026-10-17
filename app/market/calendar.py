@@ -9,6 +9,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 def calendar_series(row):
     title = str(row.get("title", "")).lower()
     country = row.get("country")
@@ -66,11 +67,7 @@ def verified_calendar_actual(row, observations):
             if method == "inflation" and "y/y" in title:
                 previous = f"{year - 1:04d}-{month:02d}"
             elif method == "change" or "m/m" in title:
-                previous = (
-                    f"{year - 1:04d}-12"
-                    if month == 1
-                    else f"{year:04d}-{month - 1:02d}"
-                )
+                previous = f"{year - 1:04d}-12" if month == 1 else f"{year:04d}-{month - 1:02d}"
             else:
                 return None
             base = next(
@@ -121,12 +118,7 @@ def economic_calendar():
         except (ValueError, TypeError):
             released = False
         spec = calendar_series(row)
-        if (
-            released
-            and row.get("reference_period")
-            and spec
-            and os.getenv("FRED_API_KEY")
-        ):
+        if released and row.get("reference_period") and spec and os.getenv("FRED_API_KEY"):
             series_id = spec[0]
             vintage = when[:10]
             key = (series_id, vintage)
@@ -200,11 +192,7 @@ def earnings(key):
             move = None
             reason = "Announcement timing and next trading session not verified"
             if when in verified and history is not None and not history.empty:
-                local = (
-                    when.tz_convert(history.index.tz)
-                    if history.index.tz is not None
-                    else None
-                )
+                local = when.tz_convert(history.index.tz) if history.index.tz is not None else None
                 if local is not None:
                     bars = sorted(
                         (stamp.date(), common.number(price))
@@ -234,4 +222,3 @@ def earnings(key):
         "Provider earnings records; Bursa coverage and release timing may be incomplete",
         instrument=asset,
     )
-

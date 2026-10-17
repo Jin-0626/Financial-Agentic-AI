@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   calculate,
@@ -697,6 +698,7 @@ export function MarketChart({
   market,
   range,
   identity,
+  name,
   currency,
   onRange,
   analysis,
@@ -705,6 +707,7 @@ export function MarketChart({
   market: Market<Candle[]>;
   range: Range;
   identity: string;
+  name?: string | null;
   currency: string | null;
   onRange: (range: Range) => void;
 }) {
@@ -712,7 +715,8 @@ export function MarketChart({
     <section className="panel history">
       <div className="panel-head">
         <h3>
-          Price history <span>OHLC</span>
+          Price history <StockLabel code={identity} name={name} />{" "}
+          <span>OHLC</span>
         </h3>
         <div className="ranges" aria-label="History range">
           {ranges.map((value) => (

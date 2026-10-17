@@ -6,7 +6,11 @@ from pathlib import PurePosixPath
 from langchain.agents.middleware import AgentMiddleware
 from langchain_core.messages import ToolMessage
 
-from orchestrator.tool_registry import ROLE_TOOLS, SPECIALIST_ROLES, NATIVE_TOOLS
+from orchestrator.tool_registry import (
+    ROLE_TOOLS,
+    SPECIALIST_ROLES as SPECIALIST_ROLES,
+    NATIVE_TOOLS,
+)
 
 
 class CapabilityPolicy(AgentMiddleware):
@@ -17,10 +21,7 @@ class CapabilityPolicy(AgentMiddleware):
 
     def allowed(self, name, args):
         if name in {"write_file", "edit_file"}:
-            return (
-                self.role == "orchestrator"
-                and args.get("file_path") == "/memories/habits.md"
-            )
+            return self.role == "orchestrator" and args.get("file_path") == "/memories/habits.md"
         if name in {"ls", "glob", "grep"}:
             path = args.get("path", "")
             return (
@@ -49,6 +50,7 @@ class CapabilityPolicy(AgentMiddleware):
             return False
         if name == "run_analytics":
             from financial_analytics.registry import OPERATIONS, CATEGORY_ROLES
+
             operation = args.get("operation")
             specification = OPERATIONS.get(operation) if isinstance(operation, str) else None
             return specification is not None and self.role in CATEGORY_ROLES[specification.category]
@@ -66,7 +68,9 @@ class CapabilityPolicy(AgentMiddleware):
         budget = getattr(getattr(request.runtime, "context", None), "run_budget", None)
         repeated = False
         if budget:
-            key = json.dumps([request.tool_call["name"], request.tool_call.get("args", {})], sort_keys=True)
+            key = json.dumps(
+                [request.tool_call["name"], request.tool_call.get("args", {})], sort_keys=True
+            )
             with budget.lock:
                 budget.failures[key] = budget.failures.get(key, 0) + 1
                 repeated = budget.failures[key] > 2
@@ -78,17 +82,19 @@ class CapabilityPolicy(AgentMiddleware):
                 {
                     "status": "error",
                     "category": "validation",
-                    "error": ("Repeated invalid call blocked; change the arguments or report the missing capability. " if repeated else "") + "Tool capability denied. Discovery uses /scripts/ or /skills/; read_file requires limit=1..200 and offset>=0. Financial retrieval must use an authorized specialist. Correct the arguments instead of repeating the rejected call.",
+                    "error": (
+                        "Repeated invalid call blocked; change the arguments or report the missing capability. "
+                        if repeated
+                        else ""
+                    )
+                    + "Tool capability denied. Discovery uses /scripts/ or /skills/; read_file requires limit=1..200 and offset>=0. Financial retrieval must use an authorized specialist. Correct the arguments instead of repeating the rejected call.",
                 }
             ),
         )
 
     def delegated_tools(self, runtime):
         context = getattr(runtime, "context", None)
-        if (
-            self.role == "orchestrator"
-            and getattr(context, "response_schema", None) is not None
-        ):
+        if self.role == "orchestrator" and getattr(context, "response_schema", None) is not None:
             return {
                 "market_data",
                 "financial_news",
@@ -103,16 +109,24 @@ class CapabilityPolicy(AgentMiddleware):
         name = request.tool_call["name"]
         args = request.tool_call.get("args", {})
         if name in {"grep", "glob"} and args.get("path") in {None, "", "/", "."}:
-            return request.override(tool_call={**request.tool_call,
-                "args": {**args, "path": "/scripts/"}})
+            return request.override(
+                tool_call={**request.tool_call, "args": {**args, "path": "/scripts/"}}
+            )
         return request
 
     @staticmethod
     def workspace_listing(request):
-        if request.tool_call["name"] == "ls" and request.tool_call.get("args", {}).get("path") == "/":
-            return ToolMessage(name="ls", tool_call_id=request.tool_call["id"],
-                               content=json.dumps([{"path": "/scripts/", "is_dir": True},
-                                                   {"path": "/skills/", "is_dir": True}]))
+        if (
+            request.tool_call["name"] == "ls"
+            and request.tool_call.get("args", {}).get("path") == "/"
+        ):
+            return ToolMessage(
+                name="ls",
+                tool_call_id=request.tool_call["id"],
+                content=json.dumps(
+                    [{"path": "/scripts/", "is_dir": True}, {"path": "/skills/", "is_dir": True}]
+                ),
+            )
         return None
 
     def _prepare_tool_call(self, request):
@@ -120,9 +134,7 @@ class CapabilityPolicy(AgentMiddleware):
         response = self.workspace_listing(request)
         if response is None and (
             request.tool_call["name"] in self.delegated_tools(request.runtime)
-            or not self.allowed(
-                request.tool_call["name"], request.tool_call.get("args", {})
-            )
+            or not self.allowed(request.tool_call["name"], request.tool_call.get("args", {}))
         ):
             response = self.denial(request)
         return request, response

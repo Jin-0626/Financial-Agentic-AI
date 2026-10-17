@@ -77,10 +77,14 @@ class SQLitePortfolioRepository:
         return self._connection
 
     def _load(self, org, user, pid):
-        row = self._conn().execute(
-            "SELECT body FROM portfolio_documents WHERE org_id=? AND user_id=? AND id=?",
-            (org, user, pid),
-        ).fetchone()
+        row = (
+            self._conn()
+            .execute(
+                "SELECT body FROM portfolio_documents WHERE org_id=? AND user_id=? AND id=?",
+                (org, user, pid),
+            )
+            .fetchone()
+        )
         return json.loads(row[0]) if row else None
 
     async def load(self, org, user, pid):
@@ -89,10 +93,15 @@ class SQLitePortfolioRepository:
 
     async def list(self, org, user):
         def read():
-            rows = self._conn().execute(
-                """SELECT body FROM portfolio_documents WHERE org_id=? AND user_id=?
-                   ORDER BY saved_at DESC, id LIMIT 100""", (org, user)
-            ).fetchall()
+            rows = (
+                self._conn()
+                .execute(
+                    """SELECT body FROM portfolio_documents WHERE org_id=? AND user_id=?
+                   ORDER BY saved_at DESC, id LIMIT 100""",
+                    (org, user),
+                )
+                .fetchall()
+            )
             return [json.loads(row[0]) for row in rows]
 
         async with self._lock:
@@ -103,8 +112,14 @@ class SQLitePortfolioRepository:
             """INSERT INTO portfolio_documents(org_id,user_id,id,revision,saved_at,body)
                VALUES(?,?,?,?,?,?) ON CONFLICT(org_id,user_id,id) DO UPDATE SET
                revision=excluded.revision,saved_at=excluded.saved_at,body=excluded.body""",
-            (org, user, pid, document["revision"], document.get("saved_at", ""),
-             json.dumps(document, ensure_ascii=False, allow_nan=False, separators=(",", ":"))),
+            (
+                org,
+                user,
+                pid,
+                document["revision"],
+                document.get("saved_at", ""),
+                json.dumps(document, ensure_ascii=False, allow_nan=False, separators=(",", ":")),
+            ),
         )
 
     async def mutate(self, org, user, pid, change, expected=None):
@@ -114,17 +129,25 @@ class SQLitePortfolioRepository:
                 old = await self._call(lambda: self._load(org, user, pid))
                 if expected is not None and (old is None or old.get("revision", 0) != expected):
                     raise ValueError("Portfolio changed; reload before saving")
-                count = await self._call(lambda: self._conn().execute(
-                    "SELECT count(*) FROM portfolio_documents WHERE org_id=? AND user_id=?",
-                    (org, user),
-                ).fetchone()[0])
+                count = await self._call(
+                    lambda: (
+                        self._conn()
+                        .execute(
+                            "SELECT count(*) FROM portfolio_documents WHERE org_id=? AND user_id=?",
+                            (org, user),
+                        )
+                        .fetchone()[0]
+                    )
+                )
                 new = await change(copy.deepcopy(old), count)
                 if new != old:
                     if new is None:
-                        await self._call(lambda: self._conn().execute(
-                            "DELETE FROM portfolio_documents WHERE org_id=? AND user_id=? AND id=?",
-                            (org, user, pid),
-                        ))
+                        await self._call(
+                            lambda: self._conn().execute(
+                                "DELETE FROM portfolio_documents WHERE org_id=? AND user_id=? AND id=?",
+                                (org, user, pid),
+                            )
+                        )
                     else:
                         new["revision"] = (old or {}).get("revision", 0) + 1
                         await self._call(lambda: self._write(org, user, pid, new))
@@ -135,14 +158,19 @@ class SQLitePortfolioRepository:
 
     async def import_documents(self, documents):
         """Atomic repeatable copy; never replace differing local documents."""
+
         def copy_documents():
             conn = self._conn()
             imported = 0
             conn.execute("BEGIN IMMEDIATE")
             try:
                 for org, user, pid, revision, document in documents:
-                    if (not isinstance(document, dict) or document.get("id") != pid
-                            or document.get("revision") != revision or revision < 1):
+                    if (
+                        not isinstance(document, dict)
+                        or document.get("id") != pid
+                        or document.get("revision") != revision
+                        or revision < 1
+                    ):
                         raise ValueError("Invalid portfolio migration document")
                     previous = self._load(org, user, pid)
                     if previous is not None:

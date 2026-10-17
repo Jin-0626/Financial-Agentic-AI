@@ -8,9 +8,8 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from decimal import Decimal, InvalidOperation
-from typing import Any
 
 import pandas as pd
 
@@ -28,11 +27,7 @@ ACCOUNTS = {
 
 
 def _base(org_id: str, ticker: str, currency: str, as_of: str, dataset: dict) -> dict:
-    if (
-        not org_id
-        or len(org_id) > 128
-        or not re.fullmatch(r"[A-Z0-9.^=_-]{1,32}", ticker)
-    ):
+    if not org_id or len(org_id) > 128 or not re.fullmatch(r"[A-Z0-9.^=_-]{1,32}", ticker):
         raise ValueError("Invalid snapshot identity")
     if not re.fullmatch(r"[A-Z]{3}", currency):
         raise ValueError("Provider currency is required")
@@ -44,15 +39,13 @@ def _base(org_id: str, ticker: str, currency: str, as_of: str, dataset: dict) ->
         "unit_multiplier": "1",
         "provider": "yahoo",
         "source_reference": f"https://finance.yahoo.com/quote/{ticker}",
-        "retrieved_at": datetime.now(timezone.utc).isoformat(),
+        "retrieved_at": datetime.now(UTC).isoformat(),
         "as_of": as_of,
         "dataset": dataset,
     }
 
 
-def prices_snapshot(
-    frame: pd.DataFrame, *, org_id: str, ticker: str, currency: str
-) -> dict:
+def prices_snapshot(frame: pd.DataFrame, *, org_id: str, ticker: str, currency: str) -> dict:
     """Require a frame fetched with auto_adjust=True; reject duplicates and gaps."""
     if frame.empty or "Close" not in frame or len(frame) < 3 or len(frame) > 10001:
         raise ValueError("Insufficient adjusted prices")
@@ -61,11 +54,7 @@ def prices_snapshot(
     for index, row in frame.iterrows():
         day = pd.Timestamp(index).date().isoformat()
         close = float(row["Close"])
-        if (
-            (previous is not None and day <= previous)
-            or not math.isfinite(close)
-            or close <= 0
-        ):
+        if (previous is not None and day <= previous) or not math.isfinite(close) or close <= 0:
             raise ValueError("Invalid or unordered adjusted prices")
         raw_volume = row.get("Volume")
         volume = None if raw_volume is None or pd.isna(raw_volume) else int(raw_volume)
@@ -73,9 +62,7 @@ def prices_snapshot(
             raise ValueError("Invalid volume")
         bars.append({"date": day, "adjusted_close": close, "volume": volume})
         previous = day
-    return _base(
-        org_id, ticker, currency, bars[-1]["date"], {"kind": "prices", "bars": bars}
-    )
+    return _base(org_id, ticker, currency, bars[-1]["date"], {"kind": "prices", "bars": bars})
 
 
 def statements_snapshot(
@@ -125,9 +112,7 @@ def statements_snapshot(
     )
 
 
-def fetch_yahoo_snapshot(
-    kind: str, *, org_id: str, ticker: str, lookback_days: int = 252
-) -> dict:
+def fetch_yahoo_snapshot(kind: str, *, org_id: str, ticker: str, lookback_days: int = 252) -> dict:
     """Administrative ingestion using the existing Yahoo provider dependency."""
     from app.infrastructure.providers import ticker_info, refresh_statement_cache
 
@@ -140,9 +125,7 @@ def fetch_yahoo_snapshot(
         # Calendar buffer preserves trading observations; never insert nontrading rows.
         from datetime import timedelta
 
-        start = datetime.now(timezone.utc).date() - timedelta(
-            days=lookback_days * 2 + 30
-        )
+        start = datetime.now(UTC).date() - timedelta(days=lookback_days * 2 + 30)
         frame = provider.history(start=start.isoformat(), auto_adjust=True, timeout=15)
         return prices_snapshot(
             frame.tail(lookback_days + 1),

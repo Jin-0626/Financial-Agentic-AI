@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 class FMPError(Exception):
     """Base exception for FMP API interactions."""
-    def __init__(self, message: str, status_code: Optional[int] = None, payload: Optional[Any] = None):
+
+    def __init__(self, message: str, status_code: int | None = None, payload: Any | None = None):
         super().__init__(message)
         self.status_code = status_code
         self.payload = payload
@@ -29,11 +30,13 @@ class FMPError(Exception):
 
 class FMPAuthError(FMPError):
     """Raised on invalid key, quota exhaustion, or premium endpoint restrictions."""
+
     pass
 
 
 class FMPRateLimitError(FMPError):
     """Raised when HTTP 429 Too Many Requests is returned."""
+
     pass
 
 
@@ -44,10 +47,12 @@ class FMPClient:
     BASE_URL_V3 = "https://financialmodelingprep.com/api/v3"
     BASE_URL_V4 = "https://financialmodelingprep.com/api/v4"
 
-    def __init__(self, api_key: Optional[str] = None, timeout: float = 20.0):
+    def __init__(self, api_key: str | None = None, timeout: float = 20.0):
         self.api_key = api_key or os.environ.get("FMP_API_KEY", "")
         if not self.api_key:
-            logger.warning("FMP_API_KEY is not configured. Requests may fail with 401 Unauthorized.")
+            logger.warning(
+                "FMP_API_KEY is not configured. Requests may fail with 401 Unauthorized."
+            )
 
         self.timeout = timeout
         self.session = requests.Session()
@@ -57,16 +62,20 @@ class FMPClient:
             total=3,
             backoff_factor=0.5,
             status_forcelist=[429, 500, 502, 503, 504],
-            raise_on_status=False
+            raise_on_status=False,
         )
         adapter = HTTPAdapter(max_retries=retries, pool_connections=10, pool_maxsize=20)
         self.session.mount("https://", adapter)
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (compatible; ModernFMPClient/1.0)",
-            "Accept": "application/json"
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (compatible; ModernFMPClient/1.0)",
+                "Accept": "application/json",
+            }
+        )
 
-    def _request(self, endpoint: str, params: Optional[Dict[str, Any]] = None, version: str = "v3") -> Any:
+    def _request(
+        self, endpoint: str, params: dict[str, Any] | None = None, version: str = "v3"
+    ) -> Any:
         """Internal dispatcher executing authenticated HTTP requests."""
         bases = {"v3": self.BASE_URL_V3, "v4": self.BASE_URL_V4, "stable": self.BASE_URL_STABLE}
         if version not in bases:
@@ -81,13 +90,18 @@ class FMPClient:
 
         try:
             resp = self.session.get(url, params=query_params, timeout=self.timeout)
-            
+
             if resp.status_code in (401, 403):
-                raise FMPAuthError(f"FMP authentication failed ({resp.status_code}): {resp.text}", status_code=resp.status_code)
+                raise FMPAuthError(
+                    f"FMP authentication failed ({resp.status_code}): {resp.text}",
+                    status_code=resp.status_code,
+                )
             elif resp.status_code == 429:
                 raise FMPRateLimitError("FMP rate limit exceeded (HTTP 429).", status_code=429)
             elif resp.status_code >= 400:
-                raise FMPError(f"FMP HTTP Error {resp.status_code}: {resp.text}", status_code=resp.status_code)
+                raise FMPError(
+                    f"FMP HTTP Error {resp.status_code}: {resp.text}", status_code=resp.status_code
+                )
 
             data = resp.json()
 
@@ -96,7 +110,10 @@ class FMPClient:
                 err = data.get("Error Message") or data.get("error")
                 if err:
                     lowered = str(err).lower()
-                    if any(k in lowered for k in ["upgrade", "subscription", "restricted", "unauthorized"]):
+                    if any(
+                        k in lowered
+                        for k in ["upgrade", "subscription", "restricted", "unauthorized"]
+                    ):
                         raise FMPAuthError(f"Subscription restriction: {err}", payload=data)
                     raise FMPError(f"FMP returned error: {err}", payload=data)
 
@@ -109,26 +126,40 @@ class FMPClient:
     # Core Fundamentals & Statements
     # -------------------------------------------------------------------------
 
-    def get_company_profile(self, symbol: str) -> Dict[str, Any]:
+    def get_company_profile(self, symbol: str) -> dict[str, Any]:
         """Fetch general corporate profile, CEO, sector, description, and currency."""
         data = self._request(f"profile/{symbol.upper()}")
         if isinstance(data, list) and data:
             return data[0]
         return data if isinstance(data, dict) else {}
 
-    def get_income_statement(self, symbol: str, period: str = "annual", limit: int = 5) -> List[Dict[str, Any]]:
+    def get_income_statement(
+        self, symbol: str, period: str = "annual", limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Fetch historical income statements (period: 'annual' or 'quarter')."""
-        return self._request(f"income-statement/{symbol.upper()}", {"period": period, "limit": limit})
+        return self._request(
+            f"income-statement/{symbol.upper()}", {"period": period, "limit": limit}
+        )
 
-    def get_balance_sheet(self, symbol: str, period: str = "annual", limit: int = 5) -> List[Dict[str, Any]]:
+    def get_balance_sheet(
+        self, symbol: str, period: str = "annual", limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Fetch historical balance sheet statements (period: 'annual' or 'quarter')."""
-        return self._request(f"balance-sheet-statement/{symbol.upper()}", {"period": period, "limit": limit})
+        return self._request(
+            f"balance-sheet-statement/{symbol.upper()}", {"period": period, "limit": limit}
+        )
 
-    def get_cash_flow(self, symbol: str, period: str = "annual", limit: int = 5) -> List[Dict[str, Any]]:
+    def get_cash_flow(
+        self, symbol: str, period: str = "annual", limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Fetch historical cash flow statements (period: 'annual' or 'quarter')."""
-        return self._request(f"cash-flow-statement/{symbol.upper()}", {"period": period, "limit": limit})
+        return self._request(
+            f"cash-flow-statement/{symbol.upper()}", {"period": period, "limit": limit}
+        )
 
-    def get_financial_ratios(self, symbol: str, period: str = "annual", limit: int = 5) -> List[Dict[str, Any]]:
+    def get_financial_ratios(
+        self, symbol: str, period: str = "annual", limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Fetch valuation and performance ratios (period: 'annual', 'quarter', or 'ttm')."""
         sym = symbol.upper()
         if period.lower() == "ttm":
@@ -136,7 +167,9 @@ class FMPClient:
             return [data] if isinstance(data, dict) else data
         return self._request(f"ratios/{sym}", {"period": period, "limit": limit})
 
-    def get_key_metrics(self, symbol: str, period: str = "annual", limit: int = 5) -> List[Dict[str, Any]]:
+    def get_key_metrics(
+        self, symbol: str, period: str = "annual", limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Fetch key metrics (EV/EBITDA, Debt-to-Equity, FCF Yield, ROIC)."""
         return self._request(f"key-metrics/{symbol.upper()}", {"period": period, "limit": limit})
 
@@ -144,7 +177,7 @@ class FMPClient:
     # Pricing & Quotes
     # -------------------------------------------------------------------------
 
-    def get_quote(self, symbols: Union[str, List[str]]) -> List[Dict[str, Any]]:
+    def get_quote(self, symbols: str | list[str]) -> list[dict[str, Any]]:
         """Fetch real-time quotes for one or multiple comma-separated symbols."""
         if isinstance(symbols, list):
             sym_str = ",".join(s.strip().upper() for s in symbols)
@@ -156,18 +189,23 @@ class FMPClient:
     def get_historical_prices(
         self,
         symbol: str,
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
-        interval: str = "1d"
-    ) -> List[Dict[str, Any]]:
+        start_date: str | None = None,
+        end_date: str | None = None,
+        interval: str = "1d",
+    ) -> list[dict[str, Any]]:
         """
         Fetch historical candles.
         interval: '1m', '5m', '15m', '30m', '1h', '4h', or '1d'.
         """
         sym = symbol.upper()
         interval_map = {
-            "1m": "1min", "5m": "5min", "15m": "15min", "30m": "30min",
-            "1h": "1hour", "4h": "4hour", "1d": "day"
+            "1m": "1min",
+            "5m": "5min",
+            "15m": "15min",
+            "30m": "30min",
+            "1h": "1hour",
+            "4h": "4hour",
+            "1d": "day",
         }
         fmp_interval = interval_map.get(interval, "day")
 
@@ -190,23 +228,27 @@ class FMPClient:
     # Macro & Institutional Data
     # -------------------------------------------------------------------------
 
-    def get_treasury_rates(self, from_date: Optional[str] = None, to_date: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_treasury_rates(
+        self, from_date: str | None = None, to_date: str | None = None
+    ) -> list[dict[str, Any]]:
         """Fetch US Treasury yields across maturities."""
         params = {"from": from_date, "to": to_date}
         data = self._request("treasury", params, version="v4")
         return data if isinstance(data, list) else []
 
-    def get_economic_calendar(self, from_date: Optional[str] = None, to_date: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_economic_calendar(
+        self, from_date: str | None = None, to_date: str | None = None
+    ) -> list[dict[str, Any]]:
         """Fetch economic indicator releases (CPI, Non-Farm Payrolls, FOMC)."""
         params = {"from": from_date, "to": to_date}
         data = self._request("economic_calendar", params)
         return data if isinstance(data, list) else []
 
-    def get_insider_trades(self, symbol: str, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_insider_trades(self, symbol: str, limit: int = 50) -> list[dict[str, Any]]:
         """Fetch corporate insider transactions filed via SEC Form 4."""
         return self._request(f"insider-trading/{symbol.upper()}", {"limit": limit}, version="v4")
 
-    def get_institutional_holders(self, symbol: str) -> List[Dict[str, Any]]:
+    def get_institutional_holders(self, symbol: str) -> list[dict[str, Any]]:
         """Fetch 13F institutional fund ownership positions."""
         return self._request(f"institutional-holder/{symbol.upper()}")
 
@@ -214,7 +256,7 @@ class FMPClient:
     # Comprehensive Company Overview
     # -------------------------------------------------------------------------
 
-    def get_full_overview(self, symbol: str) -> Dict[str, Any]:
+    def get_full_overview(self, symbol: str) -> dict[str, Any]:
         """Aggregate profile, real-time quote, TTM ratios, and key metrics in one payload."""
         sym = symbol.upper()
         out = {"symbol": sym}
@@ -248,6 +290,7 @@ class FMPClient:
 # -----------------------------------------------------------------------------
 # CLI Entry Point
 # -----------------------------------------------------------------------------
+
 
 def main():
     parser = argparse.ArgumentParser(description="Financial Modeling Prep (FMP) CLI Tool")
@@ -299,7 +342,9 @@ def main():
             result = client.get_company_profile(args.symbol)
         elif args.command == "statement":
             if args.type == "income":
-                result = client.get_income_statement(args.symbol, period=args.period, limit=args.limit)
+                result = client.get_income_statement(
+                    args.symbol, period=args.period, limit=args.limit
+                )
             elif args.type == "balance":
                 result = client.get_balance_sheet(args.symbol, period=args.period, limit=args.limit)
             elif args.type == "cashflow":
@@ -307,7 +352,12 @@ def main():
         elif args.command == "ratios":
             result = client.get_financial_ratios(args.symbol, period=args.period, limit=args.limit)
         elif args.command == "history":
-            result = client.get_historical_prices(args.symbol, start_date=args.start_date, end_date=args.end_date, interval=args.interval)
+            result = client.get_historical_prices(
+                args.symbol,
+                start_date=args.start_date,
+                end_date=args.end_date,
+                interval=args.interval,
+            )
         elif args.command == "overview":
             result = client.get_full_overview(args.symbol)
         elif args.command == "treasury":

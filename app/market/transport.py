@@ -9,6 +9,8 @@ from urllib.parse import urlsplit
 import requests
 import yfinance as yf
 
+__all__ = ["yf", "fetch", "Throttled", "yahoo_bound", "cg"]
+
 logger = logging.getLogger(__name__)
 
 HOSTS = {
@@ -69,9 +71,7 @@ def fetch(url, params=None, headers=None):
                 except ValueError:
                     try:
                         seconds = int(
-                            (
-                                parsedate_to_datetime(retry) - datetime.now(UTC)
-                            ).total_seconds()
+                            (parsedate_to_datetime(retry) - datetime.now(UTC)).total_seconds()
                         )
                     except (ValueError, TypeError):
                         seconds = 60
@@ -110,4 +110,3 @@ def cg(path, params=None):
         params,
         {"x-cg-demo-api-key": key} if key else {},
     )
-

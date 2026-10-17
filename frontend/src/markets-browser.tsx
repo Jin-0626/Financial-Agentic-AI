@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useEffect, useState } from "react";
 import { useDesktopView } from "./view-settings";
 import { DataInfo } from "./data-info";
@@ -85,7 +86,11 @@ export function MarketsBrowser({
         </span>
       </div>
       <p className="coverage-note">
-        Provider coverage; this is not an exhaustive exchange listing.
+        {view.market_tab === "MY"
+          ? "Malaysia: configured tracked set, not all Bursa listings. Rankings apply within this set."
+          : view.market_tab === "US"
+            ? "Broad US provider coverage, including OTC; ranked by displayed regular-session quotes. This is not an exhaustive exchange listing."
+            : "Provider coverage; this is not an exhaustive exchange listing."}
       </p>
       {view.market_tab === "overview" ? (
         <MarketOverview snapshot={snapshot} onSelect={onSelect} />
@@ -243,8 +248,10 @@ function MarketTable({
             aria-label={`Open ${row.instrument.symbol}`}
             onClick={() => onSelect(row.instrument.id)}
           >
-            <strong>{row.instrument.symbol}</strong>
-            <small>{row.instrument.name ?? "Name unavailable"}</small>
+            <StockLabel
+              code={row.instrument.symbol}
+              name={row.instrument.name}
+            />
           </button>
         );
       case "name":

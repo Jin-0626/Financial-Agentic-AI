@@ -36,7 +36,9 @@ class MarketAdapterTests(unittest.TestCase):
 
     def test_crypto_quote_cannot_substitute_another_asset(self):
         with (
-            patch.object(data_transport, "cg",
+            patch.object(
+                data_transport,
+                "cg",
                 return_value=[{"id": "ethereum", "symbol": "eth", "current_price": 20}],
             ),
             self.assertRaises(ValueError),
@@ -52,13 +54,13 @@ class MarketAdapterTests(unittest.TestCase):
         }
         self.assertEqual(data_calendar.verified_calendar_actual(event, rows)["value"], "2.5%")
         self.assertIsNone(
-            data_calendar.verified_calendar_actual(
-                {**event, "reference_period": "2026-10"}, rows
-            )
+            data_calendar.verified_calendar_actual({**event, "reference_period": "2026-10"}, rows)
         )
 
     def test_quote_preserves_missing_and_currency(self):
-        with patch.object(data_common, "ticker_info",
+        with patch.object(
+            data_common,
+            "ticker_info",
             return_value=(
                 MagicMock(),
                 {
@@ -101,7 +103,9 @@ class MarketAdapterTests(unittest.TestCase):
         self.assertEqual(data_options.options("yahoo:5326.KL")["status"], "unavailable")
 
     def test_calendar_does_not_invent_an_actual(self):
-        with patch.object(data_transport, "fetch",
+        with patch.object(
+            data_transport,
+            "fetch",
             return_value=[
                 {
                     "title": "CPI",
@@ -143,9 +147,7 @@ class MarketAdapterTests(unittest.TestCase):
     def test_earnings_move_uses_next_actual_bar_and_unknown_time_stays_null(self):
         import pandas as pd
 
-        when = pd.DatetimeIndex(
-            ["2026-10-01 16:30", "2026-09-01 00:00"], tz="America/New_York"
-        )
+        when = pd.DatetimeIndex(["2026-10-01 16:30", "2026-09-01 00:00"], tz="America/New_York")
         earnings = pd.DataFrame(
             {"EPS Estimate": [1.0, 1.0], "Reported EPS": [1.1, 1.2]}, index=when
         )
@@ -162,26 +164,36 @@ class MarketAdapterTests(unittest.TestCase):
         self.assertIsNone(result["data"][1]["next_session_move_percent"])
 
     def test_screener_preserves_provider_total_and_page(self):
-        with patch.object(
-            data_transport.yf,
-            "screen",
-            return_value={
+        from app.market import us
+
+        def page(query, **params):
+            return {
                 "total": 500,
                 "quotes": [
                     {
-                        "symbol": "AAPL",
+                        "symbol": f"STOCK{index:03}",
                         "currency": "USD",
-                        "marketCap": 123,
+                        "marketCap": index,
+                        "regularMarketPrice": 10,
                         "regularMarketChangePercent": 2,
                     }
+                    for index in range(
+                        params["offset"], min(500, params["offset"] + params["size"])
+                    )
                 ],
-            },
+            }
+
+        with (
+            patch.object(us, "universe", us.USSnapshot()),
+            patch.object(data_transport.yf, "screen", side_effect=page),
         ):
             result = data_screening.screener(
                 "US", None, None, None, None, "market_cap", True, 100, 100
             )
         self.assertEqual(result["total"], 500)
         self.assertEqual(result["offset"], 100)
+        self.assertEqual(len(result["data"]), 100)
+        self.assertEqual(result["data"][0]["market_cap"], 399)
         self.assertIn("not verified", result["coverage"])
 
     def test_ohlcv_orders_deduplicates_and_drops_invalid_bars(self):
@@ -203,8 +215,7 @@ class MarketAdapterTests(unittest.TestCase):
         )
         ticker = MagicMock()
         ticker.history.return_value = frame
-        with patch.object(data_common, "ticker_info", return_value=(ticker, {"currency": "MYR"})
-        ):
+        with patch.object(data_common, "ticker_info", return_value=(ticker, {"currency": "MYR"})):
             value = data_history.ohlcv("yahoo:5326.KL", "1M")
         self.assertEqual(len(value["data"]), 2)
         self.assertLess(value["data"][0]["time"], value["data"][1]["time"])
@@ -226,9 +237,9 @@ class MarketAdapterTests(unittest.TestCase):
 
     def test_context_is_bounded_and_does_not_accept_other_fields(self):
         self.assertEqual(
-            ChatRequest(
-                terminal_context={"instrument": {"id": "yahoo:5326.KL"}}
-            ).terminal_context["instrument"]["id"],
+            ChatRequest(terminal_context={"instrument": {"id": "yahoo:5326.KL"}}).terminal_context[
+                "instrument"
+            ]["id"],
             "yahoo:5326.KL",
         )
         for value in (
@@ -278,8 +289,7 @@ class MarketServiceTests(unittest.IsolatedAsyncioTestCase):
             return data_common.result([], "Fixture", "Synthetic")
 
         tasks = [
-            asyncio.create_task(self.service.get(("q", i), "fixture", 0, load))
-            for i in range(8)
+            asyncio.create_task(self.service.get(("q", i), "fixture", 0, load)) for i in range(8)
         ]
         tasks[0].cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
@@ -335,9 +345,7 @@ class MarketRouteTests(unittest.TestCase):
         app.include_router(router, prefix="/api")
         with TestClient(app) as client:
             self.assertEqual(
-                client.get(
-                    "/api/market/ohlcv?instrument=yahoo:AAPL&range=invalid"
-                ).status_code,
+                client.get("/api/market/ohlcv?instrument=yahoo:AAPL&range=invalid").status_code,
                 422,
             )
             self.assertEqual(
@@ -353,9 +361,7 @@ class MarketRouteTests(unittest.TestCase):
                     200,
                 )
             with patch.dict("os.environ", {"APP_ENV": "production"}):
-                self.assertEqual(
-                    client.get("/api/market/capabilities").status_code, 503
-                )
+                self.assertEqual(client.get("/api/market/capabilities").status_code, 503)
 
 
 class TerminalContextTests(unittest.TestCase):

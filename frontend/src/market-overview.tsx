@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useState } from "react";
 import { mutateWatchlist, price, type Snapshot } from "./bridge";
 import { IndexCards } from "./index-market";
@@ -36,9 +37,15 @@ function MarketGroup({
   return (
     <section className="market-overview-group">
       <h3>{heading}</h3>
-      <p className="coverage-note">Ranked provider results · {market}</p>
+      <p className="coverage-note">
+        {market === "MY"
+          ? "Ranked MY tracked set · not exchange-wide leaders"
+          : "Broad US provider universe · ranked by regular-session quotes"}
+      </p>
       {envelope && <DataInfo market={envelope} />}{" "}
-      {(error || writeError) && <p role="alert">{error ?? writeError}</p>}
+      {(error || envelope?.error || writeError) && (
+        <p role="alert">{writeError ?? error ?? envelope?.error}</p>
+      )}
       <div className="resource-table">
         <table>
           <thead>
@@ -58,7 +65,10 @@ function MarketGroup({
                     className="instrument-button"
                     onClick={() => onSelect(row.instrument.id)}
                   >
-                    {row.instrument.symbol}
+                    <StockLabel
+                      code={row.instrument.symbol}
+                      name={row.instrument.name}
+                    />
                   </button>
                 </td>
                 <td>{price(row.price)}</td>
@@ -104,9 +114,13 @@ function MarketGroup({
         </table>
         {!rows.length && (
           <div className="empty">
-            {loading
-              ? "Loading provider results…"
-              : "No provider results returned"}
+            {snapshot.mode !== "HTTP"
+              ? "Market leaders require live HTTP mode."
+              : loading
+                ? "Loading provider results…"
+                : error || envelope?.status === "unavailable"
+                  ? "Provider results unavailable. Automatic retries respect provider limits."
+                  : "No provider results returned"}
           </div>
         )}
       </div>

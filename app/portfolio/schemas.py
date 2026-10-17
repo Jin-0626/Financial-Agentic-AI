@@ -1,9 +1,11 @@
 """Validated portfolio inputs shared by routes, services, and tools."""
-from datetime import date, datetime, timezone
+
+from datetime import date, datetime, UTC
 from decimal import Decimal
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.infrastructure import providers
+
 
 class Position(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -50,7 +52,7 @@ class Trade(BaseModel):
     @field_validator("date")
     @classmethod
     def past(cls, v):
-        if v > datetime.now(timezone.utc).date():
+        if v > datetime.now(UTC).date():
             raise ValueError("Trade date cannot be in the future")
         return v
 

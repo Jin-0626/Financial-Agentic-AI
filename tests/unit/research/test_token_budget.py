@@ -8,9 +8,18 @@ from contracts.context import MemoryContext
 
 
 def response(input_tokens, output_tokens):
-    return SimpleNamespace(result=[AIMessage(content="", usage_metadata={
-        "input_tokens": input_tokens, "output_tokens": output_tokens,
-        "total_tokens": input_tokens + output_tokens})])
+    return SimpleNamespace(
+        result=[
+            AIMessage(
+                content="",
+                usage_metadata={
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens,
+                    "total_tokens": input_tokens + output_tokens,
+                },
+            )
+        ]
+    )
 
 
 class TokenBudgetTests(unittest.TestCase):
@@ -38,13 +47,27 @@ class TokenBudgetTests(unittest.TestCase):
         from langchain.agents.middleware.types import ModelRequest
         from langchain_core.messages import SystemMessage
         from tests.support.agent_fixtures import ToolModel
-        request = ModelRequest(model=ToolModel(responses=[]), messages=[], state={},
-                               system_message=SystemMessage(content="Existing instructions"))
+
+        request = ModelRequest(
+            model=ToolModel(responses=[]),
+            messages=[],
+            state={},
+            system_message=SystemMessage(content="Existing instructions"),
+        )
         budget = RunBudget(max_tokens=100)
-        self.assertEqual(ExecutionLimits().bounded_request(request, budget).model_settings["max_tokens"], 800)
+        self.assertEqual(
+            ExecutionLimits().bounded_request(request, budget).model_settings["max_tokens"], 800
+        )
         request = request.override(state={"todos": [{"content": "Research"}]})
-        self.assertEqual(ExecutionLimits().bounded_request(request, budget).model_settings["max_tokens"], 3000)
-        self.assertEqual(ExecutionLimits("specialist").bounded_request(request, budget).model_settings["max_tokens"], 1500)
+        self.assertEqual(
+            ExecutionLimits().bounded_request(request, budget).model_settings["max_tokens"], 3000
+        )
+        self.assertEqual(
+            ExecutionLimits("specialist")
+            .bounded_request(request, budget)
+            .model_settings["max_tokens"],
+            1500,
+        )
         budget.tokens = 80
         bounded = ExecutionLimits().bounded_request(request, budget)
         self.assertIn("stop expanding research", bounded.system_message.text)
@@ -57,10 +80,14 @@ class TokenBudgetTests(unittest.TestCase):
         from langchain.agents.middleware.types import ModelRequest
         from langchain_core.messages import HumanMessage
         from ollama import AsyncClient
+
         model = ChatOllama(model="fixture", num_predict=1000, num_ctx=8192)
-        request = ModelRequest(model=model, messages=[HumanMessage(content="Research")],
-                               state={}, model_settings={"max_tokens": 700,
-                               "options": {"temperature": 0.2}})
+        request = ModelRequest(
+            model=model,
+            messages=[HumanMessage(content="Research")],
+            state={},
+            model_settings={"max_tokens": 700, "options": {"temperature": 0.2}},
+        )
         bounded = ExecutionLimits().bounded_request(request, RunBudget())
         self.assertNotIn("max_tokens", bounded.model_settings)
         self.assertEqual(bounded.model_settings["options"]["num_predict"], 700)
@@ -80,13 +107,18 @@ class TokenBudgetTests(unittest.TestCase):
 
     def test_invalid_configuration_fails_clearly(self):
         for value in ("0", "-1", "invalid", "1.5", ""):
-            with self.subTest(value=value), patch.dict("os.environ", {"RESEARCH_MAX_TOKENS": value}):
+            with (
+                self.subTest(value=value),
+                patch.dict("os.environ", {"RESEARCH_MAX_TOKENS": value}),
+            ):
                 with self.assertRaisesRegex(ValueError, "positive integer"):
                     RunBudget()
 
     def test_sync_and_async_do_not_call_provider_after_exhaustion(self):
         budget = RunBudget(max_tokens=10)
-        request = SimpleNamespace(runtime=SimpleNamespace(context=SimpleNamespace(run_budget=budget)))
+        request = SimpleNamespace(
+            runtime=SimpleNamespace(context=SimpleNamespace(run_budget=budget))
+        )
         middleware = ExecutionLimits()
         sync = Mock(return_value=response(5, 5))
         middleware.wrap_model_call(request, sync)
@@ -100,7 +132,9 @@ class TokenBudgetTests(unittest.TestCase):
 
     def test_async_usage_is_charged_and_overrun_remains_visible(self):
         budget = RunBudget(max_tokens=10)
-        request = SimpleNamespace(runtime=SimpleNamespace(context=SimpleNamespace(run_budget=budget)))
+        request = SimpleNamespace(
+            runtime=SimpleNamespace(context=SimpleNamespace(run_budget=budget))
+        )
         handler = AsyncMock(return_value=response(8, 3))
         with self.assertRaisesRegex(RuntimeError, "11 used; 10 limit"):
             asyncio.run(ExecutionLimits().awrap_model_call(request, handler))

@@ -1,14 +1,14 @@
 """SSE framing and incremental reasoning/text parsing; no runtime resources."""
-import json, re
-from typing import Any, Dict
+
+import json
+import re
+from typing import Any
 
 THINK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL | re.IGNORECASE)
 
 
-def _sse(event_type: str, payload: Dict[str, Any]) -> str:
-    return (
-        f"data: {json.dumps({'type': event_type, **payload}, ensure_ascii=False)}\n\n"
-    )
+def _sse(event_type: str, payload: dict[str, Any]) -> str:
+    return f"data: {json.dumps({'type': event_type, **payload}, ensure_ascii=False)}\n\n"
 
 
 def _coerce_text(value: Any) -> str:
@@ -16,7 +16,7 @@ def _coerce_text(value: Any) -> str:
     if isinstance(value, str):
         return value
     if isinstance(value, list):
-        parts: List[str] = []
+        parts: list[str] = []
         for block in value:
             if isinstance(block, str):
                 parts.append(block)
@@ -73,10 +73,9 @@ class _ThinkStreamSplitter:
             return
 
 
-def _stream_headers() -> Dict[str, str]:
+def _stream_headers() -> dict[str, str]:
     return {
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
         "X-Accel-Buffering": "no",
     }
-

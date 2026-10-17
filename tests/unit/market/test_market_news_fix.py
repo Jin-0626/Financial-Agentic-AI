@@ -1,16 +1,17 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 import json
 import unittest
 from unittest.mock import patch, Mock
-import orchestrator.tools.providers as finance
 import orchestrator.tools.providers.news as finance_news
 import orchestrator.tools.providers.common as finance_common
 
 
 class MarketNewsFixTests(unittest.TestCase):
     def setUp(self):
-        clock = patch.object(finance_news, "now_utc",
-            return_value=datetime(2026, 10, 9, 1, 0, tzinfo=timezone.utc),
+        clock = patch.object(
+            finance_news,
+            "now_utc",
+            return_value=datetime(2026, 10, 9, 1, 0, tzinfo=UTC),
         )
         clock.start()
         self.addCleanup(clock.stop)
@@ -24,9 +25,9 @@ class MarketNewsFixTests(unittest.TestCase):
         body = b"<rss><channel><item><title>Market headline</title><link>https://finance.yahoo.com/news/article</link><pubDate>Wed, 07 Oct 2026 08:00:00 GMT</pubDate></item></channel></rss>"
         response = self.response(body)
         with (
-            patch.dict(finance_common.os.environ, {"TAVILY_API_KEY": ""}),
+            patch.dict(finance_news.os.environ, {"TAVILY_API_KEY": ""}),
             patch.object(finance_common, "_fmp_client", None),
-            patch.object(finance_common.requests, "get", return_value=response),
+            patch.object(finance_news.requests, "get", return_value=response),
         ):
             result = json.loads(finance_news._make_news_tool().invoke({"count": 2}))
         self.assertEqual(result[0]["title"], "Market headline")
@@ -36,12 +37,12 @@ class MarketNewsFixTests(unittest.TestCase):
 
     def test_feed_rejects_entities_and_keeps_missing_dates_missing(self):
         with patch.object(
-            finance_common.requests, "get", return_value=self.response(b"<!DOCTYPE rss><rss/>")
+            finance_news.requests, "get", return_value=self.response(b"<!DOCTYPE rss><rss/>")
         ):
             with self.assertRaises(ValueError):
                 finance_news._public_market_news(1)
         body = b"<rss><channel><item><title>Headline</title><link>https://news.example/a</link></item><item><title>Duplicate</title><link>https://news.example/a</link></item></channel></rss>"
-        with patch.object(finance_common.requests, "get", return_value=self.response(body)):
+        with patch.object(finance_news.requests, "get", return_value=self.response(body)):
             result = finance_news._public_market_news(5)
         self.assertEqual(len(result), 1)
         self.assertIsNone(result[0]["pub_date"])
@@ -60,7 +61,7 @@ class MarketNewsFixTests(unittest.TestCase):
             ]
         )
         with (
-            patch.dict(finance_common.os.environ, {"TAVILY_API_KEY": ""}),
+            patch.dict(finance_news.os.environ, {"TAVILY_API_KEY": ""}),
             patch.object(finance_common, "_fmp_client", None),
             patch.object(yfinance, "Ticker", return_value=provider),
         ):
@@ -75,11 +76,9 @@ class MarketNewsFixTests(unittest.TestCase):
         fmp = Mock(api_key="test-only-key")
         fmp._request.side_effect = RuntimeError("provider down")
         with (
-            patch.dict(finance_common.os.environ, {"TAVILY_API_KEY": ""}),
+            patch.dict(finance_news.os.environ, {"TAVILY_API_KEY": ""}),
             patch.object(finance_common, "_fmp_client", fmp),
-            patch.object(
-                finance_common.requests, "get", return_value=self.response(body)
-            ) as get,
+            patch.object(finance_news.requests, "get", return_value=self.response(body)) as get,
         ):
             result = json.loads(
                 finance_news._make_news_tool().invoke(
@@ -90,9 +89,9 @@ class MarketNewsFixTests(unittest.TestCase):
         fmp._request.assert_not_called()
         self.assertEqual(result[0]["provider"], "Reported publisher")
         with (
-            patch.dict(finance_common.os.environ, {"TAVILY_API_KEY": ""}),
+            patch.dict(finance_news.os.environ, {"TAVILY_API_KEY": ""}),
             patch.object(finance_common, "_fmp_client", fmp),
-            patch.object(finance_common.requests, "get", return_value=self.response(body)),
+            patch.object(finance_news.requests, "get", return_value=self.response(body)),
         ):
             fallback = json.loads(finance_news._make_news_tool().invoke({"count": 1}))
         self.assertEqual(fallback["status"], "partial_success")

@@ -1,5 +1,6 @@
-import os, unittest
-from unittest.mock import patch, Mock, AsyncMock
+import os
+import unittest
+from unittest.mock import patch, AsyncMock
 import pandas as pd
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -39,9 +40,7 @@ class ProviderTests(unittest.TestCase):
             index=pd.date_range("2025-01-01", periods=3),
         )
         with patch.object(providers.yf, "download", return_value=frame) as download:
-            series = providers.price_series(
-                ["AAPL", "SPY"], {"AAPL": "USD", "SPY": "USD"}, "1mo"
-            )
+            series = providers.price_series(["AAPL", "SPY"], {"AAPL": "USD", "SPY": "USD"}, "1mo")
         self.assertEqual(len(series[1]["prices"]), 2)
         self.assertTrue(download.call_args.kwargs["auto_adjust"])
 
@@ -65,24 +64,16 @@ class ProviderTests(unittest.TestCase):
 class PortfolioIsolationTests(unittest.IsolatedAsyncioTestCase):
     async def test_saved_portfolios_are_scoped_and_reloaded(self):
         repo = MemoryPortfolioRepository()
-        doc = await service.create_portfolio(
-            repo, "org", "user", service.Portfolio(name="Saved")
-        )
+        doc = await service.create_portfolio(repo, "org", "user", service.Portfolio(name="Saved"))
         self.assertEqual(
-            (await service.load_portfolio(repo, "org", "user", doc["id"]))["portfolio"][
-                "name"
-            ],
+            (await service.load_portfolio(repo, "org", "user", doc["id"]))["portfolio"]["name"],
             "Saved",
         )
-        self.assertIsNone(
-            await service.load_portfolio(repo, "other", "user", doc["id"])
-        )
+        self.assertIsNone(await service.load_portfolio(repo, "other", "user", doc["id"]))
         self.assertIsNone(await service.load_portfolio(repo, "org", "other", doc["id"]))
 
     async def test_missing_quote_cannot_produce_partial_total(self):
-        p = service.Portfolio(
-            positions=[{"symbol": "AAPL", "quantity": "2", "average_cost": "10"}]
-        )
+        p = service.Portfolio(positions=[{"symbol": "AAPL", "quantity": "2", "average_cost": "10"}])
         with (
             patch.object(providers, "quote", side_effect=ValueError("Unavailable")),
             patch.object(service, "calculate", AsyncMock()) as native,
@@ -101,15 +92,13 @@ class PortfolioIsolationTests(unittest.IsolatedAsyncioTestCase):
             patch.dict(os.environ, {"APP_ENV": "local", "PORTFOLIO_ENABLED": "true"}),
             TestClient(app) as client,
         ):
-            result = client.post(
-                "/api/portfolio/create?org_id=o&user_id=u", json={"name": "Saved"}
-            )
+            result = client.post("/api/portfolio/create?org_id=o&user_id=u", json={"name": "Saved"})
             self.assertEqual(result.status_code, 200)
             pid = result.json()["id"]
             self.assertEqual(
-                client.get(
-                    f"/api/portfolio?org_id=o&user_id=u&portfolio_id={pid}"
-                ).json()["portfolio"]["name"],
+                client.get(f"/api/portfolio?org_id=o&user_id=u&portfolio_id={pid}").json()[
+                    "portfolio"
+                ]["name"],
                 "Saved",
             )
             with patch.dict(os.environ, {"APP_ENV": "production"}):

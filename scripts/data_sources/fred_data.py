@@ -1,4 +1,5 @@
 """Financial Deep Agents FRED curated command-line adapter."""
+
 from financial_providers import run
 
 

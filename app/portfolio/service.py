@@ -3,24 +3,28 @@
 import asyncio
 import hashlib
 import json
-from datetime import datetime, timezone, date
-from decimal import Decimal
-from typing import Literal
+from datetime import datetime, UTC
 from uuid import uuid4
-from app.portfolio.schemas import Position, Portfolio, Trade, TradeCorrection, ImportRequest
+from app.portfolio.schemas import (
+    Position as Position,
+    Portfolio as Portfolio,
+    Trade as Trade,
+    TradeCorrection as TradeCorrection,
+    ImportRequest as ImportRequest,
+)
 import app.infrastructure.providers as providers
 from app.infrastructure.native_engine import calculate
 from app.infrastructure.diagnostics import sanitize_error
 
 
 def now():
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def trade_input(t):
-    return Trade.model_validate(
-        {k: v for k, v in t.items() if k in Trade.model_fields}
-    ).model_dump(mode="json")
+    return Trade.model_validate({k: v for k, v in t.items() if k in Trade.model_fields}).model_dump(
+        mode="json"
+    )
 
 
 async def load_portfolio(repo, org, user, pid="default"):
@@ -43,8 +47,7 @@ async def save_portfolio(repo, org, user, portfolio, pid="default", expected=Non
         if old:
             if (
                 portfolio.positions
-                and portfolio.model_dump(mode="json")["positions"]
-                != old["portfolio"]["positions"]
+                and portfolio.model_dump(mode="json")["positions"] != old["portfolio"]["positions"]
             ):
                 raise ValueError("Use trade records to change holdings")
             if portfolio.currency != old["portfolio"]["currency"]:
@@ -68,7 +71,6 @@ async def save_portfolio(repo, org, user, portfolio, pid="default", expected=Non
             "opening_positions": [],
             "snapshots": [],
             "saved_at": now(),
-
         }
 
     return await repo.mutate(org, user, pid, change, expected)
@@ -136,16 +138,12 @@ async def correct_trade(repo, org, user, pid, transaction_id, correction, expect
         audit = doc.get("transaction_corrections", [])
         if len(audit) >= 2000:
             raise ValueError("Portfolio correction limit reached")
-        changed = [
-            replacement if t["id"] == transaction_id else trade_input(t) for t in trades
-        ]
-        changed.sort(
-            key=lambda t: t["date"]
-        )  # Stable order for transactions on the same date.
+        changed = [replacement if t["id"] == transaction_id else trade_input(t) for t in trades]
+        changed.sort(key=lambda t: t["date"])  # Stable order for transactions on the same date.
         result = await ledger(
             org, doc, changed
         )  # Oversells or invalid histories fail before commit.
-        today = datetime.now(timezone.utc).date().isoformat()
+        today = datetime.now(UTC).date().isoformat()
         return {
             **result,
             "performance_reset_date": today,
@@ -216,9 +214,7 @@ async def snapshot(org, portfolio):
             "currency": portfolio.currency,
             "sectors": {q["symbol"]: q.get("sector", "Unclassified") for q in quotes},
             "positions": [p.model_dump(mode="json") for p in portfolio.positions],
-            "quotes": [
-                {k: q[k] for k in ("symbol", "currency", "price")} for q in quotes
-            ],
+            "quotes": [{k: q[k] for k in ("symbol", "currency", "price")} for q in quotes],
         },
     )
     by_symbol = {q["symbol"]: q for q in quotes}
@@ -235,14 +231,12 @@ async def saved_summary(repo, org, user, pid):
         raise ValueError("Portfolio not found")
     portfolio = Portfolio.model_validate(doc["portfolio"])
     result = await snapshot(org, portfolio)
-    if result["market_value"] is not None and (
-        portfolio.positions or doc.get("transactions")
-    ):
+    if result["market_value"] is not None and (portfolio.positions or doc.get("transactions")):
 
         async def change(current, count):
             if current is None:
                 raise ValueError("Portfolio not found")
-            day = datetime.now(timezone.utc).date().isoformat()
+            day = datetime.now(UTC).date().isoformat()
             point = {
                 "date": day,
                 "market_value": result["market_value"],
@@ -270,9 +264,7 @@ async def saved_summary(repo, org, user, pid):
     try:
         benchmark = await asyncio.to_thread(providers.quote, portfolio.benchmark)
         if benchmark["currency"] != portfolio.currency:
-            raise ValueError(
-                "Benchmark currency differs; FX conversion is not available"
-            )
+            raise ValueError("Benchmark currency differs; FX conversion is not available")
         quotes = {p["symbol"]: p["currency"] for p in result["positions"]}
         quotes[portfolio.benchmark] = benchmark["currency"]
         if result["errors"]:
@@ -313,9 +305,7 @@ async def saved_summary(repo, org, user, pid):
                 "Recorded performance needs at least two common valuation dates. Projection is shown separately."
             )
         else:
-            result["comparison_error"] = (
-                "Record a BUY transaction to start tracking performance"
-            )
+            result["comparison_error"] = "Record a BUY transaction to start tracking performance"
     except Exception as error:
         result["comparison_error"] = sanitize_error(error)
     return result
@@ -353,12 +343,9 @@ def import_trades(data):
         seen[key] = occurrence + 1
         tid = (
             t.get("id")
-            or "import_"
-            + hashlib.sha256((key + str(occurrence)).encode()).hexdigest()[:48]
+            or "import_" + hashlib.sha256((key + str(occurrence)).encode()).hexdigest()[:48]
         )
-        items.append(
-            Trade.model_validate({"id": tid, **normalized}).model_dump(mode="json")
-        )
+        items.append(Trade.model_validate({"id": tid, **normalized}).model_dump(mode="json"))
     return sorted(items, key=lambda t: t["date"])
 
 
@@ -370,9 +357,7 @@ async def import_preview(repo, org, user, pid, request):
             name=data["portfolio_name"],
             owner=data.get("owner", ""),
             currency=data.get("currency", "USD"),
-            benchmark=data.get(
-                "benchmark", "^KLSE" if data.get("currency") == "MYR" else "SPY"
-            ),
+            benchmark=data.get("benchmark", "^KLSE" if data.get("currency") == "MYR" else "SPY"),
         )
         doc = {
             "id": "preview",
@@ -380,7 +365,6 @@ async def import_preview(repo, org, user, pid, request):
             "opening_positions": [],
             "transactions": [],
             "snapshots": [],
-
             "revision": 0,
         }
     else:
@@ -418,9 +402,7 @@ async def import_preview(repo, org, user, pid, request):
             if isinstance(q, BaseException):
                 raise q
             if q["currency"] != doc["portfolio"]["currency"]:
-                raise ValueError(
-                    "Import quote currency differs; FX conversion is not available"
-                )
+                raise ValueError("Import quote currency differs; FX conversion is not available")
     result = await ledger(org, doc, merged)
     fingerprint = hashlib.sha256(
         json.dumps(

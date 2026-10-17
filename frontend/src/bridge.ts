@@ -161,10 +161,10 @@ export const defaultWorkspace = (): Workspace => ({
   screen: "dashboard",
   compact: true,
   desktop: defaultViews(),
-  active_layout: "Moomoo Market Desk",
+  active_layout: " Market Desk",
   layouts: [
     {
-      name: "Moomoo Market Desk",
+      name: "Market Desk",
       panels: { chart: panelSpec("chart"), watchlist: panelSpec("watchlist") },
       root: {
         type: "split",

@@ -1,4 +1,5 @@
 """Bounded, workspace-local research traces; no external telemetry exporter."""
+
 import copy
 import json
 import math
@@ -6,7 +7,7 @@ import re
 import threading
 import time
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from uuid import uuid4
 
 from langchain_core.callbacks import BaseCallbackHandler
@@ -16,7 +17,9 @@ MAX_TRACES = 50
 MAX_CALLS = 500
 MAX_PAYLOAD = 16_384
 MAX_TRACE_PAYLOAD = 524_288
-_SECRET = re.compile(r"(?i)(password|secret|api[_-]?key|authorization|cookie|^(?:access_|refresh_|auth_)?token$)")
+_SECRET = re.compile(
+    r"(?i)(password|secret|api[_-]?key|authorization|cookie|^(?:access_|refresh_|auth_)?token$)"
+)
 
 
 def payload(value):
@@ -26,8 +29,10 @@ def payload(value):
         if hasattr(item, "model_dump"):
             item = item.model_dump(mode="json")
         if isinstance(item, dict):
-            return {str(k): "[redacted]" if _SECRET.search(str(k)) else clean(v, depth + 1)
-                    for k, v in item.items()}
+            return {
+                str(k): "[redacted]" if _SECRET.search(str(k)) else clean(v, depth + 1)
+                for k, v in item.items()
+            }
         if isinstance(item, (list, tuple)):
             return [clean(v, depth + 1) for v in item]
         if isinstance(item, str):
@@ -51,7 +56,10 @@ def payload(value):
         text = json.dumps("[payload could not be serialized]")
     encoded = text.encode("utf-8")
     if len(encoded) > MAX_PAYLOAD:
-        return {"truncated": True, "preview": encoded[:MAX_PAYLOAD].decode("utf-8", errors="ignore")}
+        return {
+            "truncated": True,
+            "preview": encoded[:MAX_PAYLOAD].decode("utf-8", errors="ignore"),
+        }
     return json.loads(text)
 
 
@@ -64,35 +72,55 @@ class TraceStore:
         trace_id = str(uuid4())
         with self.lock:
             if len(self.traces) >= MAX_TRACES:
-                oldest = next((key for key, value in self.traces.items()
-                               if value["status"] != "running"), None)
+                oldest = next(
+                    (key for key, value in self.traces.items() if value["status"] != "running"),
+                    None,
+                )
                 if oldest is None:
                     return LocalTrace(self, None)
                 del self.traces[oldest]
             self.traces[trace_id] = {
-                "id": trace_id, "org": org, "user": user, "thread_id": thread_id,
-                "name": payload(question), "started_at": datetime.now(timezone.utc).isoformat(),
-                "status": "running", "duration_ms": 0, "calls": [], "limited": False,
-                "_started": time.monotonic(), "_bytes": 0,
+                "id": trace_id,
+                "org": org,
+                "user": user,
+                "thread_id": thread_id,
+                "name": payload(question),
+                "started_at": datetime.now(UTC).isoformat(),
+                "status": "running",
+                "duration_ms": 0,
+                "calls": [],
+                "limited": False,
+                "_started": time.monotonic(),
+                "_bytes": 0,
             }
         return LocalTrace(self, trace_id)
 
     def read(self, org, user, trace_id=None):
         with self.lock:
-            rows = [row for row in reversed(self.traces.values())
-                    if row["org"] == org and row["user"] == user
-                    and (trace_id is None or row["id"] == trace_id)]
+            rows = [
+                row
+                for row in reversed(self.traces.values())
+                if row["org"] == org
+                and row["user"] == user
+                and (trace_id is None or row["id"] == trace_id)
+            ]
             result = []
             for row in rows:
-                public = {k: v for k, v in row.items() if not k.startswith("_") and k not in {"org", "user"}}
+                public = {
+                    k: v
+                    for k, v in row.items()
+                    if not k.startswith("_") and k not in {"org", "user"}
+                }
                 if trace_id is None:
                     public = {k: v for k, v in public.items() if k != "calls"}
                     public["call_count"] = len(row["calls"])
                 if row["status"] == "running":
                     public["duration_ms"] = (time.monotonic() - row["_started"]) * 1000
                 if trace_id is not None:
-                    public["calls"] = [{k: v for k, v in call.items() if not k.startswith("_")}
-                                       for call in row["calls"]]
+                    public["calls"] = [
+                        {k: v for k, v in call.items() if not k.startswith("_")}
+                        for call in row["calls"]
+                    ]
                     for call, raw in zip(public["calls"], row["calls"]):
                         if call["status"] == "running":
                             call["duration_ms"] = (time.monotonic() - raw["_started"]) * 1000
@@ -124,13 +152,20 @@ class LocalTrace(BaseCallbackHandler):
             if len(row["calls"]) >= MAX_CALLS:
                 row["limited"] = True
                 return
-            row["calls"].append({
-                "id": str(run_id), "parent_id": str(parent_run_id) if parent_run_id else None,
-                "name": sanitize_error(name or kind), "kind": kind, "status": "running",
-                "started_at": datetime.now(timezone.utc).isoformat(),
-                "duration_ms": 0, "input": self._bounded(row, inputs), "output": None,
-                "_started": time.monotonic(),
-            })
+            row["calls"].append(
+                {
+                    "id": str(run_id),
+                    "parent_id": str(parent_run_id) if parent_run_id else None,
+                    "name": sanitize_error(name or kind),
+                    "kind": kind,
+                    "status": "running",
+                    "started_at": datetime.now(UTC).isoformat(),
+                    "duration_ms": 0,
+                    "input": self._bounded(row, inputs),
+                    "output": None,
+                    "_started": time.monotonic(),
+                }
+            )
 
     def _end(self, run_id, output=None, error=None):
         with self.store.lock:
@@ -149,12 +184,15 @@ class LocalTrace(BaseCallbackHandler):
                 if isinstance(content, dict) and "_evidence" in content:
                     content = content.get("data")
                 items = content if isinstance(content, list) else [content]
-                failed = failed or any(isinstance(item, dict) and
-                                       (item.get("error") or item.get("status") == "error")
-                                       for item in items)
-            call.update(status="error" if failed else "success",
-                        duration_ms=(time.monotonic() - call["_started"]) * 1000,
-                        output=self._bounded(row, output) if error is None else None)
+                failed = failed or any(
+                    isinstance(item, dict) and (item.get("error") or item.get("status") == "error")
+                    for item in items
+                )
+            call.update(
+                status="error" if failed else "success",
+                duration_ms=(time.monotonic() - call["_started"]) * 1000,
+                output=self._bounded(row, output) if error is None else None,
+            )
             if error is not None:
                 call["error"] = sanitize_error(error)
 
@@ -168,10 +206,15 @@ class LocalTrace(BaseCallbackHandler):
                 row["error"] = sanitize_error(error)
             for call in row["calls"]:
                 if call["status"] == "running":
-                    call.update(status="interrupted", duration_ms=(time.monotonic() - call["_started"]) * 1000)
+                    call.update(
+                        status="interrupted",
+                        duration_ms=(time.monotonic() - call["_started"]) * 1000,
+                    )
 
     def on_chain_start(self, serialized, inputs, *, run_id, parent_run_id=None, **kwargs):
-        self._start(run_id, parent_run_id, kwargs.get("name") or (serialized or {}).get("name"), "chain")
+        self._start(
+            run_id, parent_run_id, kwargs.get("name") or (serialized or {}).get("name"), "chain"
+        )
 
     def on_chain_end(self, outputs, *, run_id, **kwargs):
         self._end(run_id)
@@ -180,7 +223,13 @@ class LocalTrace(BaseCallbackHandler):
         self._end(run_id, error=error)
 
     def on_chat_model_start(self, serialized, messages, *, run_id, parent_run_id=None, **kwargs):
-        self._start(run_id, parent_run_id, kwargs.get("name") or (serialized or {}).get("name"), "model", messages)
+        self._start(
+            run_id,
+            parent_run_id,
+            kwargs.get("name") or (serialized or {}).get("name"),
+            "model",
+            messages,
+        )
 
     def on_llm_end(self, response, *, run_id, **kwargs):
         self._end(run_id, response)
@@ -188,7 +237,9 @@ class LocalTrace(BaseCallbackHandler):
     def on_llm_error(self, error, *, run_id, **kwargs):
         self._end(run_id, error=error)
 
-    def on_tool_start(self, serialized, input_str, *, run_id, parent_run_id=None, inputs=None, **kwargs):
+    def on_tool_start(
+        self, serialized, input_str, *, run_id, parent_run_id=None, inputs=None, **kwargs
+    ):
         if inputs is None:
             try:
                 inputs = json.loads(input_str)

@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useState, type ReactNode } from "react";
 import { type PanelSpec, type Snapshot, type Range } from "./bridge";
 import { ChartEditor } from "./chart-editor";
@@ -78,6 +79,7 @@ export function Panel({
               market={market}
               range={range}
               identity={selected ?? "none"}
+              name={selectedQuote?.data?.instrument.name}
               currency={
                 selectedQuote?.data?.currency ??
                 (selected
@@ -153,7 +155,14 @@ export function Panel({
         <div className="panel-binding">
           <span>
             {spec.binding.type === "pinned" ? "Pinned" : "Linked"} ·{" "}
-            {selected ?? "No instrument"}
+            {selected ? (
+              <StockLabel
+                code={selected}
+                name={selectedQuote?.data?.instrument.name}
+              />
+            ) : (
+              "No instrument"
+            )}
           </span>
           <details>
             <summary>Symbol</summary>

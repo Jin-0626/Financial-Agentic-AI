@@ -49,3 +49,6 @@ analytics-runtime/.venv/
 *.sqlite3-journal
 *.sqlite3-wal
 *.sqlite3-shm
+
+# Offline benchmark reports
+benchmark-results/

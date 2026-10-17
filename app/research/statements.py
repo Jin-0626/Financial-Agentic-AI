@@ -25,9 +25,7 @@ def financial_statements(messages):
             or not isinstance(payload.get("symbol"), str)
         ):
             continue
-        if not any(
-            isinstance(payload.get(key), dict) and payload[key] for key, _ in STATEMENTS
-        ):
+        if not any(isinstance(payload.get(key), dict) and payload[key] for key, _ in STATEMENTS):
             continue
         companies[payload["symbol"]] = {
             **{key: payload.get(key, {}) for key, _ in STATEMENTS},

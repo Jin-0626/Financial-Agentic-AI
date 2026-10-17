@@ -4,6 +4,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 @transport.yahoo_bound
 def search(query):
     found, failures = [], []
@@ -28,4 +29,3 @@ def search(query):
         "Global provider search; exchange identity retained",
         limitations=failures,
     )
-

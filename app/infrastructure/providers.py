@@ -2,7 +2,7 @@
 
 import math
 import re
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 import pandas as pd
 import yfinance as yf
 
@@ -10,9 +10,7 @@ import yfinance as yf
 def symbol(value):
     value = value.strip().upper()
     if not re.fullmatch(r"[A-Z0-9^][A-Z0-9.^=_\-]{0,31}", value):
-        raise ValueError(
-            "Use an exact Yahoo Finance ticker, including its exchange suffix"
-        )
+        raise ValueError("Use an exact Yahoo Finance ticker, including its exchange suffix")
     return value
 
 
@@ -46,9 +44,7 @@ def search_symbols(query, count=8):
             "exchange": q.get("exchDisp") or q.get("exchange"),
             "type": q.get("quoteType"),
         }
-        for q in yf.Search(
-            query, max_results=count, news_count=0, lists_count=0, timeout=10
-        ).quotes
+        for q in yf.Search(query, max_results=count, news_count=0, lists_count=0, timeout=10).quotes
         if isinstance(q, dict) and q.get("symbol")
     ][:count]
 
@@ -87,7 +83,7 @@ def quote(value):
         "as_of": info.get("regularMarketTime"),
         "change_percent": change,
         "source": "Yahoo Finance",
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "fetched_at": datetime.now(UTC).isoformat(),
     }
 
 

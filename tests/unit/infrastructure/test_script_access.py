@@ -1,7 +1,6 @@
 import json
 import sys
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
@@ -77,22 +76,13 @@ class ScriptAccessTests(unittest.TestCase):
         with patch.object(agent, "MODEL_NAME", model):
             graph = agent.create_agent(None, InMemoryStore())
             state = graph.invoke(
-                {
-                    "messages": [
-                        HumanMessage(content="Discover BNM script capabilities")
-                    ]
-                },
+                {"messages": [HumanMessage(content="Discover BNM script capabilities")]},
                 context=MemoryContext(response_schema=None),
             )
         tools = [m for m in state["messages"] if isinstance(m, ToolMessage)]
+        self.assertTrue(any(m.name == "ls" and "bnm_data.py" in m.content for m in tools))
         self.assertTrue(
-            any(m.name == "ls" and "bnm_data.py" in m.content for m in tools)
-        )
-        self.assertTrue(
-            any(
-                m.name == "read_file" and "Financial research scripts" in m.content
-                for m in tools
-            )
+            any(m.name == "read_file" and "Financial research scripts" in m.content for m in tools)
         )
         self.assertFalse(any(m.status == "error" for m in tools))
         receipts = current_evidence(state["messages"])
@@ -166,9 +156,7 @@ class ScriptAccessTests(unittest.TestCase):
         self.assertIsNotNone(backend.edit("/AGENTS.md", "Financial", "bad").error)
         self.assertIsNotNone(backend.delete("/AGENTS.md").error)
         self.assertIsNotNone(asyncio.run(backend.awrite("/AGENTS.md", "bad")).error)
-        self.assertEqual(
-            backend.upload_files([("/bad.py", b"bad")])[0].error, "permission_denied"
-        )
+        self.assertEqual(backend.upload_files([("/bad.py", b"bad")])[0].error, "permission_denied")
         self.assertEqual((SCRIPTS_ROOT / "AGENTS.md").read_bytes(), before)
 
     def test_runner_denies_unknown_paths_commands_and_shell(self):
@@ -178,9 +166,7 @@ class ScriptAccessTests(unittest.TestCase):
             ("sec_data.py", ["filing_content", "http://localhost/"]),
         ]:
             with patch("orchestrator.tools.scripts._capture") as execute:
-                result = json.loads(
-                    run_script.invoke({"script": name, "arguments": args})
-                )
+                result = json.loads(run_script.invoke({"script": name, "arguments": args}))
                 self.assertEqual(result["status"], "error")
                 execute.assert_not_called()
 
@@ -188,17 +174,13 @@ class ScriptAccessTests(unittest.TestCase):
         policy = CapabilityPolicy("research")
         self.assertTrue(policy.allowed("ls", {"path": "/scripts/"}))
         self.assertTrue(
-            policy.allowed(
-                "read_file", {"file_path": "/scripts/AGENTS.md", "limit": 100}
-            )
+            policy.allowed("read_file", {"file_path": "/scripts/AGENTS.md", "limit": 100})
         )
         self.assertFalse(
             policy.allowed("read_file", {"file_path": "/scripts/../.env", "limit": 100})
         )
         self.assertFalse(policy.allowed("ls", {"path": "/"}))
-        self.assertFalse(
-            policy.allowed("write_file", {"file_path": "/scripts/AGENTS.md"})
-        )
+        self.assertFalse(policy.allowed("write_file", {"file_path": "/scripts/AGENTS.md"}))
         self.assertFalse(CapabilityPolicy("synthesis").allowed("run_script", {}))
 
     def test_output_limit_kills_large_subprocess(self):
@@ -208,9 +190,7 @@ class ScriptAccessTests(unittest.TestCase):
     def test_sec_requires_explicit_contact_identity(self):
         with patch.dict("os.environ", {"SEC_USER_AGENT": ""}):
             result = json.loads(
-                run_script.invoke(
-                    {"script": "sec_data.py", "arguments": ["available_form_types"]}
-                )
+                run_script.invoke({"script": "sec_data.py", "arguments": ["available_form_types"]})
             )
         self.assertEqual(result["status"], "error")
         self.assertIn("SEC_USER_AGENT", result["error"])

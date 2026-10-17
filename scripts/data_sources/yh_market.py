@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 import requests
 from requests.adapters import HTTPAdapter
 
@@ -37,7 +37,9 @@ _session.mount("https://", _adapter)
 _session.mount("http://", _adapter)
 
 
-def _request_yahoo(endpoint: str, params: Optional[Dict[str, Any]] = None, timeout: float = 10.0) -> Any:
+def _request_yahoo(
+    endpoint: str, params: dict[str, Any] | None = None, timeout: float = 10.0
+) -> Any:
     """Execute GET request with dual-endpoint fallback and structured error handling."""
     params = params or {}
     clean_endpoint = endpoint.lstrip("/")
@@ -52,7 +54,7 @@ def _request_yahoo(endpoint: str, params: Optional[Dict[str, Any]] = None, timeo
                 continue  # Retry on the secondary query endpoint
             else:
                 return {"error": f"HTTP {resp.status_code}", "detail": resp.text[:200]}
-        except requests.RequestException as e:
+        except requests.RequestException:
             continue
 
     return {"error": f"Failed to fetch data from {clean_endpoint} after checking hosts"}
@@ -62,7 +64,8 @@ def _request_yahoo(endpoint: str, params: Optional[Dict[str, Any]] = None, timeo
 # Clean API Endpoints
 # -----------------------------------------------------------------------------
 
-def get_market_summary(region: str = "US") -> List[Dict[str, Any]]:
+
+def get_market_summary(region: str = "US") -> list[dict[str, Any]]:
     """
     Fetch market indexes overview (S&P 500, Nasdaq, Dow, Crude, Gold, BTC, etc.).
     Returns a cleaned list of quotes.
@@ -74,19 +77,21 @@ def get_market_summary(region: str = "US") -> List[Dict[str, Any]]:
     market_items = data.get("marketSummaryResponse", {}).get("result", [])
     cleaned = []
     for item in market_items:
-        cleaned.append({
-            "symbol": item.get("symbol"),
-            "short_name": item.get("shortName"),
-            "market_state": item.get("marketState"),
-            "price": item.get("regularMarketPrice", {}).get("raw"),
-            "change": item.get("regularMarketChange", {}).get("raw"),
-            "change_percent": item.get("regularMarketChangePercent", {}).get("raw"),
-            "exchange": item.get("exchange"),
-        })
+        cleaned.append(
+            {
+                "symbol": item.get("symbol"),
+                "short_name": item.get("shortName"),
+                "market_state": item.get("marketState"),
+                "price": item.get("regularMarketPrice", {}).get("raw"),
+                "change": item.get("regularMarketChange", {}).get("raw"),
+                "change_percent": item.get("regularMarketChangePercent", {}).get("raw"),
+                "exchange": item.get("exchange"),
+            }
+        )
     return cleaned
 
 
-def get_trending(region: str = "US", count: int = 15) -> List[Dict[str, Any]]:
+def get_trending(region: str = "US", count: int = 15) -> list[dict[str, Any]]:
     """Fetch symbols currently trending in a specific market region."""
     data = _request_yahoo(f"v1/finance/trending/{region}", {"count": count})
     if "error" in data:
@@ -100,7 +105,9 @@ def get_trending(region: str = "US", count: int = 15) -> List[Dict[str, Any]]:
     return [{"symbol": q.get("symbol")} for q in quotes if "symbol" in q]
 
 
-def get_movers(category: str = "gainers", count: int = 25, region: str = "US") -> List[Dict[str, Any]]:
+def get_movers(
+    category: str = "gainers", count: int = 25, region: str = "US"
+) -> list[dict[str, Any]]:
     """
     Fetch market movers using Yahoo screeners.
     Categories: 'gainers', 'losers', 'active'
@@ -109,12 +116,11 @@ def get_movers(category: str = "gainers", count: int = 25, region: str = "US") -
         "gainers": "day_gainers",
         "losers": "day_losers",
         "active": "most_actives",
-        "most_actives": "most_actives"
+        "most_actives": "most_actives",
     }
     scr_id = screener_map.get(category.lower(), "day_gainers")
     data = _request_yahoo(
-        "v1/finance/screener/predefined/saved",
-        {"scrIds": scr_id, "count": count, "region": region}
+        "v1/finance/screener/predefined/saved", {"scrIds": scr_id, "count": count, "region": region}
     )
     if "error" in data:
         return [data]
@@ -126,19 +132,21 @@ def get_movers(category: str = "gainers", count: int = 25, region: str = "US") -
     quotes = res[0].get("quotes", [])
     cleaned = []
     for q in quotes:
-        cleaned.append({
-            "symbol": q.get("symbol"),
-            "name": q.get("shortName") or q.get("longName"),
-            "price": q.get("regularMarketPrice"),
-            "change": q.get("regularMarketChange"),
-            "change_percent": q.get("regularMarketChangePercent"),
-            "volume": q.get("regularMarketVolume"),
-            "market_cap": q.get("marketCap"),
-        })
+        cleaned.append(
+            {
+                "symbol": q.get("symbol"),
+                "name": q.get("shortName") or q.get("longName"),
+                "price": q.get("regularMarketPrice"),
+                "change": q.get("regularMarketChange"),
+                "change_percent": q.get("regularMarketChangePercent"),
+                "volume": q.get("regularMarketVolume"),
+                "market_cap": q.get("marketCap"),
+            }
+        )
     return cleaned
 
 
-def get_options_chain(symbol: str, expiration_timestamp: Optional[int] = None) -> Dict[str, Any]:
+def get_options_chain(symbol: str, expiration_timestamp: int | None = None) -> dict[str, Any]:
     """
     Fetch options chain for a given ticker.
     Optional expiration timestamp (epoch seconds).
@@ -167,7 +175,7 @@ def get_options_chain(symbol: str, expiration_timestamp: Optional[int] = None) -
     }
 
 
-def get_recommendations(symbol: str) -> List[Dict[str, Any]]:
+def get_recommendations(symbol: str) -> list[dict[str, Any]]:
     """Fetch peer recommendations / similar symbols."""
     data = _request_yahoo(f"v6/finance/recommendationsbysymbol/{symbol.upper()}", {"lang": "en-US"})
     if "error" in data:
@@ -184,6 +192,7 @@ def get_recommendations(symbol: str) -> List[Dict[str, Any]]:
 # -----------------------------------------------------------------------------
 # CLI Entry Point
 # -----------------------------------------------------------------------------
+
 
 def main():
     parser = argparse.ArgumentParser(description="Yahoo Finance Fast Market Data Fetcher")

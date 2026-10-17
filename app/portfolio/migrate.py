@@ -34,5 +34,7 @@ if __name__ == "__main__":
     try:
         count = asyncio.run(migrate())
     except Exception:
-        raise SystemExit("Portfolio migration failed; source records were not modified. Check source connectivity and target conflicts.") from None
+        raise SystemExit(
+            "Portfolio migration failed; source records were not modified. Check source connectivity and target conflicts."
+        ) from None
     print(f"Copied {count} portfolio documents to SQLite; source records retained.")

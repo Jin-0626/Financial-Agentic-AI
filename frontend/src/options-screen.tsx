@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useEffect, useRef, useState } from "react";
 import { price, type Range } from "./bridge";
 import { useResource, type Contract } from "./resources";
@@ -449,7 +450,19 @@ export function OptionsScreen({
             />
           ) : (
             <>
-              <h3>Underlying</h3>
+              <h3>
+                Underlying{" "}
+                {selected && (
+                  <StockLabel
+                    code={selected}
+                    name={
+                      quote.payload?.type === "quote"
+                        ? quote.payload.market.data?.instrument.name
+                        : null
+                    }
+                  />
+                )}
+              </h3>
               {quote.payload?.type === "quote" && (
                 <>
                   <strong className="underlying-price">
@@ -464,6 +477,11 @@ export function OptionsScreen({
                   market={history.payload.market}
                   range={range}
                   identity={selected ?? "none"}
+                  name={
+                    quote.payload?.type === "quote"
+                      ? quote.payload.market.data?.instrument.name
+                      : null
+                  }
                   currency={
                     quote.payload?.type === "quote"
                       ? (quote.payload.market.data?.currency ?? null)

@@ -9,9 +9,14 @@ from app.research import resources
 logger = logging.getLogger(__name__)
 
 
-
 async def _chat(
-    message, thread_id, user_id, org_id, response_schema="financial", resume=None, terminal_context=None
+    message,
+    thread_id,
+    user_id,
+    org_id,
+    response_schema="financial",
+    resume=None,
+    terminal_context=None,
 ):
     trace = resources.traces.begin(org_id, user_id, thread_id, message)
     try:
@@ -21,7 +26,10 @@ async def _chat(
             if resume is not None
             else {"messages": [{"role": "user", "content": message}], "todos": []},
             context=MemoryContext(
-                user_id=user_id, org_id=org_id, response_schema=response_schema, terminal_context=terminal_context
+                user_id=user_id,
+                org_id=org_id,
+                response_schema=response_schema,
+                terminal_context=terminal_context,
             ),
             config=RunnableConfig(
                 configurable={"thread_id": thread_id},
@@ -44,4 +52,3 @@ async def _chat(
         return error_result(exc, thread_id)
     finally:
         trace.finish("interrupted")
-

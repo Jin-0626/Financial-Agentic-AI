@@ -1,10 +1,11 @@
-import app.research.resources as research_resources
 """Public history contracts share conversion without losing field differences."""
+
+import app.research.resources as research_resources
+
 
 import unittest
 from unittest.mock import Mock, patch
 import pandas as pd
-import orchestrator.tools.providers as financial_tools
 import orchestrator.tools.providers.common as financial_tools_common
 
 
@@ -98,7 +99,5 @@ class PersistedConversationTests(unittest.IsolatedAsyncioTestCase):
             found = await routes_history._list_threads("org", "user")
         self.assertEqual(len(found), 1)
         self.assertEqual(found[0].last_message, "Saved question")
-        self.assertEqual(
-            graph.aget_state.await_args.args[0]["configurable"]["checkpoint_ns"], ""
-        )
+        self.assertEqual(graph.aget_state.await_args.args[0]["configurable"]["checkpoint_ns"], "")
         graph.aget_state.assert_awaited_once()

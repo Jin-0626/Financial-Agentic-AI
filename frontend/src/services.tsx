@@ -1,4 +1,5 @@
 import { useDesktopView } from "./view-settings";
+import { StockLabel } from "./stock-label";
 import { DataTable, EquityChart } from "./shared-ui";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
@@ -7,6 +8,7 @@ import { PortfolioEditor } from "./portfolio-editor";
 
 type Holding = {
   symbol: string;
+  name?: string;
   quantity: string;
   average_cost: string;
   market_value?: string;
@@ -286,7 +288,7 @@ export function PortfolioScreen() {
               ]}
               rows={(summary?.positions ?? document.portfolio.positions).map(
                 (row) => [
-                  row.symbol,
+                  <StockLabel code={row.symbol} name={row.name} />,
                   row.quantity,
                   row.average_cost,
                   row.market_value,
@@ -302,7 +304,14 @@ export function PortfolioScreen() {
                 columns={["Date", "Symbol", "Side", "Quantity", "Price"]}
                 rows={document.transactions.map((row) => [
                   row.date,
-                  row.symbol,
+                  <StockLabel
+                    code={row.symbol}
+                    name={
+                      summary?.positions.find(
+                        (position) => position.symbol === row.symbol,
+                      )?.name
+                    }
+                  />,
                   row.side,
                   row.quantity,
                   row.price,

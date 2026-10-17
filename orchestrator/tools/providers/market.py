@@ -4,7 +4,9 @@ from typing import Literal
 from langchain_core.tools import BaseTool, tool
 from app.infrastructure.diagnostics import sanitize_error
 from . import common
+
 logger = logging.getLogger(__name__)
+
 
 def _make_market_data_tool() -> BaseTool:
     @tool
@@ -52,27 +54,21 @@ def _make_market_data_tool() -> BaseTool:
                             "detail": common._dependency_errors.get("yahoo"),
                         }
                     )
-                category = (
-                    "gainers" if sym in ("MOVERS_GAINERS", "GAINERS") else "losers"
-                )
+                category = "gainers" if sym in ("MOVERS_GAINERS", "GAINERS") else "losers"
                 return common._to_json(common.yahoo_market_data.get_movers(category, count=15))
             if common.stock_data is None:
                 return common._to_json(
                     {
                         "error": "Market data dependency unavailable",
                         "category": "dependency",
-                        "detail": common._dependency_errors.get(
-                            "yfinance", "yf_data not loaded"
-                        ),
+                        "detail": common._dependency_errors.get("yfinance", "yf_data not loaded"),
                     }
                 )
             if data_type == "quote":
                 return common._to_json(common.stock_data.get_quote(sym))
             elif data_type == "history":
                 return common._to_json(
-                    common.stock_data.get_historical_period(
-                        sym, period=period, interval=interval
-                    )
+                    common.stock_data.get_historical_period(sym, period=period, interval=interval)
                 )
             elif data_type == "overview":
                 return common._to_json(common.stock_data.get_info(sym))

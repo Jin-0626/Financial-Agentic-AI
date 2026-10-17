@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { createElement, useEffect, useId, useState } from "react";
 import type { Payload, ResourceRequest } from "./resources";
+import { normalizeDecimal } from "./decimal";
 export type ResourceUpdate = {
   owner: string;
   generation: number;
@@ -23,11 +24,25 @@ type Entry = {
 const entries = new Map<string, Entry>();
 let listening: Promise<unknown> | null = null;
 let handlersBound = false;
+export function resourceKey(request: ResourceRequest): string {
+  const decimal = (value: string | null | undefined) =>
+    value == null ? null : (normalizeDecimal(value) ?? value);
+  const normalized =
+    request.type === "screener"
+      ? {
+          ...request,
+          min_cap: decimal(request.min_cap),
+          min_change: decimal(request.min_change),
+          min_volume: decimal(request.min_volume),
+        }
+      : request;
+  return JSON.stringify(normalized, Object.keys(normalized).sort());
+}
 function apply(update: ResourceUpdate) {
   const entry = entries.get(update.owner);
   if (
     !entry ||
-    JSON.stringify(update.request) !== entry.key ||
+    resourceKey(update.request) !== entry.key ||
     (entry.generation !== null && update.generation < entry.generation) ||
     (entry.latest &&
       (update.generation < entry.latest.generation ||
@@ -118,7 +133,7 @@ export function useSubscription(
 ) {
   const id = useId(),
     owner = ownerOverride ?? `resource:${id}`,
-    key = request ? JSON.stringify(request) : null;
+    key = request ? resourceKey(request) : null;
   const [state, setState] = useState<{
     key: string | null;
     update: ResourceUpdate | null;
@@ -166,7 +181,7 @@ export function useSubscription(
   return {
     payload: update?.payload ?? null,
     error: update?.error ?? null,
-    loading: update?.loading ?? !!key,
+    loading: enabled && (update?.loading ?? !!key),
     refresh: () => {
       const entry = entries.get(owner);
       if (entry && entry.generation === null) {

@@ -1,13 +1,17 @@
 from __future__ import annotations
-import os, requests, logging
+import os
+import requests
+import logging
 from urllib.parse import urlsplit, urlencode
-from typing import Any, Optional
-from datetime import datetime, timezone, timedelta
+from typing import Any
+from datetime import datetime, timedelta, UTC
 from orchestrator.freshness import now_utc
 from langchain_core.tools import BaseTool, tool
 from app.infrastructure.diagnostics import sanitize_error
 from . import common
+
 logger = logging.getLogger(__name__)
+
 
 def _search_tavily_news(
     query: str, count: int, api_key: str, days: int | None = 7
@@ -156,15 +160,16 @@ def _recent_news(articles, days):
         published = None
         try:
             if isinstance(raw, (int, float)) and not isinstance(raw, bool):
-                published = datetime.fromtimestamp(raw, timezone.utc)
+                published = datetime.fromtimestamp(raw, UTC)
             elif isinstance(raw, str):
                 try:
                     published = datetime.fromisoformat(raw.replace("Z", "+00:00"))
                 except ValueError:
                     from email.utils import parsedate_to_datetime
+
                     published = parsedate_to_datetime(raw)
                 if published.tzinfo is None:
-                    published = published.replace(tzinfo=timezone.utc)
+                    published = published.replace(tzinfo=UTC)
         except (ValueError, TypeError, OverflowError, OSError):
             pass
         if (
@@ -180,7 +185,7 @@ def _recent_news(articles, days):
         item["retrieved_at"] = current.isoformat()
         result.append((published, item))
     result.sort(
-        key=lambda pair: pair[0] or datetime.min.replace(tzinfo=timezone.utc),
+        key=lambda pair: pair[0] or datetime.min.replace(tzinfo=UTC),
         reverse=True,
     )
     return [item for _, item in result]
@@ -189,10 +194,10 @@ def _recent_news(articles, days):
 def _make_news_tool() -> BaseTool:
     @tool
     def financial_news(
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
         count: int = 10,
-        query: Optional[str] = None,
-        days: Optional[int] = 7,
+        query: str | None = None,
+        days: int | None = 7,
     ) -> str:
         """
         Search financial news with Tavily, falling back to FMP, Yahoo and a public RSS search.
@@ -233,9 +238,7 @@ def _make_news_tool() -> BaseTool:
         tavily_key = os.getenv("TAVILY_API_KEY", "").strip()
         if tavily_key:
             search_query = " ".join(
-                part
-                for part in [symbol, query or "latest financial business news"]
-                if part
+                part for part in [symbol, query or "latest financial business news"] if part
             )
             try:
                 articles = _recent_news(
@@ -281,9 +284,7 @@ def _make_news_tool() -> BaseTool:
                     return success(news)
                 attempts.append({"provider": "FMP", "status": "empty"})
             except Exception as e:
-                attempts.append(
-                    {"provider": "FMP", "status": "error", "error": sanitize_error(e)}
-                )
+                attempts.append({"provider": "FMP", "status": "error", "error": sanitize_error(e)})
         if symbol and not query:
             try:
                 # News does not depend on whether the analytics module imported successfully.

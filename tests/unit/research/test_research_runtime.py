@@ -11,7 +11,6 @@ import orchestrator.tools.providers.market as finance_market
 import orchestrator.tools.providers.news as finance_news
 import orchestrator.tools.providers.common as finance_common
 import app.research.routes as routes_routes
-import app.research.service as routes_service
 from orchestrator.specialists import get_subagents_for_type
 from orchestrator.integrity import RESEARCH_INTEGRITY
 
@@ -25,36 +24,54 @@ class RuntimeTests(unittest.TestCase):
         settings.start()
         self.addCleanup(settings.stop)
 
-
     def test_market_tool_independent_of_sandbox(self):
         provider = Mock()
         provider.get_quote.return_value = {"symbol": "0157.KL", "price": 0.5}
         with patch.object(finance_common, "stock_data", provider):
-            result = json.loads(finance_market._make_market_data_tool().invoke({"symbol": "0157.KL"}))
+            result = json.loads(
+                finance_market._make_market_data_tool().invoke({"symbol": "0157.KL"})
+            )
             self.assertEqual(result["price"], 0.5)
 
     def test_news_empty_and_failed_are_distinct(self):
         import yfinance
-        with patch.object(finance_common, "_fmp_client", None), patch.object(yfinance, "Ticker", return_value=SimpleNamespace(news=[])):
+
+        with (
+            patch.object(finance_common, "_fmp_client", None),
+            patch.object(yfinance, "Ticker", return_value=SimpleNamespace(news=[])),
+        ):
             result = json.loads(finance_news._make_news_tool().invoke({"symbol": "0157.KL"}))
             self.assertEqual(result["status"], "empty")
             self.assertNotIn("error", result)
-        with patch.object(finance_common, "_fmp_client", None), patch.object(yfinance, "Ticker", side_effect=RuntimeError("HTTP 429")):
+        with (
+            patch.object(finance_common, "_fmp_client", None),
+            patch.object(yfinance, "Ticker", side_effect=RuntimeError("HTTP 429")),
+        ):
             result = json.loads(finance_news._make_news_tool().invoke({"symbol": "0157.KL"}))
             self.assertEqual(result["status"], "error")
             self.assertIn("429", result["attempts"][0]["error"])
 
     def test_news_fallback_is_independent_of_analytics_import(self):
         import yfinance
+
         fmp = Mock(api_key="configured")
         fmp._request.side_effect = RuntimeError("401")
-        with patch.object(finance_common, "stock_data", None), patch.object(finance_common, "_fmp_client", fmp), patch.object(yfinance, "Ticker", return_value=SimpleNamespace(news=[{"content": {"title": "Verified headline"}}])):
+        with (
+            patch.object(finance_common, "stock_data", None),
+            patch.object(finance_common, "_fmp_client", fmp),
+            patch.object(
+                yfinance,
+                "Ticker",
+                return_value=SimpleNamespace(news=[{"content": {"title": "Verified headline"}}]),
+            ),
+        ):
             result = json.loads(finance_news._make_news_tool().invoke({"symbol": "0157.KL"}))
             self.assertEqual(result["articles"][0]["title"], "Verified headline")
             self.assertEqual(result["status"], "partial_success")
 
     def test_retired_status_and_provider_context(self):
         from fastapi import HTTPException
+
         with self.assertRaises(HTTPException) as raised:
             asyncio.run(routes_routes.retired_sandbox())
         self.assertEqual(raised.exception.status_code, 410)
@@ -74,24 +91,51 @@ class RuntimeTests(unittest.TestCase):
         from deepagents.backends import StateBackend
         from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
         from langchain_core.messages import AIMessage
+
         class ToolModel(FakeMessagesListChatModel):
             def bind_tools(self, tools, **kwargs):
                 return self
-        model = ToolModel(responses=[
-            AIMessage(content="", tool_calls=[{"name": "task", "args": {"description": "Retrieve quote and report errors", "subagent_type": "research"}, "id": "delegate"}]),
-            AIMessage(content="", tool_calls=[{"name": "market_data", "args": {"symbol": "0157.KL"}, "id": "quote"}]),
-            AIMessage(content="Provider returned HTTP 429; current valuation is unavailable."),
-            AIMessage(content="market_data failed with HTTP 429; no company narrative is verified."),
-        ])
+
+        model = ToolModel(
+            responses=[
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "name": "task",
+                            "args": {
+                                "description": "Retrieve quote and report errors",
+                                "subagent_type": "research",
+                            },
+                            "id": "delegate",
+                        }
+                    ],
+                ),
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {"name": "market_data", "args": {"symbol": "0157.KL"}, "id": "quote"}
+                    ],
+                ),
+                AIMessage(content="Provider returned HTTP 429; current valuation is unavailable."),
+                AIMessage(
+                    content="market_data failed with HTTP 429; no company narrative is verified."
+                ),
+            ]
+        )
         provider = Mock()
         provider.get_quote.return_value = {"error": "HTTP 429"}
         with patch.object(finance_common, "stock_data", provider):
             graph = create_deep_agent(
-                model=model, system_prompt=RESEARCH_INTEGRITY,
+                model=model,
+                system_prompt=RESEARCH_INTEGRITY,
                 tools=finance.build_financial_tools(),
-                subagents=[get_subagents_for_type("general")[0]], backend=StateBackend(),
+                subagents=[get_subagents_for_type("general")[0]],
+                backend=StateBackend(),
             )
-            result = graph.invoke({"messages": [{"role": "user", "content": "Research Focus Point"}]})
+            result = graph.invoke(
+                {"messages": [{"role": "user", "content": "Research Focus Point"}]}
+            )
         provider.get_quote.assert_called_once_with("0157.KL")
         self.assertIn("HTTP 429", result["messages"][-1].content)
 

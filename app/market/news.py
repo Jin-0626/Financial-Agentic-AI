@@ -7,6 +7,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 @transport.yahoo_bound
 def news(key=None):
     from urllib.parse import parse_qsl, urlencode, urlunsplit
@@ -75,13 +76,7 @@ def news(key=None):
                 parsed.scheme,
                 parsed.netloc,
                 parsed.path,
-                urlencode(
-                    [
-                        (k, v)
-                        for k, v in parse_qsl(parsed.query)
-                        if not k.startswith("utm_")
-                    ]
-                ),
+                urlencode([(k, v) for k, v in parse_qsl(parsed.query) if not k.startswith("utm_")]),
                 "",
             )
         )
@@ -114,4 +109,3 @@ def news(key=None):
         "Provider headlines; publication dates retained",
         limitations=failures,
     )
-

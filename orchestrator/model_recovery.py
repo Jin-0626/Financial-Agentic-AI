@@ -1,4 +1,5 @@
 """Recover one transient Ollama failure before any response has been streamed."""
+
 import asyncio
 import time
 
@@ -30,14 +31,17 @@ class ModelRecovery(AgentMiddleware):
         else:
             callbacks = callbacks.copy()
             callbacks.add_handler(progress)
-        return request.override(model=request.model.model_copy(update={"callbacks": callbacks})), progress
+        return request.override(
+            model=request.model.model_copy(update={"callbacks": callbacks})
+        ), progress
 
     @staticmethod
     def _retry(error, progress, request):
         if progress is None or progress.emitted:
             return False
         if error.status_code not in {500, 502, 503, 504} and not (
-                error.status_code == -1 and str(error.error).startswith("Internal Server Error")):
+            error.status_code == -1 and str(error.error).startswith("Internal Server Error")
+        ):
             return False
         budget = getattr(getattr(request.runtime, "context", None), "run_budget", None)
         if budget:

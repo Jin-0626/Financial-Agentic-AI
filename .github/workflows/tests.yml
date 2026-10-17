@@ -40,6 +40,8 @@ jobs:
       - run: rustup toolchain install 1.99.0 --profile minimal
       - run: cargo +1.99.0 build --locked -j 2
       - run: uv sync --frozen
+      - run: uvx --from ruff==0.17.0 ruff check .
+      - run: uvx --from ruff==0.17.0 ruff format --check .
       - run: uv run --frozen python scripts/setup_analytics.py
       - run: uv run --frozen python -B -m unittest discover -s tests -t . -v
         env:

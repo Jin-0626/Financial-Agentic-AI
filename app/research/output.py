@@ -3,6 +3,7 @@
 The application wraps readable assistant text with status, todos, files, and
 thread identity. Evidence receipts remain in artifacts rather than report text.
 """
+
 import json
 import re
 
@@ -14,10 +15,16 @@ def extract_text(content):
     if isinstance(content, str):
         return content
     if isinstance(content, list):
-        return "".join(block if isinstance(block, str) else block.get("text", "")
-                       for block in content if isinstance(block, str) or
-                       (isinstance(block, dict) and block.get("type", "text") == "text"
-                        and isinstance(block.get("text"), str)))
+        return "".join(
+            block if isinstance(block, str) else block.get("text", "")
+            for block in content
+            if isinstance(block, str)
+            or (
+                isinstance(block, dict)
+                and block.get("type", "text") == "text"
+                and isinstance(block.get("text"), str)
+            )
+        )
     return "" if content is None else str(content)
 
 
@@ -27,12 +34,13 @@ def readable_text(content):
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE).strip()
     candidate = text
     if text.startswith("```json") and text.endswith("```"):
-        candidate = text[len("```json"): -3].strip()
+        candidate = text[len("```json") : -3].strip()
     try:
         payload = json.loads(candidate)
     except (ValueError, TypeError):
         return text
-    if not isinstance(payload, dict): return text
+    if not isinstance(payload, dict):
+        return text
     if payload.get("kind") == "research_evidence_v1" and isinstance(payload.get("summary"), str):
         return payload["summary"].strip()
     if "success" in payload and isinstance(payload.get("result"), str):
@@ -42,14 +50,23 @@ def readable_text(content):
 
 REPORT_SECTIONS = ("Executive Summary", "Analysis", "Key Risks", "Recommendations", "Sources")
 _SECTION_ALIASES = {name.casefold(): name for name in REPORT_SECTIONS}
-_SECTION_ALIASES.update({"summary": "Executive Summary", "key findings": "Analysis",
-                         "findings": "Analysis", "risks": "Key Risks", "references": "Sources"})
+_SECTION_ALIASES.update(
+    {
+        "summary": "Executive Summary",
+        "key findings": "Analysis",
+        "findings": "Analysis",
+        "risks": "Key Risks",
+        "references": "Sources",
+    }
+)
 
 
 def normalize_report(text):
     """Render recognized research sections in a stable order without generating claims."""
     candidate = text.strip()
-    fence = re.fullmatch(r"```(?:markdown|md)?\s*\n(.*?)\n```", candidate, re.DOTALL | re.IGNORECASE)
+    fence = re.fullmatch(
+        r"```(?:markdown|md)?\s*\n(.*?)\n```", candidate, re.DOTALL | re.IGNORECASE
+    )
     if fence:
         candidate = fence.group(1).strip()
     sections = {name: [] for name in REPORT_SECTIONS}
@@ -60,7 +77,9 @@ def normalize_report(text):
     for line in candidate.splitlines():
         if line.lstrip().startswith(("```", "~~~")):
             in_fence = not in_fence
-        heading = None if in_fence else re.fullmatch(r"\s*(?:#{1,6}\s+(.+?)|\*\*(.+?)\*\*)\s*", line)
+        heading = (
+            None if in_fence else re.fullmatch(r"\s*(?:#{1,6}\s+(.+?)|\*\*(.+?)\*\*)\s*", line)
+        )
         name = None
         if heading:
             label = (heading.group(1) or heading.group(2)).strip().rstrip("#").strip()
@@ -90,12 +109,16 @@ def normalize_report(text):
 def format_result(state, thread_id):
     result = ""
     for message in reversed(state.get("messages", [])):
-        if isinstance(message, HumanMessage) or (isinstance(message, dict) and message.get("role") == "user"):
+        if isinstance(message, HumanMessage) or (
+            isinstance(message, dict) and message.get("role") == "user"
+        ):
             break
         if isinstance(message, AIMessage):
             if message.tool_calls:
                 break
-            if message.additional_kwargs.get("research_draft") or message.additional_kwargs.get("research_output_feedback"):
+            if message.additional_kwargs.get("research_draft") or message.additional_kwargs.get(
+                "research_output_feedback"
+            ):
                 continue
             result = normalize_report(readable_text(message.content))
             break
@@ -114,16 +137,29 @@ def format_result(state, thread_id):
             if isinstance(todo, dict):
                 todos.append({**todo, "task": todo.get("task", todo.get("content", ""))})
             elif isinstance(todo, str):
-                todos.append({"id": f"todo-{i+1}", "task": todo, "status": "completed", "subtasks": []})
+                todos.append(
+                    {"id": f"todo-{i + 1}", "task": todo, "status": "completed", "subtasks": []}
+                )
     files = state.get("files", {})
-    return {"success": bool(result.strip()), "result": result, "todos": todos,
-            "files": files if isinstance(files, dict) else {}, "thread_id": thread_id,
-            "error": None if result.strip() else "Agent completed without an assistant response"}
+    return {
+        "success": bool(result.strip()),
+        "result": result,
+        "todos": todos,
+        "files": files if isinstance(files, dict) else {},
+        "thread_id": thread_id,
+        "error": None if result.strip() else "Agent completed without an assistant response",
+    }
 
 
 def error_result(error, thread_id):
-    return {"success": False, "result": "", "todos": [], "files": {},
-            "thread_id": thread_id, "error": research_error(error)}
+    return {
+        "success": False,
+        "result": "",
+        "todos": [],
+        "files": {},
+        "thread_id": thread_id,
+        "error": research_error(error),
+    }
 
 
 def request_mode(data):

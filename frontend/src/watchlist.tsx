@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   defaultTable,
@@ -200,7 +201,7 @@ export function Watchlist({
               onSelect(id, ids.indexOf(id));
             }}
           >
-            <strong>{symbol(id)}</strong>
+            <StockLabel code={id} name={q?.instrument.name} />
             <small>
               {market?.stale
                 ? "Stale"
@@ -585,7 +586,10 @@ export function Watchlist({
           role="group"
           aria-label={`Actions for ${symbol(rowMenu)}`}
         >
-          <strong>{symbol(rowMenu)}</strong>
+          <StockLabel
+            code={rowMenu}
+            name={snapshot.quotes[rowMenu]?.data?.instrument.name}
+          />
           <button
             disabled={busy}
             onClick={() => {

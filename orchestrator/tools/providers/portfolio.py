@@ -1,18 +1,19 @@
 from __future__ import annotations
-import json, logging
+import json
+import logging
 from langchain_core.tools import BaseTool, tool
 from langchain.tools import ToolRuntime
 from app.infrastructure.diagnostics import sanitize_error
 from . import common
+
 logger = logging.getLogger(__name__)
+
 
 def _make_portfolio_tool() -> BaseTool:
     import asyncio
 
     @tool
-    async def portfolio_analytics(
-        action: str, payload_json: str, runtime: ToolRuntime
-    ) -> str:
+    async def portfolio_analytics(action: str, payload_json: str, runtime: ToolRuntime) -> str:
         """Use Rust for weighted-average transaction replay or explicitly labelled fixed-holdings projection.
 
         replay_transactions accepts Financial transactions (date,symbol,type,quantity,price).
@@ -29,9 +30,7 @@ def _make_portfolio_tool() -> BaseTool:
                 raise ValueError("Portfolio payload exceeds 1 MiB")
             parsed = json.loads(payload_json)
             if action == "replay_transactions":
-                trades = import_trades(
-                    {"portfolio_name": "Calculation", "transactions": parsed}
-                )
+                trades = import_trades({"portfolio_name": "Calculation", "transactions": parsed})
                 result = await calculate(
                     org,
                     "portfolio_ledger",
@@ -44,24 +43,16 @@ def _make_portfolio_tool() -> BaseTool:
                     }
                 )
             if action == "current_holdings_nav":
-                if not isinstance(parsed, dict) or not isinstance(
-                    parsed.get("positions"), list
-                ):
+                if not isinstance(parsed, dict) or not isinstance(parsed.get("positions"), list):
                     raise ValueError("Supply positions")
                 positions = [
-                    Position.model_validate({"average_cost": "0", **p}).model_dump(
-                        mode="json"
-                    )
+                    Position.model_validate({"average_cost": "0", **p}).model_dump(mode="json")
                     for p in parsed["positions"]
                 ]
                 if not 1 <= len(positions) <= 50:
                     raise ValueError("Use between 1 and 50 holdings")
-                benchmark = providers.symbol(
-                    parsed.get("benchmark", positions[0]["symbol"])
-                )
-                symbols = list(
-                    dict.fromkeys([p["symbol"] for p in positions] + [benchmark])
-                )
+                benchmark = providers.symbol(parsed.get("benchmark", positions[0]["symbol"]))
+                symbols = list(dict.fromkeys([p["symbol"] for p in positions] + [benchmark]))
                 quotes = await asyncio.gather(
                     *(asyncio.to_thread(providers.quote, s) for s in symbols)
                 )

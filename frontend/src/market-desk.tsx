@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { price, type Snapshot } from "./bridge";
 import { useDesktopView } from "./view-settings";
@@ -49,8 +50,11 @@ export function MarketDesk({
         <div className="desk-heading">
           <span className="market-heading">
             <h2>
-              {snapshot.preferences.selected?.split(":").slice(1).join(":") ??
-                "No instrument selected"}
+              {selected ? (
+                <StockLabel code={selected} name={quote?.instrument.name} />
+              ) : (
+                "No instrument selected"
+              )}
             </h2>
           </span>
           <div className="desk-quote" aria-label="Active instrument quote">

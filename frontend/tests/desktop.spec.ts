@@ -1,9 +1,42 @@
 import { defaultBrowser } from "../src/browser-model";
+import { resourceKey } from "../src/subscriptions";
 import { expect, test, Page } from "@playwright/test";
 import { defaultWorkspace, type Snapshot } from "../src/bridge";
 import { compareDecimal } from "../src/watchlist";
 import { alignContracts } from "../src/options-screen";
 import type { Contract } from "../src/resources";
+
+test("resource matching ignores native field order and screener null defaults", () => {
+  const request = {
+    type: "screener" as const,
+    market: "MY" as const,
+    sector: null,
+    sort: "volume" as const,
+    descending: true,
+    offset: 0,
+  };
+  const native = {
+    offset: 0,
+    descending: true,
+    sort: "volume" as const,
+    min_volume: null,
+    min_change: null,
+    min_cap: null,
+    sector: null,
+    market: "MY" as const,
+    type: "screener" as const,
+  };
+  expect(resourceKey(request)).toBe(resourceKey(native));
+  expect(resourceKey(request)).not.toBe(
+    resourceKey({ ...native, market: "US" }),
+  );
+  expect(resourceKey(request)).not.toBe(
+    resourceKey({ ...native, min_volume: "1000" }),
+  );
+  expect(resourceKey({ ...request, min_cap: "009007199254740993.0100" })).toBe(
+    resourceKey({ ...native, min_cap: "9007199254740993.01" }),
+  );
+});
 
 test("option rows preserve exact strikes and duplicate contracts", () => {
   const contract = (id: string, strike: string | null) =>
@@ -319,7 +352,10 @@ test("named lists retain drafts after failed bulk writes and persist table setti
     watch.getByRole("columnheader", { name: "Volume", exact: true }),
   ).toBeVisible();
   await watch
-    .getByRole("button", { name: "MSFT Synthetic", exact: true })
+    .getByRole("button", {
+      name: "MSFT Name unavailable Synthetic",
+      exact: true,
+    })
     .click();
   await watch.getByRole("button", { name: "Move down", exact: true }).click();
   await expect(watch.locator("tbody tr").first()).toContainText("bitcoin");
@@ -361,7 +397,7 @@ test("multi-chart presets retain independent ranges and saved layouts", async ({
     .getByRole("button", { name: /^AAPL/ })
     .click();
   for (const binding of await page.locator(".panel-binding").all())
-    await expect(binding).toContainText("Linked · yahoo:AAPL");
+    await expect(binding).toContainText("Linked · AAPL Apple Inc.");
   await workspaceTools(page);
   await page.getByLabel("Saved layout").selectOption("Moomoo Market Desk");
   await expect(page.locator(".history")).toHaveCount(1);
@@ -522,7 +558,7 @@ test("duplicate chart panels retain pinned symbols and independent ranges", asyn
     .getByRole("button", { name: "Pin symbol", exact: true })
     .click();
   await expect(instance.locator(".panel-binding")).toContainText(
-    "Pinned · yahoo:AAPL",
+    "Pinned · AAPL Apple Inc.",
   );
   await instance.getByRole("button", { name: "1D", exact: true }).click();
   await expect(
@@ -533,17 +569,17 @@ test("duplicate chart panels retain pinned symbols and independent ranges", asyn
     .getByRole("button", { name: /^5326.KL/ })
     .click();
   await expect(instance.locator(".panel-binding")).toContainText(
-    "Pinned · yahoo:AAPL",
+    "Pinned · AAPL Apple Inc.",
   );
   await expect(
     page.locator('[data-panel-id="chart"] .panel-binding'),
-  ).toContainText("Linked · yahoo:5326.KL");
+  ).toContainText("Linked · 5326.KL 99SMART");
   await instance.locator(".panel-binding summary").click();
   await instance
     .getByRole("button", { name: "Follow active instrument", exact: true })
     .click();
   await expect(instance.locator(".panel-binding")).toContainText(
-    "Linked · yahoo:5326.KL",
+    "Linked · 5326.KL 99SMART",
   );
 });
 
@@ -743,7 +779,12 @@ async function nativeFixture(
       const instrument = (id: string) => ({
         id,
         symbol: id.split(":")[1],
-        name: id.split(":")[1],
+        name:
+          id === "yahoo:5326.KL"
+            ? "99SMART"
+            : id === "yahoo:AAPL"
+              ? "Apple Inc."
+              : id.split(":")[1],
         exchange: "Synthetic",
         asset_class: "equity",
       });
@@ -1110,11 +1151,26 @@ async function nativeFixture(
               }
             ).invoke("terminal_resource", { request: args.request });
             const owner = args.owner as string;
+            const request = args.request as Record<string, unknown>;
+            const nativeRequest =
+              request.type === "screener"
+                ? {
+                    type: request.type,
+                    market: request.market,
+                    sector: request.sector ?? null,
+                    min_cap: request.min_cap ?? null,
+                    min_change: request.min_change ?? null,
+                    min_volume: request.min_volume ?? null,
+                    sort: request.sort,
+                    descending: request.descending,
+                    offset: request.offset,
+                  }
+                : Object.fromEntries(Object.entries(request).reverse());
             const update = {
               owner,
               generation: ++resourceGeneration,
               revision: resourceGeneration,
-              request: args.request,
+              request: nativeRequest,
               payload: resource,
               loading: false,
               error: null,
@@ -1163,6 +1219,7 @@ async function nativeFixture(
                   {
                     instrument: {
                       ...instrument("coingecko:bitcoin"),
+                      name: "Bitcoin",
                       symbol: "BTC",
                       asset_class: "crypto",
                     },
@@ -1175,6 +1232,21 @@ async function nativeFixture(
                   },
                 ]),
               };
+            if (
+              request.type === "screener" &&
+              (platform as unknown as { testLeaderUnavailable?: boolean })
+                .testLeaderUnavailable
+            ) {
+              return {
+                type: "screener",
+                market: {
+                  ...market(null),
+                  status: "unavailable",
+                  error: "Fixture provider rate limit",
+                  retry_after: 60,
+                },
+              };
+            }
             if (request.type === "screener" && rich) {
               const query = args.request as { market: string; offset: number };
               return {
@@ -1539,7 +1611,7 @@ test("selection, range, watchlist edits, command history and save use typed IPC"
 }) => {
   await nativeFixture(page);
   await page.goto("/");
-  await page.getByRole("button", { name: "AAPL Synthetic" }).click();
+  await page.getByRole("button", { name: "AAPL Apple Inc. Synthetic" }).click();
   await expect(page.locator(".market-heading h2")).toContainText("AAPL");
   await page.getByRole("button", { name: "1D", exact: true }).click();
   await expect(
@@ -1548,11 +1620,11 @@ test("selection, range, watchlist edits, command history and save use typed IPC"
   await page.getByLabel("Add symbol").fill("MSFT");
   await page.getByLabel("Add to watchlist").click();
   await expect(
-    page.getByRole("button", { name: "MSFT Synthetic" }),
+    page.getByRole("button", { name: "MSFT Name unavailable Synthetic" }),
   ).toBeVisible();
   await page.getByLabel("Remove MSFT").click();
   await expect(
-    page.getByRole("button", { name: "MSFT Synthetic" }),
+    page.getByRole("button", { name: "MSFT Name unavailable Synthetic" }),
   ).toHaveCount(0);
   await page.getByLabel("Open command prompt").click();
   const prompt = page.getByLabel("Command prompt", { exact: true });
@@ -1738,9 +1810,9 @@ test("live screens use native resources, preserve crypto IDs and disclose missin
   await navigation.getByText("More", { exact: true }).click();
   await navigation.getByRole("button", { name: "crypto", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "BTC", exact: true }),
+    page.getByRole("button", { name: "BTC Bitcoin", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "BTC", exact: true }).click();
+  await page.getByRole("button", { name: "BTC Bitcoin", exact: true }).click();
   await expect(page.locator(".market-heading h2")).toContainText("bitcoin");
   await navigation.getByText("More", { exact: true }).click();
   await navigation.getByRole("button", { name: "news", exact: true }).click();
@@ -1984,6 +2056,83 @@ async function navigateScreen(page: Page, name: string) {
     .getByRole("button", { name, exact: true })
     .click();
 }
+
+test("all heat lists complete loading with native screener request serialization", async ({
+  page,
+}) => {
+  await nativeFixture(page, false, true, false, true);
+  await page.goto("/");
+  await navigateScreen(page, "markets");
+  const lists = page.locator(".market-overview-group");
+  await expect(lists).toHaveCount(4);
+  for (let index = 0; index < 4; index++) {
+    await expect(lists.nth(index).locator("tbody tr")).toHaveCount(8);
+    await expect(lists.nth(index)).not.toContainText(
+      "Loading provider results",
+    );
+  }
+  await lists.first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "test-results/heat-lists.png" });
+  await page.setViewportSize({ width: 960, height: 640 });
+  await lists
+    .first()
+    .evaluate((element) => element.scrollIntoView({ block: "start" }));
+  await page.screenshot({ path: "test-results/heat-lists-small.png" });
+});
+
+for (const unavailable of [false, true])
+  test(`heat lists finish with explicit ${unavailable ? "unavailable" : "empty"} results`, async ({
+    page,
+  }) => {
+    await nativeFixture(page, false, true);
+    await page.addInitScript((value) => {
+      (
+        window as unknown as { testLeaderUnavailable: boolean }
+      ).testLeaderUnavailable = value;
+    }, unavailable);
+    await page.goto("/");
+    await navigateScreen(page, "markets");
+    const lists = page.locator(".market-overview-group");
+    for (let index = 0; index < 4; index++) {
+      await expect(lists.nth(index)).toContainText(
+        unavailable
+          ? "Provider results unavailable"
+          : "No provider results returned",
+      );
+      await expect(lists.nth(index)).not.toContainText(
+        "Loading provider results",
+      );
+    }
+  });
+
+test("stock names remain beside codes with the optional name column hidden", async ({
+  page,
+}) => {
+  await nativeFixture(page, false, true, false, true);
+  await page.goto("/");
+  await expect(page.locator(".market-heading .stock-label")).toContainText(
+    "5326.KL 99SMART",
+  );
+  await navigateScreen(page, "watchlist");
+  await expect(
+    page.locator('.watchlist-full th[data-column="name"]'),
+  ).toHaveCount(0);
+  const labels = page.locator(
+    '.watchlist-full td[data-column="instrument"] .stock-label',
+  );
+  await expect(labels.nth(0)).toHaveText("5326.KL 99SMART");
+  await expect(labels.nth(1)).toHaveText("AAPL Apple Inc.");
+  await page.screenshot({ path: "test-results/stock-names-watchlist.png" });
+  await page.setViewportSize({ width: 960, height: 640 });
+  await expect(labels.nth(0).locator(".stock-name")).toBeVisible();
+  await page.screenshot({
+    path: "test-results/stock-names-watchlist-small.png",
+  });
+  await navigateScreen(page, "markets");
+  await expect(
+    page.locator(".market-overview .stock-label").first(),
+  ).toBeVisible();
+});
 
 test("reference geometry uses prepared API cards and releases overview subscriptions", async ({
   page,

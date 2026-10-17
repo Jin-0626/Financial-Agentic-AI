@@ -175,7 +175,7 @@ fn invalid() -> ToolError {
     )
 }
 fn parse<T: serde::de::DeserializeOwned>(value: &Value) -> Result<T, ToolError> {
-    serde_json::from_value(value.clone()).map_err(|_| invalid())
+    T::deserialize(value).map_err(|_| invalid())
 }
 pub fn schemas() -> Value {
     json!({"snapshot":schema_for!(data_pipeline::Snapshot), "tools":tools()})

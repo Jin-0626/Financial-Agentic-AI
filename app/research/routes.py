@@ -1,7 +1,6 @@
 from app.research import protocol
 import asyncio
 import logging
-from typing import List
 from fastapi import APIRouter, HTTPException, Depends, Response
 from fastapi.responses import StreamingResponse
 from app.research.schemas import ChatRequest, ChatHistoryResponse, ThreadInfo
@@ -37,16 +36,20 @@ async def chat(body: ChatRequest, identity=Depends(authenticated_identity)):
 
         result = await asyncio.wait_for(
             service._chat(
-                message, thread_id, user_id, org_id, response_schema, data.get("resume"), data.get("terminal_context")
+                message,
+                thread_id,
+                user_id,
+                org_id,
+                response_schema,
+                data.get("resume"),
+                data.get("terminal_context"),
             ),
             timeout=120.0,
         )
 
         return result
-    except asyncio.TimeoutError:
-        raise HTTPException(
-            status_code=504, detail="Request timed out, please try again later"
-        )
+    except TimeoutError:
+        raise HTTPException(status_code=504, detail="Request timed out, please try again later")
     except HTTPException:
         raise
     except Exception as e:
@@ -115,10 +118,8 @@ async def get_history(
     return await history._get_history(messages._owned_thread(thread_id, org_id, user_id))
 
 
-@router.get("/threads", response_model=List[ThreadInfo])
-async def list_threads(
-    org_id: str = Depends(organization), user_id: str = Depends(user)
-):
+@router.get("/threads", response_model=list[ThreadInfo])
+async def list_threads(org_id: str = Depends(organization), user_id: str = Depends(user)):
     return await history._list_threads(org_id, user_id)
 
 
@@ -131,16 +132,22 @@ async def delete_thread(
 
 
 @router.get("/traces")
-async def list_traces(response: Response, org_id: str = Depends(organization), user_id: str = Depends(user)):
+async def list_traces(
+    response: Response, org_id: str = Depends(organization), user_id: str = Depends(user)
+):
     response.headers["Cache-Control"] = "no-store"
     return {"traces": resources.traces.read(org_id, user_id)}
 
 
 @router.get("/traces/{trace_id}")
-async def trace_detail(trace_id: str, response: Response, org_id: str = Depends(organization), user_id: str = Depends(user)):
+async def trace_detail(
+    trace_id: str,
+    response: Response,
+    org_id: str = Depends(organization),
+    user_id: str = Depends(user),
+):
     response.headers["Cache-Control"] = "no-store"
     rows = resources.traces.read(org_id, user_id, trace_id)
     if not rows:
         raise HTTPException(404, "Trace not found in this workspace")
     return rows[0]
-

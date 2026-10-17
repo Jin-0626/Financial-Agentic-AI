@@ -1,4 +1,5 @@
 import { BrowserSettingsProvider } from "./browser-settings";
+import { StockLabel } from "./stock-label";
 import { DesktopViewProvider } from "./view-settings";
 import { TitleBar, TitleBarTools } from "./title-bar";
 import { MarketTicker } from "./index-market";
@@ -16,13 +17,7 @@ import { Watchlist } from "./watchlist";
 import { DockWorkspace } from "./docking";
 import { FeatureScreen, MarketResource } from "./resources";
 import { SettingsScreen } from "./settings";
-import {
-  price,
-  numeric,
-  symbol,
-  defaultWorkspace,
-  type Screen,
-} from "./bridge";
+import { price, numeric, defaultWorkspace, type Screen } from "./bridge";
 export function AppView({ state }: { state: AppState }) {
   const {
     view,
@@ -193,7 +188,7 @@ export function AppView({ state }: { state: AppState }) {
                       >
                         <option value="">Templates</option>
                         {[
-                          "Moomoo Market Desk",
+                          " Market Desk",
                           "Two Chart Desk",
                           "Four Chart Desk",
                           "Market Overview",
@@ -477,7 +472,11 @@ export function AppView({ state }: { state: AppState }) {
                             setPalette(false);
                           }}
                         >
-                          Select {symbol(id)}
+                          Select{" "}
+                          <StockLabel
+                            code={id}
+                            name={snapshot?.quotes[id]?.data?.instrument.name}
+                          />
                         </button>
                       ))}
                     {workspace.layouts

@@ -9,7 +9,9 @@ from orchestrator.model_recovery import ModelRecovery
 
 
 def request():
-    return ModelRequest(model=ChatOllama(model="test"), messages=[], state={}, runtime=SimpleNamespace(context=None))
+    return ModelRequest(
+        model=ChatOllama(model="test"), messages=[], state={}, runtime=SimpleNamespace(context=None)
+    )
 
 
 class RecoveryTests(unittest.TestCase):
@@ -23,10 +25,12 @@ class RecoveryTests(unittest.TestCase):
 
     def test_no_retry_after_streaming_or_for_validation_failures(self):
         for streamed, status in [(True, -1), (False, 400), (False, 401)]:
+
             def fail(req):
                 if streamed:
                     req.model.callbacks[-1].on_llm_new_token("partial")
                 raise ResponseError("Internal Server Error", status)
+
             handler = Mock(side_effect=fail)
             with self.assertRaises(ResponseError):
                 ModelRecovery().wrap_model_call(request(), handler)
@@ -54,13 +58,19 @@ class AsyncRecoveryTests(unittest.IsolatedAsyncioTestCase):
         from ollama import ChatResponse, Message
 
         req = request()
+
         async def parts():
-            yield ChatResponse(model="test", message=Message(role="assistant", content="partial"), done=False)
+            yield ChatResponse(
+                model="test", message=Message(role="assistant", content="partial"), done=False
+            )
             raise ResponseError("Internal Server Error")
+
         req.model._async_client = SimpleNamespace(chat=AsyncMock(return_value=parts()))
+
         async def handler(tracked):
             async for _ in tracked.model.astream([HumanMessage(content="Synthetic test")]):
                 pass
+
         invoke = AsyncMock(side_effect=handler)
         with self.assertRaises(ResponseError):
             await ModelRecovery().awrap_model_call(req, invoke)

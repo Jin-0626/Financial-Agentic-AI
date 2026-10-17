@@ -66,8 +66,7 @@ class MarketService:
                             self.cache[key] = (time.monotonic(), value, size)
                             while (
                                 len(self.cache) > 256
-                                or sum(entry[2] for entry in self.cache.values())
-                                > 16 * 1024 * 1024
+                                or sum(entry[2] for entry in self.cache.values()) > 16 * 1024 * 1024
                             ):
                                 self.cache.popitem(last=False)
                         except Throttled as error:
@@ -77,9 +76,7 @@ class MarketService:
 
                 future.add_done_callback(complete)
         try:
-            value, _ = await asyncio.wait_for(
-                asyncio.shield(asyncio.wrap_future(future)), 30
-            )
+            value, _ = await asyncio.wait_for(asyncio.shield(asyncio.wrap_future(future)), 30)
             return copy.deepcopy(value)
         except asyncio.CancelledError:
             raise

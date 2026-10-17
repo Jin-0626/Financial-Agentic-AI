@@ -1,5 +1,8 @@
 """Deterministic repository fixture; never imported by production."""
-import asyncio, copy
+
+import asyncio
+import copy
+
 
 class MemoryPortfolioRepository:
     """Deterministic test repository; production uses backend SQLite."""
@@ -12,18 +15,12 @@ class MemoryPortfolioRepository:
         return copy.deepcopy(self.data.get((org, user, pid)))
 
     async def list(self, org, user):
-        return [
-            copy.deepcopy(v)
-            for (o, u, _), v in self.data.items()
-            if (o, u) == (org, user)
-        ]
+        return [copy.deepcopy(v) for (o, u, _), v in self.data.items() if (o, u) == (org, user)]
 
     async def mutate(self, org, user, pid, change, expected=None):
         async with self.lock:
             old = await self.load(org, user, pid)
-            if expected is not None and (
-                old is None or old.get("revision", 0) != expected
-            ):
+            if expected is not None and (old is None or old.get("revision", 0) != expected):
                 raise ValueError("Portfolio changed; reload before saving")
             new = await change(old, len(await self.list(org, user)))
             if new == old:

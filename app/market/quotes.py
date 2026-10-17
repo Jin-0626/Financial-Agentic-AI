@@ -6,6 +6,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 @transport.yahoo_bound
 def quote(key):
     asset = common.instrument(key)
@@ -122,4 +123,3 @@ def quote(key):
         if common.number(observed) is not None
         else None,
     )
-

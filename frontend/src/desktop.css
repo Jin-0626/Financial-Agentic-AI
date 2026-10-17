@@ -876,8 +876,32 @@ button:disabled {
 .watchlist-full th[aria-label="Reorder"] {
   width: 22px;
 }
+.stock-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  max-width: 100%;
+  vertical-align: middle;
+  text-align: left;
+}
+.market-overview-group .empty {
+  min-height: 96px;
+}
+.stock-code {
+  flex-shrink: 0;
+  font-weight: 600;
+}
+.stock-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  font-weight: 400;
+  color: var(--muted);
+}
 .watchlist-full th[data-column="instrument"] {
-  width: 110px;
+  width: 240px;
 }
 .watchlist-full th[data-column="name"] {
   width: 180px;

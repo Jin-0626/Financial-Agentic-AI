@@ -1,10 +1,13 @@
 from __future__ import annotations
-import logging, math
+import logging
+import math
 from typing import Any
 from langchain_core.tools import BaseTool, tool
 from app.infrastructure.diagnostics import sanitize_error
 from . import common
+
 logger = logging.getLogger(__name__)
+
 
 def _treasury_result() -> dict[str, Any]:
     """Use one schema for direct rates, proxies, partial coverage, and complete failure."""
@@ -73,9 +76,7 @@ def _treasury_result() -> dict[str, Any]:
                         if field in maturity_fields and finite_number(value)
                     }
                     if not valid or not isinstance(row.get("date"), str):
-                        record_error(
-                            "FMP", "Treasury row lacks dated finite yield values"
-                        )
+                        record_error("FMP", "Treasury row lacks dated finite yield values")
                         continue
                     invalid = [
                         field
@@ -83,9 +84,7 @@ def _treasury_result() -> dict[str, Any]:
                         if field in row and not finite_number(row[field])
                     ]
                     if invalid:
-                        record_error(
-                            "FMP", "Unavailable yield fields: " + ", ".join(invalid)
-                        )
+                        record_error("FMP", "Unavailable yield fields: " + ", ".join(invalid))
                     direct_rates.append({"date": row["date"], **valid})
         except Exception as e:
             record_error("FMP", e)
@@ -95,9 +94,7 @@ def _treasury_result() -> dict[str, Any]:
         if common.stock_data is None:
             record_error(
                 "Yahoo",
-                common._dependency_errors.get(
-                    "yfinance", "Market data dependency unavailable"
-                ),
+                common._dependency_errors.get("yfinance", "Market data dependency unavailable"),
             )
         else:
             try:
@@ -142,9 +139,7 @@ def _treasury_result() -> dict[str, Any]:
                 record_error("Yahoo", e)
 
     has_data = bool(direct_rates or proxies)
-    status = (
-        "partial_success" if has_data and errors else "success" if has_data else "error"
-    )
+    status = "partial_success" if has_data and errors else "success" if has_data else "error"
     return {
         "status": status,
         "treasury_rates": direct_rates,

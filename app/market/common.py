@@ -3,7 +3,7 @@ import math
 import re
 from datetime import UTC, datetime
 from numbers import Real
-from app.infrastructure.providers import symbol, ticker_info
+from app.infrastructure.providers import symbol as symbol, ticker_info as ticker_info
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +26,7 @@ def now():
 def number(value):
     return (
         float(value)
-        if isinstance(value, Real)
-        and not isinstance(value, bool)
-        and math.isfinite(value)
+        if isinstance(value, Real) and not isinstance(value, bool) and math.isfinite(value)
         else None
     )
 
@@ -76,4 +74,3 @@ def result(data, source, coverage, **metadata):
         "stale": False,
         **metadata,
     }
-

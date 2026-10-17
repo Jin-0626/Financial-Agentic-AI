@@ -25,14 +25,16 @@ class SQLitePortfolioTests(unittest.IsolatedAsyncioTestCase):
         other = SQLitePortfolioRepository(self.path)
         await other.setup()
         try:
+
             async def change(old, count):
                 await asyncio.sleep(0.005)
                 old["updates"] = old.get("updates", 0) + 1
                 old["exact"] = "9007199254740993.000000001"
                 return old
 
-            await asyncio.gather(*(r.mutate("org", "user", doc["id"], change)
-                                   for r in [self.repo, other] * 4))
+            await asyncio.gather(
+                *(r.mutate("org", "user", doc["id"], change) for r in [self.repo, other] * 4)
+            )
             loaded = await other.load("org", "user", doc["id"])
             self.assertEqual(loaded["updates"], 8)
             self.assertEqual(loaded["revision"], 9)
@@ -49,15 +51,19 @@ class SQLitePortfolioTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_callback_failure_and_cancellation_roll_back(self):
         doc = await create_portfolio(self.repo, "o", "u", Portfolio(name="Stable"))
+
         async def fail(old, count):
             old["portfolio"]["name"] = "Broken"
             raise ValueError("failed calculation")
+
         with self.assertRaises(ValueError):
             await self.repo.mutate("o", "u", doc["id"], fail)
         entered = asyncio.Event()
+
         async def wait(old, count):
             entered.set()
             await asyncio.Event().wait()
+
         task = asyncio.create_task(self.repo.mutate("o", "u", doc["id"], wait))
         await entered.wait()
         task.cancel()
@@ -72,10 +78,12 @@ class SQLitePortfolioTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await self.repo.import_documents(rows), 0)
         extra = {**doc, "id": "extra"}
         with self.assertRaises(ValueError):
-            await self.repo.import_documents([
-                ("o", "u", "extra", 7, extra),
-                ("o", "u", "legacy", 7, {**doc, "different": True}),
-            ])
+            await self.repo.import_documents(
+                [
+                    ("o", "u", "extra", 7, extra),
+                    ("o", "u", "legacy", 7, {**doc, "different": True}),
+                ]
+            )
         self.assertIsNone(await self.repo.load("o", "u", "extra"))
         self.assertEqual(await self.repo.load("o", "u", "legacy"), doc)
 
@@ -92,14 +100,18 @@ class SQLitePortfolioTests(unittest.IsolatedAsyncioTestCase):
         with closing(sqlite3.connect(self.path)) as conn:
             conn.execute("""CREATE TRIGGER reject_update BEFORE UPDATE ON portfolio_documents
                 BEGIN SELECT RAISE(ABORT, 'fixture disk write failure'); END""")
+
         async def change(old, count):
             old["portfolio"]["name"] = "Lost draft"
             return old
+
         with self.assertRaisesRegex(RuntimeError, "SQLite operation failed"):
             await self.repo.mutate("o", "u", doc["id"], change, doc["revision"])
         self.assertEqual(await self.repo.load("o", "u", doc["id"]), doc)
+
         async def delete(old, count):
             return None
+
         await self.repo.mutate("o", "u", doc["id"], delete, doc["revision"])
         self.assertEqual(await self.repo.list("o", "u"), [])
 
@@ -111,8 +123,10 @@ class SQLitePortfolioTests(unittest.IsolatedAsyncioTestCase):
         rows = await self.repo.list("o", "u")
         self.assertEqual(len(rows), 50)
         self.assertEqual(rows[0]["portfolio"]["name"], "Portfolio 49")
+
         async def unchanged(old, count):
             return old
+
         doc = rows[0]
         self.assertEqual(await self.repo.mutate("o", "u", doc["id"], unchanged), doc)
         self.assertEqual((await self.repo.load("o", "u", doc["id"]))["revision"], 1)

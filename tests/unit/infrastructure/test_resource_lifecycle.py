@@ -2,96 +2,58 @@
 
 import asyncio
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from app.infrastructure.native_engine import NativeEngine
-from app.infrastructure.persistence import ThreadedPool
+from app.infrastructure.persistence import bridge_context
 
 
-class ThreadedPoolLifecycleTests(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        with patch("app.infrastructure.persistence.ConnectionPool") as constructor:
-            self.pool = ThreadedPool("fixture", open=False)
-        self.sync_pool = constructor.return_value
+class DatabaseContextLifecycleTests(unittest.IsolatedAsyncioTestCase):
+    async def test_success_releases_context(self):
+        context = MagicMock()
+        async with bridge_context(context) as resource:
+            self.assertIs(resource, context.__enter__.return_value)
+        context.__exit__.assert_called_once_with(None, None, None)
 
-    async def test_success_closes_on_context_exit(self):
-        async with self.pool as opened:
-            self.assertIs(opened, self.pool)
-            self.sync_pool.close.assert_not_called()
-        self.sync_pool.open.assert_called_once_with()
-        self.sync_pool.wait.assert_called_once_with()
-        self.sync_pool.close.assert_called_once_with()
-
-    async def test_startup_failure_closes_and_preserves_original_error(self):
-        for stage in ("open", "wait"):
-            with self.subTest(stage=stage):
-                self.sync_pool.reset_mock(side_effect=True)
-                error = RuntimeError(f"{stage} failed")
-                getattr(self.sync_pool, stage).side_effect = error
-                with self.assertRaises(RuntimeError) as raised:
-                    async with self.pool:
-                        self.fail("Failed startup must not enter the context")
-                self.assertIs(raised.exception, error)
-                self.sync_pool.close.assert_called_once_with()
-
-    async def test_cleanup_failure_does_not_replace_startup_error(self):
-        error = RuntimeError("startup failed")
-        self.sync_pool.wait.side_effect = error
-        self.sync_pool.close.side_effect = RuntimeError("cleanup failed")
-        with self.assertLogs("app.infrastructure.persistence", level="ERROR"):
-            with self.assertRaises(RuntimeError) as raised:
-                await self.pool.__aenter__()
+    async def test_failure_reaches_transaction_context(self):
+        context = MagicMock()
+        error = RuntimeError("transaction failed")
+        with self.assertRaises(RuntimeError) as raised:
+            async with bridge_context(context):
+                raise error
         self.assertIs(raised.exception, error)
-        self.sync_pool.close.assert_called_once_with()
+        self.assertIs(context.__exit__.call_args.args[1], error)
 
-    async def test_cancelled_readiness_closes_before_propagating(self):
-        waiting = asyncio.Event()
+    async def test_cancelled_open_releases_acquired_resource(self):
+        import threading
 
-        async def wait():
-            waiting.set()
-            await asyncio.Event().wait()
-
-        with patch.object(self.pool, "wait", wait):
-            task = asyncio.create_task(self.pool.__aenter__())
-            self.addAsyncCleanup(self.cancel_task, task)
-            await asyncio.wait_for(waiting.wait(), 1)
-            task.cancel()
-            with self.assertRaises(asyncio.CancelledError):
-                await task
-        self.sync_pool.close.assert_called_once_with()
-
-    async def test_cancelled_open_finishes_before_cleanup(self):
-        started = asyncio.Event()
-        finish = asyncio.Event()
+        started = threading.Event()
+        finish = threading.Event()
         events = []
+        context = MagicMock()
 
-        async def open_pool():
+        def enter():
             started.set()
-            await finish.wait()
+            finish.wait(3)
             events.append("opened")
 
-        async def close_pool():
-            events.append("closed")
+        context.__enter__.side_effect = enter
+        context.__exit__.side_effect = lambda *args: events.append("closed")
 
-        with (
-            patch.object(self.pool, "open", open_pool),
-            patch.object(self.pool, "close", close_pool),
-        ):
-            task = asyncio.create_task(self.pool.__aenter__())
-            self.addAsyncCleanup(self.cancel_task, task)
-            await asyncio.wait_for(started.wait(), 1)
+        async def acquire():
+            async with bridge_context(context):
+                self.fail("cancelled open must not yield")
+
+        task = asyncio.create_task(acquire())
+        try:
+            self.assertTrue(await asyncio.to_thread(started.wait, 2))
             task.cancel()
             await asyncio.sleep(0)
-            self.assertEqual(events, [])
+        finally:
             finish.set()
-            with self.assertRaises(asyncio.CancelledError):
-                await asyncio.wait_for(task, 1)
+        with self.assertRaises(asyncio.CancelledError):
+            await task
         self.assertEqual(events, ["opened", "closed"])
-        self.sync_pool.wait.assert_not_called()
-
-    async def cancel_task(self, task):
-        task.cancel()
-        await asyncio.gather(task, return_exceptions=True)
 
 
 class NativeConnectionLifecycleTests(unittest.IsolatedAsyncioTestCase):
@@ -157,9 +119,7 @@ class NativeConnectionLifecycleTests(unittest.IsolatedAsyncioTestCase):
             self.assertIs(await self.engine.tools("org"), tools)
             replacement = self.engine.connections["org"]
             ready.set_exception(RuntimeError("old connection failed"))
-            results = await asyncio.wait_for(
-                asyncio.gather(*waiters, return_exceptions=True), 1
-            )
+            results = await asyncio.wait_for(asyncio.gather(*waiters, return_exceptions=True), 1)
             self.assertTrue(all(isinstance(result, RuntimeError) for result in results))
             self.assertIs(self.engine.connections.get("org"), replacement)
             self.assertIs(await self.engine.tools("org"), tools)

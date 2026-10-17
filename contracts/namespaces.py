@@ -1,4 +1,6 @@
 """Memory belongs to an organization and a user, never a user alone."""
+
+
 def user_namespace(rt):
     context = getattr(rt, "context", None)
     org_id = getattr(context, "org_id", "default-org")

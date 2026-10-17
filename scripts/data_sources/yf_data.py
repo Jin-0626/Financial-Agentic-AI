@@ -11,8 +11,8 @@ import contextlib
 import io
 import json
 import math
-from datetime import date as _date, datetime
-from typing import Any, Dict, List, Optional
+from datetime import datetime, UTC
+from typing import Any
 
 import pandas as pd
 import yfinance as yf
@@ -41,7 +41,7 @@ def _price_digits(value: float) -> int:
     return min(12, 4 - int(math.floor(math.log10(a))))
 
 
-def _px(value: Any, digits: Optional[int] = None) -> Optional[float]:
+def _px(value: Any, digits: int | None = None) -> float | None:
     """Rounds float price safely, returning None on invalid/NaN values."""
     if value is None:
         return None
@@ -54,7 +54,7 @@ def _px(value: Any, digits: Optional[int] = None) -> Optional[float]:
         return None
 
 
-def _int(value: Any, default: Optional[int] = None) -> Optional[int]:
+def _int(value: Any, default: int | None = None) -> int | None:
     """Safely converts to int or returns default if NaN/invalid."""
     if value is None:
         return default
@@ -86,7 +86,7 @@ def _sanitize(obj: Any) -> Any:
 # -----------------------------------------------------------------------------
 
 
-def get_quote(symbol: str) -> Dict[str, Any]:
+def get_quote(symbol: str) -> dict[str, Any]:
     """Fetch real-time snapshot quote for a single symbol."""
     from app.infrastructure.providers import quote
 
@@ -101,9 +101,7 @@ def get_quote(symbol: str) -> Dict[str, Any]:
         return {"error": str(error), "symbol": symbol}
 
 
-def _history_records(
-    hist: pd.DataFrame, symbol: Optional[str] = None
-) -> List[Dict[str, Any]]:
+def _history_records(hist: pd.DataFrame, symbol: str | None = None) -> list[dict[str, Any]]:
     """Serialize OHLCV bars consistently, retaining each public output shape."""
     out = []
     for index, row in hist.iterrows():
@@ -127,7 +125,7 @@ def _history_records(
 
 def get_historical(
     symbol: str, start_date: str, end_date: str, interval: str = "1d"
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Fetch historical OHLCV series for a custom date range."""
     try:
         buf = io.StringIO()
@@ -144,22 +142,20 @@ def get_historical(
 
 def get_historical_period(
     symbol: str, period: str = "6mo", interval: str = "1d"
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Fetch historical OHLCV data using period codes (e.g. 1mo, 6mo, 1y, 5y)."""
     try:
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
             ticker = yf.Ticker(symbol)
-            hist = ticker.history(
-                period=period, interval=interval, timeout=_NET_TIMEOUT
-            )
+            hist = ticker.history(period=period, interval=interval, timeout=_NET_TIMEOUT)
 
         return _history_records(hist)
     except Exception as e:
         return [{"error": str(e), "symbol": symbol}]
 
 
-def get_batch_quotes(symbols: List[str]) -> List[Dict[str, Any]]:
+def get_batch_quotes(symbols: list[str]) -> list[dict[str, Any]]:
     """Fetch provider quotes, preserving market timestamps and per-symbol failures."""
     from concurrent.futures import ThreadPoolExecutor
 
@@ -172,7 +168,7 @@ def get_batch_quotes(symbols: List[str]) -> List[Dict[str, Any]]:
         return list(executor.map(get_quote, selected))
 
 
-def get_info(symbol: str) -> Dict[str, Any]:
+def get_info(symbol: str) -> dict[str, Any]:
     """Fetch company fundamentals, valuation ratios, and corporate profile."""
     try:
         from app.infrastructure.providers import ticker_info
@@ -190,8 +186,7 @@ def get_info(symbol: str) -> Dict[str, Any]:
                 "as_of": info.get("regularMarketTime"),
                 "most_recent_quarter": info.get("mostRecentQuarter"),
                 "last_fiscal_year_end": info.get("lastFiscalYearEnd"),
-                "current_price": info.get("currentPrice")
-                or info.get("regularMarketPrice"),
+                "current_price": info.get("currentPrice") or info.get("regularMarketPrice"),
                 "trailing_pe": info.get("trailingPE"),
                 "forward_pe": info.get("forwardPE"),
                 "peg_ratio": info.get("trailingPegRatio"),
@@ -217,9 +212,8 @@ def get_info(symbol: str) -> Dict[str, Any]:
         return {"error": str(e), "symbol": symbol}
 
 
-def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
+def get_financials(symbol: str, frequency: str = "latest") -> dict[str, Any]:
     """Fetch the latest available statement frequency without mixing annual and quarterly totals."""
-    from datetime import timezone
 
     try:
         if frequency not in {"latest", "annual", "quarterly"}:
@@ -236,9 +230,7 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
             for column in df.columns:
                 day = pd.Timestamp(column).date().isoformat()
                 result[day] = {
-                    str(label): _sanitize(
-                        value.item() if hasattr(value, "item") else value
-                    )
+                    str(label): _sanitize(value.item() if hasattr(value, "item") else value)
                     for label, value in df[column].items()
                     if pd.notna(value)
                 }
@@ -250,13 +242,9 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
                     ticker.quarterly_income_stmt if quarterly else ticker.financials
                 ),
                 "balance_sheet": records(
-                    ticker.quarterly_balance_sheet
-                    if quarterly
-                    else ticker.balance_sheet
+                    ticker.quarterly_balance_sheet if quarterly else ticker.balance_sheet
                 ),
-                "cash_flow": records(
-                    ticker.quarterly_cashflow if quarterly else ticker.cashflow
-                ),
+                "cash_flow": records(ticker.quarterly_cashflow if quarterly else ticker.cashflow),
             }
 
         fetched = {}
@@ -275,16 +263,24 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
         available = {kind: data for kind, data in fetched.items() if latest(data)}
         if not available:
             raise ValueError("Financial statements unavailable from Yahoo Finance")
-        chosen = max(
-            available, key=lambda kind: (latest(available[kind]), kind == "quarterly")
-        )
-        current = datetime.now(timezone.utc)
+        chosen = max(available, key=lambda kind: (latest(available[kind]), kind == "quarterly"))
+        current = datetime.now(UTC)
         from decimal import Decimal
+
         currency = info.get("financialCurrency")
         report_figures = []
-        monetary_fields = {"Total Revenue", "Net Income", "Net Income Common Stockholders",
-                           "Total Assets", "Stockholders Equity", "Total Equity Gross Minority Interest",
-                           "Operating Cash Flow", "Free Cash Flow", "Total Debt", "Cash And Cash Equivalents"}
+        monetary_fields = {
+            "Total Revenue",
+            "Net Income",
+            "Net Income Common Stockholders",
+            "Total Assets",
+            "Stockholders Equity",
+            "Total Equity Gross Minority Interest",
+            "Operating Cash Flow",
+            "Free Cash Flow",
+            "Total Debt",
+            "Cash And Cash Equivalents",
+        }
         for table_name, table in available[chosen].items():
             for period_end, values in table.items():
                 for label, value in values.items():
@@ -293,9 +289,16 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
                     amount = Decimal(str(value))
                     if not amount.is_finite():
                         continue
-                    report_figures.append({"statement": table_name, "period_end": period_end,
-                        "field": label, "amount": format(amount, "f"), "currency": currency,
-                        "display": f"{currency or 'Currency unavailable'} {amount:,.2f}"})
+                    report_figures.append(
+                        {
+                            "statement": table_name,
+                            "period_end": period_end,
+                            "field": label,
+                            "amount": format(amount, "f"),
+                            "currency": currency,
+                            "display": f"{currency or 'Currency unavailable'} {amount:,.2f}",
+                        }
+                    )
         return _sanitize(
             {
                 "symbol": symbol,
@@ -303,7 +306,9 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
                 **available[chosen],
                 "frequency": chosen.title(),
                 "amount_unit": "base currency units, not thousands/millions/billions",
-                "period_label": "Annual period ending" if chosen == "annual" else "Interim period ending",
+                "period_label": "Annual period ending"
+                if chosen == "annual"
+                else "Interim period ending",
                 "audit_status": "Not verified from an audited filing",
                 "report_figures": report_figures,
                 "as_of": latest(available[chosen]),
@@ -321,7 +326,7 @@ def get_financials(symbol: str, frequency: str = "latest") -> Dict[str, Any]:
 # -----------------------------------------------------------------------------
 
 
-def replay_portfolio_transactions(transactions: List[Dict[str, Any]]) -> Dict[str, Any]:
+def replay_portfolio_transactions(transactions: list[dict[str, Any]]) -> dict[str, Any]:
     """Compatibility CLI: Rust decimal ledger; never invent a historical NAV."""
     import asyncio
     from app.infrastructure.native_engine import NativeEngine
@@ -330,9 +335,7 @@ def replay_portfolio_transactions(transactions: List[Dict[str, Any]]) -> Dict[st
     async def calculate():
         engine = NativeEngine()
         try:
-            trades = import_trades(
-                {"portfolio_name": "CLI", "transactions": transactions}
-            )
+            trades = import_trades({"portfolio_name": "CLI", "transactions": transactions})
             return await engine.call(
                 os.environ.get("ENGINE_ORG_ID", "local-org"),
                 "portfolio_ledger",
@@ -345,9 +348,7 @@ def replay_portfolio_transactions(transactions: List[Dict[str, Any]]) -> Dict[st
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Standalone yfinance Market & Portfolio CLI"
-    )
+    parser = argparse.ArgumentParser(description="Standalone yfinance Market & Portfolio CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # quote
@@ -374,9 +375,7 @@ def main():
 
     # replay
     p_replay = subparsers.add_parser("replay")
-    p_replay.add_argument(
-        "transactions_json", help="Path to JSON file containing transactions"
-    )
+    p_replay.add_argument("transactions_json", help="Path to JSON file containing transactions")
 
     args = parser.parse_args()
 
@@ -386,15 +385,13 @@ def main():
     elif args.command == "batch_quotes":
         result = get_batch_quotes(args.symbols)
     elif args.command == "history":
-        result = get_historical_period(
-            args.symbol, period=args.period, interval=args.interval
-        )
+        result = get_historical_period(args.symbol, period=args.period, interval=args.interval)
     elif args.command == "info":
         result = get_info(args.symbol)
     elif args.command == "financials":
         result = get_financials(args.symbol)
     elif args.command == "replay":
-        with open(args.transactions_json, "r", encoding="utf-8") as f:
+        with open(args.transactions_json, encoding="utf-8") as f:
             txns = json.load(f)
         result = replay_portfolio_transactions(txns)
 

@@ -125,9 +125,7 @@ async def lifespan(application):
                 auth,
                 "jwks_client",
                 return_value=SimpleNamespace(
-                    get_signing_key_from_jwt=lambda _: SimpleNamespace(
-                        key=key.public_key()
-                    )
+                    get_signing_key_from_jwt=lambda _: SimpleNamespace(key=key.public_key())
                 ),
             ),
             patch.object(providers, "quote", quote),
@@ -135,9 +133,7 @@ async def lifespan(application):
             patch.object(
                 providers,
                 "search_symbols",
-                lambda query, count=8: [
-                    {"symbol": "AAPL", "name": "Apple", "exchange": "NASDAQ"}
-                ],
+                lambda query, count=8: [{"symbol": "AAPL", "name": "Apple", "exchange": "NASDAQ"}],
             ),
             patch.object(agent, "_configured_model", lambda: model),
         ):
@@ -147,11 +143,7 @@ async def lifespan(application):
         if not database.startswith("terminal_e2e_"):
             raise RuntimeError("Invalid disposable database name")
         with psycopg.connect(admin_url, autocommit=True) as conn:
-            conn.execute(
-                sql.SQL("DROP DATABASE {} WITH (FORCE)").format(
-                    sql.Identifier(database)
-                )
-            )
+            conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(database)))
 
 
 app.app.router.lifespan_context = lifespan

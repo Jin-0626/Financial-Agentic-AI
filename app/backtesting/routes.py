@@ -1,4 +1,5 @@
 """Authenticated backtesting screen; execution uses the bounded Rust worker."""
+
 import asyncio
 from datetime import date, timedelta
 from typing import Annotated
@@ -34,8 +35,14 @@ class HistoryInput(BaseModel):
 
 def load_history(args):
     ticker, info = market_data_common.ticker_info(args.symbol.upper())
-    frame = ticker.history(start=args.start.isoformat(), end=(args.end + timedelta(days=1)).isoformat(),
-                           interval="1d", auto_adjust=True, actions=False, timeout=10)
+    frame = ticker.history(
+        start=args.start.isoformat(),
+        end=(args.end + timedelta(days=1)).isoformat(),
+        interval="1d",
+        auto_adjust=True,
+        actions=False,
+        timeout=10,
+    )
     rows = []
     for timestamp, row in frame.iterrows():
         close = market_data_common.number(row.get("Close"))
@@ -49,21 +56,34 @@ def load_history(args):
     currency = info.get("currency")
     if not isinstance(currency, str) or len(currency) != 3 or not currency.isalpha():
         raise ValueError("Provider did not supply the price currency; use verified CSV data")
-    return market_data_common.result(rows, "Yahoo Finance", "Adjusted daily closing prices; dividends and splits reflected in prices",
-                              currency=currency.upper(), symbol=args.symbol.upper(), interval="1d")
+    return market_data_common.result(
+        rows,
+        "Yahoo Finance",
+        "Adjusted daily closing prices; dividends and splits reflected in prices",
+        currency=currency.upper(),
+        symbol=args.symbol.upper(),
+        interval="1d",
+    )
 
 
 @router.get("/catalog")
 async def catalog():
-    return {"engine": "Rust", "strategies": strategy_catalog(),
-            "limits": {"observations": 10000, "deadline_seconds": 60},
-            "execution": "Prior-close signals execute at the next close; fractional shares, long-only"}
+    return {
+        "engine": "Rust",
+        "strategies": strategy_catalog(),
+        "limits": {"observations": 10000, "deadline_seconds": 60},
+        "execution": "Prior-close signals execute at the next close; fractional shares, long-only",
+    }
 
 
 @router.post("/history")
 async def history(args: HistoryInput):
-    return await market_service.get(("backtest_history", args.symbol.upper(), args.start.isoformat(), args.end.isoformat()),
-                                   "yahoo", 300, lambda: load_history(args))
+    return await market_service.get(
+        ("backtest_history", args.symbol.upper(), args.start.isoformat(), args.end.isoformat()),
+        "yahoo",
+        300,
+        lambda: load_history(args),
+    )
 
 
 @router.post("/run")

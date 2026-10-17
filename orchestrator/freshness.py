@@ -1,13 +1,13 @@
 """Runtime date context for coordinators and every specialist; never cached in memory."""
 
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from zoneinfo import ZoneInfo
 from langchain.agents.middleware import AgentMiddleware
 from langchain_core.messages import SystemMessage, HumanMessage
 
 
 def now_utc():
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class ResearchFreshness(AgentMiddleware):
@@ -33,23 +33,20 @@ class ResearchFreshness(AgentMiddleware):
             "If the latest available release is old, disclose its as-of date and the coverage gap. "
             "For explicitly historical questions, preserve the requested dates and use financial_news(days=None) when appropriate."
         )
-        blocks = (
-            list(request.system_message.content_blocks)
-            if request.system_message
-            else []
-        )
+        blocks = list(request.system_message.content_blocks) if request.system_message else []
         messages = list(request.messages)
-        turns = [i for i, message in enumerate(messages)
-                 if isinstance(message, HumanMessage)
-                 and not message.additional_kwargs.get("synthesis_observation")]
+        turns = [
+            i
+            for i, message in enumerate(messages)
+            if isinstance(message, HumanMessage)
+            and not message.additional_kwargs.get("synthesis_observation")
+        ]
         if len(turns) >= 2 and messages[turns[-1]].content == messages[turns[-2]].content:
             # An explicit retry of the same question must not inherit its failed tool loop.
-            messages = messages[turns[-1]:]
+            messages = messages[turns[-1] :]
         return request.override(
             messages=messages,
-            system_message=SystemMessage(
-                content=[*blocks, {"type": "text", "text": text}]
-            )
+            system_message=SystemMessage(content=[*blocks, {"type": "text", "text": text}]),
         )
 
     def wrap_model_call(self, request, handler):

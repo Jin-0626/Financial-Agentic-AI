@@ -22,9 +22,7 @@ class AgentRuntime:
         async with self.lock:
             if org not in self.agents:
                 tools = await self.engine.agent_tools(org)
-                self.agents[org] = create_agent(
-                    self.checkpointer, self.store, native_tools=tools
-                )
+                self.agents[org] = create_agent(self.checkpointer, self.store, native_tools=tools)
             return self.agents[org]
 
     async def ainvoke(self, *args, context, **kwargs):

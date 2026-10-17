@@ -4,6 +4,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 def crypto():
     rows = transport.cg(
         "coins/markets",
@@ -23,9 +24,7 @@ def crypto():
                 "price": common.decimal(row.get("current_price")),
                 "market_cap": common.number(row.get("market_cap")),
                 "change_percent": common.number(row.get("price_change_percentage_24h")),
-                "sparkline": ((row.get("sparkline_in_7d") or {}).get("price") or [])[
-                    -168:
-                ],
+                "sparkline": ((row.get("sparkline_in_7d") or {}).get("price") or [])[-168:],
                 "observed_at": row.get("last_updated"),
             }
             for row in rows
@@ -34,8 +33,6 @@ def crypto():
         "Top 30 assets by provider market cap",
         currency="USD",
         dominance={
-            key: global_data.get("market_cap_percentage", {}).get(key)
-            for key in ("btc", "eth")
+            key: global_data.get("market_cap_percentage", {}).get(key) for key in ("btc", "eth")
         },
     )
-

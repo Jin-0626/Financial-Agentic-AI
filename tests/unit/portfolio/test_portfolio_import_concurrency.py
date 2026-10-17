@@ -1,4 +1,5 @@
 """Bounded import quote retrieval preserves preview/commit integrity."""
+
 import asyncio
 import hashlib
 import json
@@ -13,9 +14,23 @@ from tests.support.portfolio import MemoryPortfolioRepository
 
 
 def request(symbols):
-    return service.ImportRequest(data={"portfolio_name": "Import", "currency": "USD", "transactions": [
-        {"id": str(i), "symbol": symbol, "type": "BUY", "quantity": "1", "price": "10", "date": "2025-01-01"}
-        for i, symbol in enumerate(symbols)]})
+    return service.ImportRequest(
+        data={
+            "portfolio_name": "Import",
+            "currency": "USD",
+            "transactions": [
+                {
+                    "id": str(i),
+                    "symbol": symbol,
+                    "type": "BUY",
+                    "quantity": "1",
+                    "price": "10",
+                    "date": "2025-01-01",
+                }
+                for i, symbol in enumerate(symbols)
+            ],
+        }
+    )
 
 
 class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
@@ -25,6 +40,7 @@ class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
         started = threading.Event()
         active = peak = 0
         seen = []
+
         def quote(symbol):
             nonlocal active, peak
             with lock:
@@ -37,10 +53,13 @@ class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
             with lock:
                 active -= 1
             return {"currency": "USD"}
+
         req = request([f"S{i}" for i in range(9)] + ["S0"])
         ledger = AsyncMock(return_value={"transactions": req.data["transactions"]})
         with patch.object(providers, "quote", quote), patch.object(service, "ledger", ledger):
-            task = asyncio.create_task(service.import_preview(MemoryPortfolioRepository(), "o", "u", None, req))
+            task = asyncio.create_task(
+                service.import_preview(MemoryPortfolioRepository(), "o", "u", None, req)
+            )
             try:
                 self.assertTrue(await asyncio.to_thread(started.wait, 3))
                 self.assertEqual(len(seen), 4)
@@ -49,18 +68,24 @@ class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
             concurrent = await task
         self.assertEqual(peak, 4)
         self.assertEqual(sorted(seen), [f"S{i}" for i in range(9)])
-        with patch.object(providers, "quote", return_value={"currency": "USD"}), patch.object(service, "ledger", ledger):
-            sequential = await service.import_preview(MemoryPortfolioRepository(), "o", "u", None, req)
+        with (
+            patch.object(providers, "quote", return_value={"currency": "USD"}),
+            patch.object(service, "ledger", ledger),
+        ):
+            sequential = await service.import_preview(
+                MemoryPortfolioRepository(), "o", "u", None, req
+            )
         self.assertEqual(concurrent, sequential)
-        expected_hash = hashlib.sha256(json.dumps(
-            [req.mode, req.data, 0], sort_keys=True, allow_nan=False
-        ).encode()).hexdigest()
+        expected_hash = hashlib.sha256(
+            json.dumps([req.mode, req.data, 0], sort_keys=True, allow_nan=False).encode()
+        ).hexdigest()
         self.assertEqual(concurrent["preview_hash"], expected_hash)
 
     async def test_failure_order_currency_and_no_writes(self):
         for first_currency in ("EUR", "USD"):
             failed = threading.Event()
             seen = []
+
             def quote(symbol):
                 seen.append(symbol)
                 if symbol == "S0":
@@ -68,10 +93,13 @@ class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
                     return {"currency": first_currency}
                 failed.set()
                 raise ValueError("provider failed " + symbol)
+
             repo = MemoryPortfolioRepository()
             ledger = AsyncMock()
             req = request(["S0", "S1", "S2", "S3", "S4"])
-            expected = "Import quote currency differs" if first_currency == "EUR" else "provider failed S1"
+            expected = (
+                "Import quote currency differs" if first_currency == "EUR" else "provider failed S1"
+            )
             with patch.object(providers, "quote", quote), patch.object(service, "ledger", ledger):
                 with self.assertRaisesRegex(ValueError, expected):
                     await service.import_commit(repo, "o", "u", None, req)
@@ -84,6 +112,7 @@ class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
         started = threading.Event()
         lock = threading.Lock()
         seen = []
+
         def quote(symbol):
             with lock:
                 seen.append(symbol)
@@ -91,17 +120,20 @@ class ImportConcurrencyTests(unittest.IsolatedAsyncioTestCase):
                     started.set()
             release.wait(5)
             return {"currency": "USD"}
+
         ledger = AsyncMock()
         repo = MemoryPortfolioRepository()
         with patch.object(providers, "quote", quote), patch.object(service, "ledger", ledger):
-            task = asyncio.create_task(service.import_commit(repo, "o", "u", None, request([f"S{i}" for i in range(9)])))
+            task = asyncio.create_task(
+                service.import_commit(repo, "o", "u", None, request([f"S{i}" for i in range(9)]))
+            )
             try:
                 self.assertTrue(await asyncio.to_thread(started.wait, 3))
                 task.cancel()
-                await asyncio.sleep(.02)
+                await asyncio.sleep(0.02)
                 self.assertFalse(task.done())
                 task.cancel()
-                await asyncio.sleep(.02)
+                await asyncio.sleep(0.02)
                 self.assertFalse(task.done())
             finally:
                 release.set()

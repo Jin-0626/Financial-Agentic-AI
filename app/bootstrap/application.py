@@ -37,9 +37,7 @@ async def lifespan(app):
     try:
         engine = NativeEngine()
         async with AsyncExitStack() as stack:
-            store = await stack.enter_async_context(
-                AsyncPostgresStore.from_conn_string(DB_URL)
-            )
+            store = await stack.enter_async_context(AsyncPostgresStore.from_conn_string(DB_URL))
             checkpointer = await stack.enter_async_context(
                 AsyncPostgresSaver.from_conn_string(DB_URL)
             )
@@ -70,15 +68,11 @@ async def lifespan(app):
 app = FastAPI(title="Financial Research Terminal", lifespan=lifespan)
 app.state.terminal_service = "research-terminal"
 _origins = [
-    value.strip()
-    for value in os.getenv("OIDC_CLIENT_ORIGINS", "").split(",")
-    if value.strip()
+    value.strip() for value in os.getenv("OIDC_CLIENT_ORIGINS", "").split(",") if value.strip()
 ]
 if _origins:
     if "*" in _origins:
-        raise ValueError(
-            "OIDC_CLIENT_ORIGINS must list explicit trusted frontend origins"
-        )
+        raise ValueError("OIDC_CLIENT_ORIGINS must list explicit trusted frontend origins")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_origins,

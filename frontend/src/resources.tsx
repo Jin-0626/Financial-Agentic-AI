@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { OptionsScreen } from "./options-screen";
 import { CalendarScreen } from "./calendar-screen";
 import { NewsScreen } from "./news-screen";
@@ -5,13 +6,7 @@ import { DataInfo } from "./data-info";
 import { DataTable as Table } from "./shared-ui";
 import { useSubscription } from "./subscriptions";
 import { useEffect, useState, type ReactNode } from "react";
-import {
-  price,
-  symbol,
-  type Instrument,
-  type Market,
-  type Screen,
-} from "./bridge";
+import { price, type Instrument, type Market, type Screen } from "./bridge";
 import {
   PortfolioScreen,
   ResearchHistoryScreen,
@@ -149,7 +144,9 @@ export function MarketResource({
           <Table
             columns={["Instrument", "Name", "Exchange", "Asset"]}
             rows={(payload.market.data ?? []).map((row) => [
-              <button onClick={() => onSelect(row.id)}>{row.symbol}</button>,
+              <button onClick={() => onSelect(row.id)}>
+                <StockLabel code={row.id} name={row.name} />
+              </button>,
               row.name,
               row.exchange,
               row.asset_class,
@@ -193,7 +190,10 @@ export function MarketResource({
               ]}
               rows={(payload.market.data ?? []).map((row) => [
                 <button onClick={() => onSelect(row.instrument.id)}>
-                  {row.instrument.symbol}
+                  <StockLabel
+                    code={row.instrument.symbol}
+                    name={row.instrument.name}
+                  />
                 </button>,
                 price(row.price),
                 <span
@@ -217,7 +217,10 @@ export function MarketResource({
                     (row.change_percent ?? 0) >= 0 ? "gain-cell" : "loss-cell"
                   }
                 >
-                  {row.instrument.symbol}
+                  <StockLabel
+                    code={row.instrument.symbol}
+                    name={row.instrument.name}
+                  />
                   <strong>{price(row.change_percent)}%</strong>
                 </button>
               ))}
@@ -230,7 +233,14 @@ export function MarketResource({
           <Table
             columns={["Series", "Type", "Value", "Unit", "Observed", "Source"]}
             rows={(payload.market.data ?? []).map((row) => [
-              row.name,
+              row.instrument ? (
+                <StockLabel
+                  code={row.instrument.symbol}
+                  name={row.instrument.name ?? row.name}
+                />
+              ) : (
+                row.name
+              ),
               row.kind,
               price(row.price),
               row.unit,
@@ -420,7 +430,11 @@ export function FeatureScreen({
       {(screen === "markets" || screen === "screener") && (
         <div className="feature-toolbar">
           <h2>{screen.toUpperCase()}</h2>
-          {selected && <span>Linked to {symbol(selected)}</span>}
+          {selected && (
+            <span>
+              Linked to <StockLabel code={selected} />
+            </span>
+          )}
           {screen === "markets" && (
             <form
               onSubmit={(event) => {

@@ -11,11 +11,12 @@ certificate verification, explicit connection/read timeouts and an 8 MiB respons
 limit. The outer provider worker limits stdout/stderr to 64 KiB each; request narrow
 windows and small limits. Large SEC fact collections may exceed that outer limit.
 
-The manifest distinguishes these registered clients from retained reference scripts.
+The manifest contains the five registered entry points, their shared client, and
+three imported research adapters (`yf_data.py`, `yh_market.py`, `fmp_client.py`).
 Before execution, the worker verifies both the selected entry and shared client
-hashes. Unregistered scripts and arbitrary URLs cannot execute through `run_script`.
-Retained upstream-derived reference content retains its applicable licensing;
-independent runtime clients do not assert authorship of that reference library.
+hashes. Unregistered adapters and arbitrary URLs cannot execute through `run_script`.
+Inactive reference scripts have been removed; retained adapters keep their applicable
+licensing.
 
 The read-only script workspace supports discovery through the Deep Agents filesystem.
 Role policy, workspace evidence receipts and built-in Traces cover provider calls.

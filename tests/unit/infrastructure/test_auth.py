@@ -55,16 +55,12 @@ class IdentityTests(unittest.TestCase):
             auth,
             "jwks_client",
             return_value=SimpleNamespace(
-                get_signing_key_from_jwt=lambda _: SimpleNamespace(
-                    key=self.key.public_key()
-                )
+                get_signing_key_from_jwt=lambda _: SimpleNamespace(key=self.key.public_key())
             ),
         )
         self.jwks.start()
         self.addCleanup(self.jwks.stop)
-        self.repo = patch.object(
-            portfolio_routes, "_repository", MemoryPortfolioRepository()
-        )
+        self.repo = patch.object(portfolio_routes, "_repository", MemoryPortfolioRepository())
         self.repo.start()
         self.addCleanup(self.repo.stop)
 
@@ -108,15 +104,14 @@ class IdentityTests(unittest.TestCase):
             headers=self.headers(org_id="org-b"),
         ).json()
         self.assertEqual(other["portfolios"], [])
-        other_user = self.client.get(
-            "/api/portfolio/list", headers=self.headers(sub="bob")
-        ).json()
+        other_user = self.client.get("/api/portfolio/list", headers=self.headers(sub="bob")).json()
         self.assertEqual(other_user["portfolios"], [])
 
     def test_research_thread_scope_and_body_cannot_override_identity(self):
         with (
             patch.object(research_resources.resources, "agent", object()),
-            patch.object(routes_service, "_chat", AsyncMock(return_value={"success": True})
+            patch.object(
+                routes_service, "_chat", AsyncMock(return_value={"success": True})
             ) as chat,
         ):
             response = self.client.post(
@@ -130,9 +125,7 @@ class IdentityTests(unittest.TestCase):
                 headers=self.headers(),
             )
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(
-                chat.call_args.args[1:4], ("org-a__alice__new", "alice", "org-a")
-            )
+            self.assertEqual(chat.call_args.args[1:4], ("org-a__alice__new", "alice", "org-a"))
             forbidden = self.client.post(
                 "/api/chat",
                 json={"message": "Research", "thread_id": "org-b__bob__owned"},

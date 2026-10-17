@@ -109,9 +109,7 @@ async def _ensure_agents_memory(store: PostgresStore):
     logger.info("Created global /AGENTS.md")
 
 
-async def _ensure_user_habits(
-    store: PostgresStore, user_id: str, org_id: str = "default-org"
-):
+async def _ensure_user_habits(store: PostgresStore, user_id: str, org_id: str = "default-org"):
     HABITS_KEY = "/habits.md"
     NAMESPACE = ("memories", org_id, user_id)
 
@@ -166,9 +164,7 @@ def _configured_model():
             or endpoint.username
             or endpoint.password
         ):
-            raise ValueError(
-                "OLLAMA_URL must be an HTTP(S) endpoint without embedded credentials"
-            )
+            raise ValueError("OLLAMA_URL must be an HTTP(S) endpoint without embedded credentials")
         return init_chat_model(MODEL_NAME, base_url=OLLAMA_URL)
     return MODEL_NAME
 
@@ -236,9 +232,7 @@ def create_agent(
                     namespace=user_namespace,
                     store=store,
                 ),
-                "/scripts/": ReadOnlyScriptsBackend(
-                    root_dir=SCRIPTS_ROOT, virtual_mode=True
-                ),
+                "/scripts/": ReadOnlyScriptsBackend(root_dir=SCRIPTS_ROOT, virtual_mode=True),
                 "/skills/": FilesystemBackend(
                     root_dir=str(LOCAL_SKILLS_DIR),
                     virtual_mode=True,

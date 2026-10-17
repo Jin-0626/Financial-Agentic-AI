@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { price } from "./bridge";
 import { DataInfo } from "./data-info";
 import { useResource } from "./resources";
@@ -45,7 +46,10 @@ export function OverviewCrypto({
                 onClick={() => onSelect(row.instrument.id)}
                 aria-label={`Open ${row.instrument.symbol} from overview`}
               >
-                <b>{row.instrument.name ?? row.instrument.symbol}</b>
+                <StockLabel
+                  code={row.instrument.symbol}
+                  name={row.instrument.name}
+                />
                 <strong>{price(row.price)}</strong>
                 <span className={tone}>
                   {row.change_percent == null
@@ -137,7 +141,10 @@ export function OverviewMacro({
                     onClick={() => onSelect(row.instrument!.id)}
                     aria-label={`Open ${row.name} from overview`}
                   >
-                    <b>{row.name}</b>
+                    <StockLabel
+                      code={row.instrument.symbol}
+                      name={row.instrument.name ?? row.name}
+                    />
                   </button>
                 ) : (
                   <b>{row.name}</b>

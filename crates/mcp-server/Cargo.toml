@@ -18,7 +18,5 @@ rust_decimal.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
 jsonschema.workspace = true
-[dev-dependencies]
-tempfile.workspace = true
 [lints]
 workspace = true

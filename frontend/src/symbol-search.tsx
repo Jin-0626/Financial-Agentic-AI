@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { StockLabel } from "./stock-label";
 import { useResource } from "./resources";
 export function SymbolSearch({
   enabled,
@@ -49,10 +50,8 @@ export function SymbolSearch({
                 setInput("");
               }}
             >
-              <strong>{row.symbol}</strong>
-              <span>
-                {row.name} · {row.exchange ?? row.asset_class}
-              </span>
+              <StockLabel code={row.id} name={row.name} />
+              <span>{row.exchange ?? row.asset_class}</span>
             </button>
           ))}
           {rows && !rows.length && <p>No verified instruments found.</p>}

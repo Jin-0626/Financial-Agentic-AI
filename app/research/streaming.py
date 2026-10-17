@@ -2,7 +2,7 @@ from app.research import protocol
 from contextlib import aclosing
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 from fastapi import HTTPException
 from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
@@ -15,13 +15,6 @@ from app.research import messages
 from app.research import resources
 
 logger = logging.getLogger(__name__)
-
-
-
-
-
-
-
 
 
 def _activity_calls(update):
@@ -49,17 +42,17 @@ async def _stream_sse(
     thread_id: str,
     user_id: str,
     org_id: str,
-    file_id: Optional[str] = None,
+    file_id: str | None = None,
     response_schema="financial",
     resume=None,
     terminal_context=None,
 ) -> Any:
     """Async graph stream with specialist activity and one final parent narrative."""
-    reasoning_parts: List[str] = []
-    final_state: Dict[str, Any] = {}
+    reasoning_parts: list[str] = []
+    final_state: dict[str, Any] = {}
     seen_tools = set()
     seen_results = set()
-    pending_events: List[str] = []
+    pending_events: list[str] = []
 
     def on_reasoning(text: str):
         reasoning_parts.append(text)
@@ -70,7 +63,7 @@ async def _stream_sse(
 
     splitter = protocol._ThinkStreamSplitter(on_reasoning, on_content)
 
-    def drain() -> List[str]:
+    def drain() -> list[str]:
         if not pending_events:
             return []
         events = pending_events[:]
@@ -81,21 +74,20 @@ async def _stream_sse(
     try:
         await resources._ensure_user_habits(resources.resources.store, user_id, org_id)
         if file_id is not None:
-            raise HTTPException(
-                status_code=410, detail="Uploaded-file analysis has been retired"
-            )
+            raise HTTPException(status_code=410, detail="Uploaded-file analysis has been retired")
         full_message = message
 
-        logger.info(
-            f"Streaming chat: thread_id={thread_id}, org_id={org_id}, file_id={file_id}"
-        )
+        logger.info(f"Streaming chat: thread_id={thread_id}, org_id={org_id}, file_id={file_id}")
         config = RunnableConfig(
             configurable={"thread_id": thread_id},
             metadata={"org_id": org_id, "user_id": user_id},
             callbacks=[trace],
         )
         context = MemoryContext(
-            user_id=user_id, org_id=org_id, response_schema=response_schema, terminal_context=terminal_context
+            user_id=user_id,
+            org_id=org_id,
+            response_schema=response_schema,
+            terminal_context=terminal_context,
         )
 
         graph_stream = resources.resources.agent.astream(
@@ -173,7 +165,9 @@ async def _stream_sse(
                         yield ev
         if final_state.get("__interrupt__"):
             trace.finish("interrupted")
-            yield protocol._sse("interrupted", {"interruptions": messages._interruptions(final_state)})
+            yield protocol._sse(
+                "interrupted", {"interruptions": messages._interruptions(final_state)}
+            )
             return
         result = format_result(final_state, thread_id)
         if not result["success"]:
@@ -183,7 +177,9 @@ async def _stream_sse(
         trace.finish("error", e)
         logger.error(f"Streaming chat error: thread_id={thread_id}: {e}", exc_info=True)
         if "budget exhausted" in str(e):
-            yield protocol._sse("budget_stop", {"message": sanitize_error(e), **context.run_budget.snapshot()})
+            yield protocol._sse(
+                "budget_stop", {"message": sanitize_error(e), **context.run_budget.snapshot()}
+            )
         yield protocol._sse("error", {"message": research_error(e)})
         return
     finally:
@@ -194,9 +190,7 @@ async def _stream_sse(
         yield ev
 
     full_content = result["result"]
-    full_reasoning = (
-        "\n\n".join(p for p in reasoning_parts if p.strip()).strip() or None
-    )
+    full_reasoning = "\n\n".join(p for p in reasoning_parts if p.strip()).strip() or None
     logger.info(
         f"Streaming chat completed: thread_id={thread_id}, reply_length={len(full_content)}"
     )
@@ -204,6 +198,3 @@ async def _stream_sse(
     if statements:
         yield protocol._sse("financial_statements", {"companies": statements})
     yield protocol._sse("done", {**result, "reasoning": full_reasoning})
-
-
-

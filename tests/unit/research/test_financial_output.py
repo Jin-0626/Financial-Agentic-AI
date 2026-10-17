@@ -1,16 +1,18 @@
 import app.research.resources as research_resources
-import asyncio, json, unittest
+import asyncio
+import json
+import unittest
 from unittest.mock import AsyncMock, Mock, patch
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
 from langgraph.types import Interrupt
 import app.research.resources as routes_resources
 import app.research.messages as routes_messages
 import app.research.routes as routes_routes
 import app.research.streaming as routes_streaming
 import app.research.service as routes_service
-from app.research.output import format_result, error_result
+from app.research.output import format_result
 from app.research.runtime import AgentRuntime
 import app.research.history as research_history
 
@@ -22,14 +24,14 @@ def agent(state=None, chunks=None, error=None):
         for event in chunks or [("values", state)]:
             yield event
 
-    return Mock(
-        ainvoke=AsyncMock(return_value=state, side_effect=error), astream=stream
-    )
+    return Mock(ainvoke=AsyncMock(return_value=state, side_effect=error), astream=stream)
 
 
 async def events():
     return [
-        json.loads(e[6:]) async for e in routes_streaming._stream_sse("Research", "t", "u", "o") if json.loads(e[6:]).get("type") != "budget"
+        json.loads(e[6:])
+        async for e in routes_streaming._stream_sse("Research", "t", "u", "o")
+        if json.loads(e[6:]).get("type") != "budget"
     ]
 
 
@@ -59,15 +61,27 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_report_layout_matches_json_stream_and_history(self):
         from app.research.output import REPORT_SECTIONS
-        state={"messages":[HumanMessage(content="Research company"),
-                           AIMessage(content="### Risks\n\nEvidence is limited.\n\n## Executive Summary\n\nVerified identity only.\n\n## Sources\n\nCompany filing.")]}
-        with patch.object(research_resources.resources, "agent",agent(state)), patch.object(routes_resources, "_ensure_user_habits",AsyncMock()):
-            result=await routes_service._chat("Research company","t","u","o")
-            output=await events()
-        headings=[line[3:] for line in result["result"].splitlines() if line.startswith("## ")]
-        self.assertEqual(headings,list(REPORT_SECTIONS))
-        self.assertEqual(output[-1]["result"],result["result"])
-        self.assertEqual(routes_messages._get_messages_from_state(state)[-1].content,result["result"])
+
+        state = {
+            "messages": [
+                HumanMessage(content="Research company"),
+                AIMessage(
+                    content="### Risks\n\nEvidence is limited.\n\n## Executive Summary\n\nVerified identity only.\n\n## Sources\n\nCompany filing."
+                ),
+            ]
+        }
+        with (
+            patch.object(research_resources.resources, "agent", agent(state)),
+            patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
+        ):
+            result = await routes_service._chat("Research company", "t", "u", "o")
+            output = await events()
+        headings = [line[3:] for line in result["result"].splitlines() if line.startswith("## ")]
+        self.assertEqual(headings, list(REPORT_SECTIONS))
+        self.assertEqual(output[-1]["result"], result["result"])
+        self.assertEqual(
+            routes_messages._get_messages_from_state(state)[-1].content, result["result"]
+        )
 
     async def test_failure_and_unfinished_run_never_complete(self):
         incomplete = {
@@ -84,9 +98,7 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
                 patch.object(research_resources.resources, "agent", model),
                 patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
             ):
-                self.assertFalse(
-                    (await routes_service._chat("Research", "t", "u", "o"))["success"]
-                )
+                self.assertFalse((await routes_service._chat("Research", "t", "u", "o"))["success"])
                 self.assertEqual([e["type"] for e in await events()], ["error"])
 
     async def test_ollama_stream_failure_is_explicit_in_json_and_sse(self):
@@ -108,7 +120,9 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_interrupt_is_not_completed_report(self):
         with (
-            patch.object(research_resources.resources, "agent",
+            patch.object(
+                research_resources.resources,
+                "agent",
                 agent({"__interrupt__": [Interrupt(value="decision", id="pause")]}),
             ),
             patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
@@ -142,9 +156,7 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
             "files": {"/notes": {}},
         }
         result = format_result(state, "t")
-        self.assertEqual(
-            set(result), {"success", "result", "todos", "files", "thread_id", "error"}
-        )
+        self.assertEqual(set(result), {"success", "result", "todos", "files", "thread_id", "error"})
         self.assertEqual(result["todos"][0]["task"], "Research")
         self.assertEqual(routes_messages._get_messages_from_state(state)[-1].content, "Answer")
 
@@ -167,17 +179,13 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
             patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
             TestClient(application) as client,
         ):
-            body = client.post(
-                "/api/chat", json={"message": "Research", "thread_id": "t"}
-            ).json()
+            body = client.post("/api/chat", json={"message": "Research", "thread_id": "t"}).json()
             stream = client.post(
                 "/api/chat/stream", json={"message": "Research", "thread_id": "t"}
             ).text
-        done = [
-            json.loads(line[6:])
-            for line in stream.splitlines()
-            if line.startswith("data: ")
-        ][-1]
+        done = [json.loads(line[6:]) for line in stream.splitlines() if line.startswith("data: ")][
+            -1
+        ]
         self.assertTrue(body["success"])
         self.assertEqual(done["result"], body["result"])
 
@@ -185,15 +193,20 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
 class StreamingLifecycleTests(unittest.IsolatedAsyncioTestCase):
     async def test_closing_client_stream_closes_upstream_graph(self):
         closed = asyncio.Event()
+
         async def graph(*args, **kwargs):
             try:
                 yield ("messages", (AIMessageChunk(content="partial"), {}))
                 await asyncio.Event().wait()
             finally:
                 closed.set()
+
         runtime = object.__new__(AgentRuntime)
         runtime.resolve = AsyncMock(return_value=Mock(astream=graph))
-        with patch.object(research_resources.resources, "agent", runtime), patch.object(routes_resources, "_ensure_user_habits", AsyncMock()):
+        with (
+            patch.object(research_resources.resources, "agent", runtime),
+            patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
+        ):
             stream = routes_streaming._stream_sse("Research", "t", "u", "o")
             await anext(stream)
             await stream.aclose()
@@ -201,6 +214,7 @@ class StreamingLifecycleTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_cancelled_consumer_closes_upstream_graph(self):
         waiting, closed = asyncio.Event(), asyncio.Event()
+
         async def graph(*args, **kwargs):
             try:
                 yield ("messages", (AIMessageChunk(content="partial"), {}))
@@ -208,12 +222,17 @@ class StreamingLifecycleTests(unittest.IsolatedAsyncioTestCase):
                 await asyncio.Event().wait()
             finally:
                 closed.set()
+
         async def consume():
             async for _ in routes_streaming._stream_sse("Research", "t", "u", "o"):
                 pass
+
         runtime = object.__new__(AgentRuntime)
         runtime.resolve = AsyncMock(return_value=Mock(astream=graph))
-        with patch.object(research_resources.resources, "agent", runtime), patch.object(routes_resources, "_ensure_user_habits", AsyncMock()):
+        with (
+            patch.object(research_resources.resources, "agent", runtime),
+            patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
+        ):
             task = asyncio.create_task(consume())
             await asyncio.wait_for(waiting.wait(), 2)
             task.cancel()
@@ -225,7 +244,13 @@ class StreamingLifecycleTests(unittest.IsolatedAsyncioTestCase):
 class HistoryReloadTests(unittest.IsolatedAsyncioTestCase):
     async def test_persisted_current_messages_render_after_reload(self):
         from types import SimpleNamespace
-        state = {"messages": [HumanMessage(content="Research company"), AIMessage(content="Verified answer")]}
+
+        state = {
+            "messages": [
+                HumanMessage(content="Research company"),
+                AIMessage(content="Verified answer"),
+            ]
+        }
         runtime = Mock(aget_state=AsyncMock(return_value=SimpleNamespace(values=state)))
         with patch.object(research_resources.resources, "agent", runtime):
             result = await research_history._get_history("org__user__thread")

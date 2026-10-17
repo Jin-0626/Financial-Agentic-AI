@@ -15,6 +15,7 @@ import app.market.calendar as data_calendar
 import app.market.options as data_options
 import app.market.screening as data_screening
 import app.market.history as data_history
+import app.market.raw_equities as raw_equities
 from app.infrastructure.auth import authenticated_identity
 from app.market.service import market_service
 
@@ -56,8 +57,10 @@ async def capabilities(request: Request):
         "service": getattr(request.app.state, "terminal_service", "market-data"),
         "features": {
             "portfolio": getattr(request.app.state, "terminal_portfolio_ready", False),
-            **{name: getattr(request.app.state, "terminal_full_ready", False)
-               for name in ("research", "backtesting", "traces")},
+            **{
+                name: getattr(request.app.state, "terminal_full_ready", False)
+                for name in ("research", "backtesting", "traces")
+            },
         },
     }
 
@@ -107,9 +110,7 @@ async def screener(
     min_cap: Annotated[float | None, Query(ge=0, allow_inf_nan=False)] = None,
     min_change: Annotated[float | None, Query(allow_inf_nan=False)] = None,
     min_volume: Annotated[int | None, Query(ge=0)] = None,
-    sort: Literal[
-        "market_cap", "change_percent", "volume", "symbol", "price"
-    ] = "market_cap",
+    sort: Literal["market_cap", "change_percent", "volume", "symbol", "price"] = "market_cap",
     descending: bool = True,
     offset: Annotated[int, Query(ge=0, le=20000)] = 0,
     limit: Annotated[int, Query(ge=1, le=250)] = 100,
@@ -134,6 +135,27 @@ async def screener(
 @router.get("/universe/us")
 async def universe():
     return await cached("universe", "nasdaq", 3600, data_screening.nasdaq_universe)
+
+
+@router.get("/screener/snapshot")
+async def screener_snapshot(market: Literal["MY", "US"] = "MY"):
+    """Complete normalized transport snapshot; native clients own ranking and paging."""
+    return await cached("screener-snapshot", "yahoo", 60, data_screening.snapshot, market)
+
+
+@router.get("/provider/us-page")
+async def native_us_page(offset: Annotated[int, Query(ge=0, le=19750, multiple_of=250)] = 0):
+    return await cached("native-us-page", "yahoo", 60, raw_equities.us_page, offset)
+
+
+@router.get("/provider/my-symbols")
+async def native_my_symbols():
+    return raw_equities.my_symbols()
+
+
+@router.get("/provider/equity-info")
+async def native_equity_info(instrument: Instrument):
+    return await cached("native-equity-info", "yahoo", 60, raw_equities.equity_info, instrument)
 
 
 @router.get("/options")

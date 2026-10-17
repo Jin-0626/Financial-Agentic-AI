@@ -4,18 +4,10 @@ Wires native market data, portfolio analytics, financial news, and macro indicat
 """
 
 from __future__ import annotations
-import os
-import requests
-from urllib.parse import urlsplit, urlencode
 import json
 import logging
-import math
-from typing import Any, List, Optional, Literal
-from datetime import datetime, timezone, timedelta
-from orchestrator.freshness import now_utc
+from typing import Any
 
-from langchain_core.tools import BaseTool, tool
-from langchain.tools import ToolRuntime
 from app.infrastructure.diagnostics import sanitize_error
 
 
@@ -47,12 +39,7 @@ _fmp_client = None
 try:
     from scripts.data_sources import fmp_client
 
-    if hasattr(fmp_client, "FMPClient"):
-        _fmp_client = fmp_client.FMPClient()
-    elif hasattr(fmp_client, "client"):
-        _fmp_client = fmp_client.client
-    else:
-        _fmp_client = fmp_client
+    _fmp_client = fmp_client.FMPClient()
 except Exception as e:
     logger.warning("FMP client unavailable: %s", sanitize_error(e))
     _fmp_client = None
@@ -61,10 +48,3 @@ except Exception as e:
 def _to_json(data: Any) -> str:
     """Safe serializer ensuring clean JSON strings for LLM context."""
     return json.dumps(data, indent=2, ensure_ascii=False)
-
-
-# -----------------------------------------------------------------------------
-# Tool 1: Real-Time Market Data & Valuations
-# -----------------------------------------------------------------------------
-
-

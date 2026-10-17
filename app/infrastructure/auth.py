@@ -33,12 +33,7 @@ def validate_config():
         raise HTTPException(503, "OIDC identity is not configured")
     for name in ("OIDC_ISSUER", "OIDC_JWKS_URL"):
         parsed = urlparse(os.environ[name])
-        if (
-            parsed.scheme != "https"
-            or not parsed.hostname
-            or parsed.username
-            or parsed.password
-        ):
+        if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
             raise HTTPException(503, "OIDC endpoints must use HTTPS")
 
 
@@ -83,7 +78,7 @@ async def authenticated_identity(request: Request):
         )
     try:
         claims = await asyncio.wait_for(asyncio.to_thread(verify, token), timeout=8)
-    except (jwt.PyJWKClientConnectionError, asyncio.TimeoutError):
+    except (TimeoutError, jwt.PyJWKClientConnectionError):
         raise HTTPException(503, "Identity provider unavailable") from None
     except jwt.PyJWTError:
         raise HTTPException(
@@ -99,18 +94,12 @@ async def authenticated_identity(request: Request):
 
 
 async def organization(request: Request, identity=Depends(authenticated_identity)):
-    return (
-        identity.org
-        if identity
-        else claim_id(request.query_params.get("org_id", "default-org"))
-    )
+    return identity.org if identity else claim_id(request.query_params.get("org_id", "default-org"))
 
 
 async def user(request: Request, identity=Depends(authenticated_identity)):
     return (
-        identity.user
-        if identity
-        else claim_id(request.query_params.get("user_id", "local-user"))
+        identity.user if identity else claim_id(request.query_params.get("user_id", "local-user"))
     )
 
 

@@ -1,16 +1,16 @@
 import logging
-from typing import List, Optional, Tuple
 from app.research.schemas import MessageItem, ChatHistoryResponse, ThreadInfo
 from app.research import messages as message_formatting
 from app.research import resources
 
 logger = logging.getLogger(__name__)
 
+
 async def _get_history(thread_id: str) -> ChatHistoryResponse:
     try:
         config = {"configurable": {"thread_id": thread_id}}
         snapshot = await resources.resources.agent.aget_state(config)
-        messages: List[MessageItem] = []
+        messages: list[MessageItem] = []
         if snapshot and snapshot.values:
             messages = message_formatting._get_messages_from_state(snapshot.values)
         return ChatHistoryResponse(thread_id=thread_id, messages=messages)
@@ -19,7 +19,7 @@ async def _get_history(thread_id: str) -> ChatHistoryResponse:
         return ChatHistoryResponse(thread_id=thread_id, messages=[])
 
 
-def _parse_thread_owner(thread_id: str) -> Tuple[Optional[str], Optional[str]]:
+def _parse_thread_owner(thread_id: str) -> tuple[str | None, str | None]:
     parts = thread_id.split("__", 2)
     if len(parts) >= 3:
         return parts[0], parts[1]
@@ -27,11 +27,11 @@ def _parse_thread_owner(thread_id: str) -> Tuple[Optional[str], Optional[str]]:
 
 
 async def _list_threads(
-    org_id: Optional[str] = None,
-    user_id: Optional[str] = None,
-) -> List[ThreadInfo]:
+    org_id: str | None = None,
+    user_id: str | None = None,
+) -> list[ThreadInfo]:
     try:
-        threads: List[ThreadInfo] = []
+        threads: list[ThreadInfo] = []
         seen_threads: set[str] = set()
         tuples = [
             item
@@ -69,9 +69,7 @@ async def _list_threads(
                 if values:
                     msgs = message_formatting._get_messages_from_state(values)
                     if msgs:
-                        last_user_msg = next(
-                            (m for m in reversed(msgs) if m.role == "user"), None
-                        )
+                        last_user_msg = next((m for m in reversed(msgs) if m.role == "user"), None)
                         info.last_message = (
                             last_user_msg.content
                             if last_user_msg
@@ -89,4 +87,3 @@ async def _list_threads(
 
 async def _delete_thread(thread_id: str):
     await resources.resources.checkpointer.adelete_thread(thread_id)
-

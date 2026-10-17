@@ -1,3 +1,4 @@
+import { StockLabel } from "./stock-label";
 import { price, type Snapshot } from "./bridge";
 import { useResource } from "./resources";
 import { DataInfo } from "./data-info";
@@ -28,7 +29,14 @@ function IndexQuote({
       onClick={() => onSelect(id)}
       title={`${market?.source ?? "Source unavailable"} · ${market?.observed_at ?? "Observation unavailable"}${error ? ` · ${error}` : ""}`}
     >
-      <b>{name}</b>
+      <StockLabel
+        code={id}
+        name={
+          q?.instrument.name === id.split(":").slice(1).join(":")
+            ? name
+            : (q?.instrument.name ?? name)
+        }
+      />
       <span>{price(q?.price)}</span>
       <span
         className={
@@ -123,7 +131,7 @@ function IndexCard({
   return (
     <article className="index-card">
       <button onClick={() => onSelect(id)}>
-        <span>{name}</span>
+        <StockLabel code={id} name={name} />
         <strong
           className={
             q?.change_percent?.startsWith("-") ? "negative" : "positive"

@@ -1,4 +1,5 @@
 """Financial Deep Agents BNM curated command-line adapter."""
+
 from financial_providers import run
 
 

@@ -1,9 +1,13 @@
-import asyncio, json, os, tempfile, unittest
+import asyncio
+import os
+import tempfile
+import unittest
 from unittest.mock import patch
 import app.portfolio.service as service
 import app.infrastructure.providers as providers
 from app.portfolio.sqlite_repository import SQLitePortfolioRepository
 from app.infrastructure.native_engine import NativeEngine
+from datetime import UTC
 
 
 @unittest.skipUnless(
@@ -26,9 +30,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
         self.native.start()
         self.repo = SQLitePortfolioRepository(os.path.join(self.temp.name, "portfolios.sqlite3"))
         await self.repo.setup()
-        self.doc = await service.create_portfolio(
-            self.repo, "org", "user", service.Portfolio()
-        )
+        self.doc = await service.create_portfolio(self.repo, "org", "user", service.Portfolio())
 
     async def asyncTearDown(self):
         await self.repo.close()
@@ -48,9 +50,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
         )
 
     async def post(self, t, revision=None):
-        return await service.record_trade(
-            self.repo, "org", "user", self.doc["id"], t, revision
-        )
+        return await service.record_trade(self.repo, "org", "user", self.doc["id"], t, revision)
 
     async def test_weighted_average_sell_dividend_and_idempotency(self):
         await self.post(self.trade("b1", "BUY", "10", "100"))
@@ -78,9 +78,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(out["realized_gain"], "0.03")
 
     async def test_concurrent_trades_and_revision_conflict(self):
-        await asyncio.gather(
-            *(self.post(self.trade(str(i), "BUY", "1", "10")) for i in range(6))
-        )
+        await asyncio.gather(*(self.post(self.trade(str(i), "BUY", "1", "10")) for i in range(6)))
         out = await self.repo.load("org", "user", self.doc["id"])
         self.assertEqual(out["portfolio"]["positions"][0]["quantity"], "6")
         with self.assertRaises(ValueError):
@@ -170,37 +168,24 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
                 }
             ],
         }
-        with patch.object(
-            providers, "quote", return_value={"symbol": "AAPL", "currency": "USD"}
-        ):
+        with patch.object(providers, "quote", return_value={"symbol": "AAPL", "currency": "USD"}):
             request = service.ImportRequest(data=data)
-            preview = await service.import_preview(
-                self.repo, "org", "user", "default", request
-            )
+            preview = await service.import_preview(self.repo, "org", "user", "default", request)
             self.assertEqual(len(await self.repo.list("org", "user")), 1)
             request.preview_hash = preview["preview_hash"]
             request.expected_revision = preview["expected_revision"]
-            saved = await service.import_commit(
-                self.repo, "org", "user", "default", request
-            )
+            saved = await service.import_commit(self.repo, "org", "user", "default", request)
             exported = await service.export_json(self.repo, "org", "user", saved["id"])
             merge = service.ImportRequest(mode="Merge", data=exported)
-            preview = await service.import_preview(
-                self.repo, "org", "user", saved["id"], merge
-            )
+            preview = await service.import_preview(self.repo, "org", "user", saved["id"], merge)
             merge.preview_hash = preview["preview_hash"]
             merge.expected_revision = preview["expected_revision"]
-            again = await service.import_commit(
-                self.repo, "org", "user", saved["id"], merge
-            )
+            again = await service.import_commit(self.repo, "org", "user", saved["id"], merge)
             self.assertEqual(len(again["transactions"]), 1)
             with self.assertRaises(ValueError):
-                await service.import_commit(
-                    self.repo, "org", "user", saved["id"], merge
-                )
+                await service.import_commit(self.repo, "org", "user", saved["id"], merge)
         with self.assertRaises(ValueError):
             service.import_trades({"portfolio_name": "Invalid", "holdings": []})
-
 
     async def test_registered_native_tool_runs_through_real_specialist(self):
         from tests.support.agent_fixtures import ToolModel
@@ -210,7 +195,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
         from contracts.context import MemoryContext
         from orchestrator.tools.research import current_evidence
         from contracts.evidence import unwrap
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         model = ToolModel(
             responses=[
@@ -241,9 +226,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
                         }
                     ],
                 ),
-                AIMessage(
-                    content="Historical one-day VaR is 10%, based on retrieved prices."
-                ),
+                AIMessage(content="Historical one-day VaR is 10%, based on retrieved prices."),
                 AIMessage(
                     content="## Executive Summary\n\nHistorical one-day VaR is 10%. It is not a forecast."
                 ),
@@ -257,7 +240,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
             "unit_multiplier": "1",
             "provider": "fixture",
             "source_reference": "reviewed fixture",
-            "retrieved_at": datetime.now(timezone.utc).isoformat(),
+            "retrieved_at": datetime.now(UTC).isoformat(),
             "as_of": "2025-01-05",
             "dataset": {
                 "kind": "prices",
@@ -305,9 +288,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(edited["portfolio"]["positions"][0]["quantity"], "3")
         self.assertEqual(edited["portfolio"]["positions"][0]["average_cost"], "110")
         self.assertEqual(edited["realized_gain"], "350")
-        self.assertEqual(
-            edited["transaction_corrections"][0]["previous"]["quantity"], "10"
-        )
+        self.assertEqual(edited["transaction_corrections"][0]["previous"]["quantity"], "10")
         self.assertEqual([t["id"] for t in edited["transactions"]], ["buy", "sell"])
         self.assertTrue(edited["performance_reset_date"])
         with self.assertRaisesRegex(ValueError, "reload"):
@@ -339,9 +320,7 @@ class NativePortfolioTests(unittest.IsolatedAsyncioTestCase):
                     correction,
                     before["revision"],
                 )
-            self.assertEqual(
-                await self.repo.load("org", "user", self.doc["id"]), before
-            )
+            self.assertEqual(await self.repo.load("org", "user", self.doc["id"]), before)
         same = await service.correct_trade(
             self.repo,
             "org",

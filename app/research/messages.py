@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Optional, Tuple
+from typing import Any
 from fastapi import HTTPException
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 from app.research.schemas import MessageItem
@@ -10,30 +10,25 @@ from app.research.output import request_mode, extract_text, readable_text, norma
 
 logger = logging.getLogger(__name__)
 
-def _extract_reasoning_and_content(message: Any) -> Tuple[str, Optional[str]]:
+
+def _extract_reasoning_and_content(message: Any) -> tuple[str, str | None]:
     if not isinstance(message, AIMessage):
         content = str(getattr(message, "content", "") or "")
         return content, None
 
     raw_content = extract_text(message.content)
-    reasoning: Optional[str] = None
+    reasoning: str | None = None
 
     extra = message.additional_kwargs or {}
     rc = extra.get("reasoning_content") or extra.get("reasoning")
     if isinstance(rc, str) and rc.strip():
         reasoning = rc.strip()
 
-    think_match = re.search(
-        r"<think>(.*?)</think>", raw_content, flags=re.DOTALL | re.IGNORECASE
-    )
+    think_match = re.search(r"<think>(.*?)</think>", raw_content, flags=re.DOTALL | re.IGNORECASE)
     if think_match:
         inline_reasoning = think_match.group(1).strip()
         if inline_reasoning:
-            reasoning = (
-                (reasoning + "\n\n" + inline_reasoning)
-                if reasoning
-                else inline_reasoning
-            )
+            reasoning = (reasoning + "\n\n" + inline_reasoning) if reasoning else inline_reasoning
         raw_content = (
             raw_content[: think_match.start()] + raw_content[think_match.end() :]
         ).strip()
@@ -53,9 +48,7 @@ def _activity_output(message):
     if isinstance(payload, dict):
         error = payload.get("error")
         if error:
-            return sanitize_error(
-                error.get("message") if isinstance(error, dict) else error
-            )[:300]
+            return sanitize_error(error.get("message") if isinstance(error, dict) else error)[:300]
         provenance = payload.get("provenance") or {}
         symbol = payload.get("symbol") or provenance.get("ticker")
         currency = payload.get("currency") or provenance.get("currency")
@@ -86,22 +79,18 @@ def _request_schema(data):
 
 
 def _interruptions(state):
-    return [
-        {"id": item.id, "value": item.value} for item in state.get("__interrupt__", [])
-    ]
+    return [{"id": item.id, "value": item.value} for item in state.get("__interrupt__", [])]
 
 
 def _get_messages_from_state(state):
     result = []
     for msg in state.get("messages", []):
-        if isinstance(msg, ToolMessage) or (
-            isinstance(msg, AIMessage) and msg.tool_calls
-        ):
+        if isinstance(msg, ToolMessage) or (isinstance(msg, AIMessage) and msg.tool_calls):
             continue
         if isinstance(msg, BaseMessage):
-            if msg.additional_kwargs.get(
-                "research_output_feedback"
-            ) or msg.additional_kwargs.get("research_draft"):
+            if msg.additional_kwargs.get("research_output_feedback") or msg.additional_kwargs.get(
+                "research_draft"
+            ):
                 continue
             role = (
                 "assistant"
@@ -118,7 +107,13 @@ def _get_messages_from_state(state):
                     None,
                 )
             )
-            result.append(MessageItem(role=role, content=normalize_report(content) if role == "assistant" else content, reasoning=reasoning))
+            result.append(
+                MessageItem(
+                    role=role,
+                    content=normalize_report(content) if role == "assistant" else content,
+                    reasoning=reasoning,
+                )
+            )
         elif isinstance(msg, dict):
             role = msg.get("role", msg.get("type", "unknown"))
             role = {"ai": "assistant", "human": "user"}.get(role, role)
@@ -140,7 +135,13 @@ def _get_messages_from_state(state):
                     extract_text(msg.get("content")),
                     msg.get("reasoning"),
                 )
-            result.append(MessageItem(role=role, content=normalize_report(content) if role == "assistant" else content, reasoning=reasoning))
+            result.append(
+                MessageItem(
+                    role=role,
+                    content=normalize_report(content) if role == "assistant" else content,
+                    reasoning=reasoning,
+                )
+            )
     # Each saved answer owns only the evidence from its own user turn.
     assistant_items = iter(item for item in result if item.role == "assistant")
     turn = []
@@ -172,8 +173,7 @@ def _get_messages_from_state(state):
 
 def _owned_thread(thread_id, org_id, user_id):
     if not all(
-        isinstance(v, str) and v and len(v) <= 128 and "__" not in v
-        for v in (org_id, user_id)
+        isinstance(v, str) and v and len(v) <= 128 and "__" not in v for v in (org_id, user_id)
     ):
         raise HTTPException(400, "Invalid workspace identity")
     prefix = f"{org_id}__{user_id}__"
@@ -185,7 +185,6 @@ def _owned_thread(thread_id, org_id, user_id):
     if len(owned) > 254:
         raise HTTPException(400, "Thread ID too long")
     return owned
-
 
 
 def _build_env_footer(org_id: str) -> str:

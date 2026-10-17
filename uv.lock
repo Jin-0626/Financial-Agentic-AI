@@ -611,6 +611,45 @@ wheels = [
 ]
 
 [[package]]
+name = "financial-research-terminal"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "deepagents" },
+    { name = "fastapi" },
+    { name = "langchain", extra = ["mcp"] },
+    { name = "langchain-core" },
+    { name = "langchain-ollama" },
+    { name = "langgraph-checkpoint-postgres" },
+    { name = "pandas" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "pydantic" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "python-dotenv" },
+    { name = "requests" },
+    { name = "uvicorn" },
+    { name = "yfinance" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "deepagents", specifier = ">=0.7.19" },
+    { name = "fastapi", specifier = ">=0.141.1" },
+    { name = "langchain", extras = ["mcp"], specifier = "==1.4.3" },
+    { name = "langchain-core", specifier = ">=1.5.4" },
+    { name = "langchain-ollama", specifier = ">=1.1.0" },
+    { name = "langgraph-checkpoint-postgres", specifier = ">=3.1.2" },
+    { name = "pandas", specifier = ">=3.0.5" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
+    { name = "pydantic", specifier = ">=2.13.5" },
+    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10,<3" },
+    { name = "python-dotenv", specifier = ">=1.2.3" },
+    { name = "requests", specifier = ">=2.31.0" },
+    { name = "uvicorn", specifier = ">=0.53.0" },
+    { name = "yfinance", specifier = ">=1.7.0" },
+]
+
+[[package]]
 name = "google-auth"
 version = "2.56.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1650,9 +1689,6 @@ wheels = [
 binary = [
     { name = "psycopg-binary", marker = "implementation_name != 'pypy'" },
 ]
-pool = [
-    { name = "psycopg-pool" },
-]
 
 [[package]]
 name = "psycopg-binary"
@@ -2262,45 +2298,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/47/c6/ee486fd809e357697ee8a44d3d69222b344920433d3b6666ccd9b374630c/tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a", size = 49413, upload-time = "2026-02-07T10:45:33.841Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/c1/eb8f9debc45d3b7918a32ab756658a0904732f75e555402972246b0b8e71/tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55", size = 28926, upload-time = "2026-02-07T10:45:32.24Z" },
-]
-
-[[package]]
-name = "testttt"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "deepagents" },
-    { name = "fastapi" },
-    { name = "langchain", extra = ["mcp"] },
-    { name = "langchain-core" },
-    { name = "langchain-ollama" },
-    { name = "langgraph-checkpoint-postgres" },
-    { name = "pandas" },
-    { name = "psycopg", extra = ["binary", "pool"] },
-    { name = "pydantic" },
-    { name = "pyjwt", extra = ["crypto"] },
-    { name = "python-dotenv" },
-    { name = "requests" },
-    { name = "uvicorn" },
-    { name = "yfinance" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "deepagents", specifier = ">=0.7.19" },
-    { name = "fastapi", specifier = ">=0.141.1" },
-    { name = "langchain", extras = ["mcp"], specifier = "==1.4.3" },
-    { name = "langchain-core", specifier = ">=1.5.4" },
-    { name = "langchain-ollama", specifier = ">=1.1.0" },
-    { name = "langgraph-checkpoint-postgres", specifier = ">=3.1.2" },
-    { name = "pandas", specifier = ">=3.0.5" },
-    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.3.6" },
-    { name = "pydantic", specifier = ">=2.13.5" },
-    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10,<3" },
-    { name = "python-dotenv", specifier = ">=1.2.3" },
-    { name = "requests", specifier = ">=2.31.0" },
-    { name = "uvicorn", specifier = ">=0.53.0" },
-    { name = "yfinance", specifier = ">=1.7.0" },
 ]
 
 [[package]]

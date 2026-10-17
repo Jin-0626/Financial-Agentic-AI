@@ -24,6 +24,7 @@ import {
   type DockNode,
   type Screen,
 } from "./bridge";
+import { StockNames } from "./stock-label";
 import { AppView } from "./app-view";
 import { sortSymbols, type WatchlistSort } from "./watchlist";
 import "./style.css";
@@ -451,7 +452,12 @@ export function useAppState() {
 }
 export type AppState = ReturnType<typeof useAppState>;
 function App() {
-  return <AppView state={useAppState()} />;
+  const state = useAppState();
+  return (
+    <StockNames snapshot={state.snapshot}>
+      <AppView state={state} />
+    </StockNames>
+  );
 }
 const root = document.getElementById("root");
 if (root)

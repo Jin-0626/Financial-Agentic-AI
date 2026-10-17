@@ -1,8 +1,8 @@
 """Internal worker for allowlisted Financial CLI scripts; never accepts shell code."""
+
 import hashlib
 import importlib.util
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -15,11 +15,16 @@ def main():
     if entry is None or Path(name).name != name:
         raise ValueError("Unknown provider script")
     path = (root / name).resolve()
-    if path.parent != root.resolve() or hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]:
+    if (
+        path.parent != root.resolve()
+        or hashlib.sha256(path.read_bytes()).hexdigest() != entry["sha256"]
+    ):
         raise ValueError("Provider script integrity check failed")
     if not entry.get("agent_registered"):
         raise ValueError("Provider script is not registered")
-    shared = next((record for record in records if record["file"] == "financial_providers.py"), None)
+    shared = next(
+        (record for record in records if record["file"] == "financial_providers.py"), None
+    )
     common = root / "financial_providers.py"
     if shared is None or hashlib.sha256(common.read_bytes()).hexdigest() != shared["sha256"]:
         raise ValueError("Shared provider integrity check failed")

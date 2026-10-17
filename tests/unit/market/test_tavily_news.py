@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 import json
 import os
 import unittest
@@ -6,15 +6,16 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 import requests
 import yfinance
-import orchestrator.tools.providers as finance
 import orchestrator.tools.providers.news as finance_news
 import orchestrator.tools.providers.common as finance_common
 
 
 class TavilyNewsTests(unittest.TestCase):
     def setUp(self):
-        clock = patch.object(finance_news, "now_utc",
-            return_value=datetime(2026, 10, 9, 1, 0, tzinfo=timezone.utc),
+        clock = patch.object(
+            finance_news,
+            "now_utc",
+            return_value=datetime(2026, 10, 9, 1, 0, tzinfo=UTC),
         )
         clock.start()
         self.addCleanup(clock.stop)
@@ -36,9 +37,7 @@ class TavilyNewsTests(unittest.TestCase):
         return response
 
     def invoke(self, **kwargs):
-        return json.loads(
-            finance_news._make_news_tool().invoke({"symbol": "0157.KL", **kwargs})
-        )
+        return json.loads(finance_news._make_news_tool().invoke({"symbol": "0157.KL", **kwargs}))
 
     def test_primary_search_preserves_article_evidence(self):
         response = self.response(
@@ -54,7 +53,7 @@ class TavilyNewsTests(unittest.TestCase):
                 "answer": "Never use this generated answer",
             }
         )
-        with patch.object(finance_common.requests, "post", return_value=response) as post:
+        with patch.object(finance_news.requests, "post", return_value=response) as post:
             result = self.invoke(query="Focus Point Holdings earnings", count=2)
         args = post.call_args.kwargs
         self.assertEqual(args["headers"]["Authorization"], "Bearer test-tavily-secret")
@@ -71,18 +70,16 @@ class TavilyNewsTests(unittest.TestCase):
 
     def test_empty_search_is_distinct_from_failure(self):
         with patch.object(
-            finance_common.requests, "post", return_value=self.response({"results": []})
+            finance_news.requests, "post", return_value=self.response({"results": []})
         ):
             result = self.invoke()
         self.assertEqual(result["status"], "empty")
-        self.assertEqual(
-            result["attempts"][0], {"provider": "Tavily", "status": "empty"}
-        )
+        self.assertEqual(result["attempts"][0], {"provider": "Tavily", "status": "empty"})
 
     def test_missing_key_does_not_make_http_request(self):
         with (
             patch.dict(os.environ, {"TAVILY_API_KEY": ""}),
-            patch.object(finance_common.requests, "post") as post,
+            patch.object(finance_news.requests, "post") as post,
         ):
             result = self.invoke()
         post.assert_not_called()
@@ -93,7 +90,7 @@ class TavilyNewsTests(unittest.TestCase):
         client._request.return_value = [{"title": "Fallback headline"}]
         with (
             patch.object(
-                finance_common.requests,
+                finance_news.requests,
                 "post",
                 side_effect=requests.Timeout("timeout test-tavily-secret"),
             ),
@@ -108,7 +105,7 @@ class TavilyNewsTests(unittest.TestCase):
     def test_http_auth_failure_is_not_an_empty_search(self):
         response = self.response({})
         response.raise_for_status.side_effect = requests.HTTPError("401 Unauthorized")
-        with patch.object(finance_common.requests, "post", return_value=response):
+        with patch.object(finance_news.requests, "post", return_value=response):
             result = self.invoke()
         self.assertEqual(result["status"], "error")
         self.assertIn("401", result["attempts"][0]["error"])
@@ -122,9 +119,7 @@ class TavilyNewsTests(unittest.TestCase):
         ]:
             with (
                 self.subTest(payload=payload),
-                patch.object(
-                    finance_common.requests, "post", return_value=self.response(payload)
-                ),
+                patch.object(finance_news.requests, "post", return_value=self.response(payload)),
             ):
                 self.assertEqual(self.invoke()["status"], "error")
 
@@ -132,10 +127,10 @@ class TavilyNewsTests(unittest.TestCase):
         response = self.response(
             {"results": [{"title": "News", "url": "https://news.example/article"}]}
         )
-        with patch.object(finance_common.requests, "post", return_value=response):
+        with patch.object(finance_news.requests, "post", return_value=response):
             self.assertIsNone(self.invoke()[0]["pub_date"])
 
     def test_count_validation_prevents_provider_call(self):
-        with patch.object(finance_common.requests, "post") as post:
+        with patch.object(finance_news.requests, "post") as post:
             self.assertEqual(self.invoke(count=21)["category"], "validation")
         post.assert_not_called()

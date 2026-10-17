@@ -1,16 +1,13 @@
 import app.research.resources as research_resources
-import importlib
 import json
 import math
 import os
 import unittest
-from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
 import app.research.routes as routes_routes
-import orchestrator.tools.providers as finance
 import orchestrator.tools.providers.economics as finance_economics
 import orchestrator.tools.providers.common as finance_common
 
@@ -18,16 +15,21 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class VerifiedDefectTests(unittest.TestCase):
-
     def test_removed_file_routes_return_410_without_agent_or_backend_access(self):
         from fastapi import FastAPI
+
         api = FastAPI()
         api.include_router(routes_routes.router, prefix="/api")
         with patch.object(research_resources.resources, "agent", None):
             with TestClient(api) as client:
-                for path in ("/api/files/upload", "/api/chat-with-file", "/api/chat-with-file/stream"):
-                    self.assertEqual(client.post(path, json={"file_id":"retired"}).status_code,410)
-
+                for path in (
+                    "/api/files/upload",
+                    "/api/chat-with-file",
+                    "/api/chat-with-file/stream",
+                ):
+                    self.assertEqual(
+                        client.post(path, json={"file_id": "retired"}).status_code, 410
+                    )
 
     def treasury(self, quotes=None, exception=None, fmp=None):
         provider = Mock()
@@ -35,8 +37,13 @@ class VerifiedDefectTests(unittest.TestCase):
             provider.get_batch_quotes.side_effect = exception
         else:
             provider.get_batch_quotes.return_value = quotes
-        with patch.object(finance_common, "stock_data", provider), patch.object(finance_common, "_fmp_client", fmp):
-            return json.loads(finance_economics._make_economics_tool().invoke({"indicator": "treasury"}))
+        with (
+            patch.object(finance_common, "stock_data", provider),
+            patch.object(finance_common, "_fmp_client", fmp),
+        ):
+            return json.loads(
+                finance_economics._make_economics_tool().invoke({"indicator": "treasury"})
+            )
 
     def quotes(self):
         return [{"symbol": symbol, "price": 4.0} for symbol in ("^IRX", "^FVX", "^TNX", "^TYX")]
@@ -69,7 +76,9 @@ class VerifiedDefectTests(unittest.TestCase):
 
     def test_treasury_partial_success_preserves_valid_quotes(self):
         valid = self.quotes()[:2]
-        result = self.treasury(valid + [{"symbol": "^TNX", "error": "HTTP 429"}, {"symbol": "^TYX", "price": None}])
+        result = self.treasury(
+            valid + [{"symbol": "^TNX", "error": "HTTP 429"}, {"symbol": "^TYX", "price": None}]
+        )
         self.assertEqual(result["status"], "partial_success")
         self.assertEqual(result["treasury_yield_proxies"], valid)
         self.assertTrue(result["provider_errors"])
@@ -91,7 +100,10 @@ class VerifiedDefectTests(unittest.TestCase):
 
     def test_treasury_fmp_partial_rows_retained_with_valid_proxies(self):
         fmp = Mock(api_key="fixture")
-        fmp.get_treasury_rates.return_value = [{"date": "2026-10-05", "year10": 4.1}, {"error": "provider failed"}]
+        fmp.get_treasury_rates.return_value = [
+            {"date": "2026-10-05", "year10": 4.1},
+            {"error": "provider failed"},
+        ]
         result = self.treasury(self.quotes(), fmp=fmp)
         self.assertEqual(result["status"], "partial_success")
         self.assertEqual(result["treasury_rates"], [{"date": "2026-10-05", "year10": 4.1}])
@@ -110,11 +122,9 @@ class VerifiedDefectTests(unittest.TestCase):
     def test_invalid_numeric_quote_is_not_success(self):
         for price in (None, True, "4", math.nan, math.inf):
             with self.subTest(price=price):
-                self.assertEqual(self.treasury([{"symbol": "^IRX", "price": price}])["status"], "error")
-
-
-
-
+                self.assertEqual(
+                    self.treasury([{"symbol": "^IRX", "price": price}])["status"], "error"
+                )
 
 
 if __name__ == "__main__":

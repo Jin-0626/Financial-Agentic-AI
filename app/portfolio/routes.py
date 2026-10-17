@@ -18,9 +18,9 @@ def set_repository(repo):
 
 
 def enabled():
-    if (
-        os.getenv("APP_ENV", "local").lower() == "production" and not configured()
-    ) or os.getenv("PORTFOLIO_ENABLED", "true").lower() != "true":
+    if (os.getenv("APP_ENV", "local").lower() == "production" and not configured()) or os.getenv(
+        "PORTFOLIO_ENABLED", "true"
+    ).lower() != "true":
         raise HTTPException(404, "Portfolio feature is disabled")
 
 
@@ -54,9 +54,9 @@ async def action(awaitable):
 
 @router.get("")
 async def load(org_id: Org, user_id: User, portfolio_id: Pid = "default"):
-    return await service.load_portfolio(
-        repository(), org_id, user_id, portfolio_id
-    ) or {"portfolio": None}
+    return await service.load_portfolio(repository(), org_id, user_id, portfolio_id) or {
+        "portfolio": None
+    }
 
 
 @router.put("")
@@ -68,9 +68,7 @@ async def save(
     revision: Revision = None,
 ):
     return await action(
-        service.save_portfolio(
-            repository(), org_id, user_id, portfolio, portfolio_id, revision
-        )
+        service.save_portfolio(repository(), org_id, user_id, portfolio, portfolio_id, revision)
     )
 
 
@@ -81,9 +79,7 @@ async def list_saved(org_id: Org, user_id: User):
 
 @router.post("/create")
 async def create(portfolio: service.Portfolio, org_id: Org, user_id: User):
-    return await action(
-        service.create_portfolio(repository(), org_id, user_id, portfolio)
-    )
+    return await action(service.create_portfolio(repository(), org_id, user_id, portfolio))
 
 
 @router.get("/symbols")
@@ -112,9 +108,7 @@ async def transaction(
     except Exception as error:
         raise HTTPException(422, sanitize_error(error)) from None
     return await action(
-        service.record_trade(
-            repository(), org_id, user_id, portfolio_id, trade, revision
-        )
+        service.record_trade(repository(), org_id, user_id, portfolio_id, trade, revision)
     )
 
 
@@ -142,26 +136,20 @@ async def correct_transaction(
 
 @router.get("/summary")
 async def summary(org_id: Org, user_id: User, portfolio_id: Pid = "default"):
-    return await action(
-        service.saved_summary(repository(), org_id, user_id, portfolio_id)
-    )
+    return await action(service.saved_summary(repository(), org_id, user_id, portfolio_id))
 
 
 @router.delete("")
 async def delete(
     org_id: Org, user_id: User, portfolio_id: Pid = "default", revision: Revision = None
 ):
-    await action(
-        service.delete_portfolio(repository(), org_id, user_id, portfolio_id, revision)
-    )
+    await action(service.delete_portfolio(repository(), org_id, user_id, portfolio_id, revision))
     return {"deleted": portfolio_id}
 
 
 @router.get("/export")
 async def export(org_id: Org, user_id: User, portfolio_id: Pid = "default"):
-    return await action(
-        service.export_json(repository(), org_id, user_id, portfolio_id)
-    )
+    return await action(service.export_json(repository(), org_id, user_id, portfolio_id))
 
 
 @router.post("/import/preview")
@@ -183,6 +171,4 @@ async def commit(
     user_id: User,
     portfolio_id: Pid = "default",
 ):
-    return await action(
-        service.import_commit(repository(), org_id, user_id, portfolio_id, request)
-    )
+    return await action(service.import_commit(repository(), org_id, user_id, portfolio_id, request))

@@ -4,6 +4,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 @transport.yahoo_bound
 def options(key, expiry=None):
     asset = common.instrument(key)
@@ -42,11 +43,7 @@ def options(key, expiry=None):
         return [
             {
                 **{
-                    key: (
-                        str(row[field])
-                        if key == "contract"
-                        else common.decimal(row.get(field))
-                    )
+                    key: (str(row[field]) if key == "contract" else common.decimal(row.get(field)))
                     for key, field in mapping.items()
                 },
                 "itm": bool(row.get("inTheMoney", False)),
@@ -68,4 +65,3 @@ def options(key, expiry=None):
         "Listed options where supplied; quotes may be delayed",
         instrument=asset,
     )
-

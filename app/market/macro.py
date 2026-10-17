@@ -115,4 +115,3 @@ def macro():
         "Dated index snapshots, ETF proxies and official daily/policy observations",
         limitations=limitations,
     )
-

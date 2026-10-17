@@ -5,6 +5,7 @@ from app.market import transport
 
 logger = logging.getLogger(__name__)
 
+
 @transport.yahoo_bound
 def ohlcv(key, range_key):
     asset = common.instrument(key)
@@ -44,8 +45,7 @@ def ohlcv(key, range_key):
             candles = [
                 c
                 for c in candles
-                if c["time"]
-                >= int(datetime(datetime.now(UTC).year, 1, 1, tzinfo=UTC).timestamp())
+                if c["time"] >= int(datetime(datetime.now(UTC).year, 1, 1, tzinfo=UTC).timestamp())
             ]
         currency = "USD"
         source = "CoinGecko"
@@ -102,9 +102,9 @@ def ohlcv(key, range_key):
         and 0 < row["time"] < 253402300800
     ]
     invalid_count = original_count - len(candles)
-    candles = sorted(
-        {row["time"]: row for row in candles}.values(), key=lambda row: row["time"]
-    )[-10000:]
+    candles = sorted({row["time"]: row for row in candles}.values(), key=lambda row: row["time"])[
+        -10000:
+    ]
     return common.result(
         candles,
         source,
@@ -118,11 +118,8 @@ def ohlcv(key, range_key):
         else None,
         limitations=(["Volume unavailable"] if asset["asset_class"] == "crypto" else [])
         + (
-            [
-                f"Excluded {invalid_count} invalid provider bars; missing bars were not filled"
-            ]
+            [f"Excluded {invalid_count} invalid provider bars; missing bars were not filled"]
             if invalid_count
             else []
         ),
     )
-

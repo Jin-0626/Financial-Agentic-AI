@@ -1,5 +1,7 @@
 //! Mock and existing FastAPI market adapters, independent of terminal and storage.
+mod equities;
 pub mod research;
+mod screening;
 use chrono::Utc;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
@@ -32,10 +34,15 @@ pub enum ProviderError {
         status: StatusCode,
         retry_after: Option<u64>,
     },
-    #[error("response exceeds 2 MiB")]
+    #[error("response exceeds endpoint size limit")]
     Oversized,
     #[error("provider payload: {0}")]
     Payload(String),
+    #[error("market upstream: {message}")]
+    Upstream {
+        message: String,
+        retry_after: Option<u64>,
+    },
 }
 impl ProviderError {
     pub fn authentication_failure(&self) -> bool {
@@ -49,7 +56,7 @@ impl ProviderError {
     }
     pub fn retry_after(&self) -> Option<u64> {
         match self {
-            Self::Http { retry_after, .. } => *retry_after,
+            Self::Http { retry_after, .. } | Self::Upstream { retry_after, .. } => *retry_after,
             _ => None,
         }
     }
@@ -245,6 +252,7 @@ pub struct DirectHttpProvider {
     client: Client,
     base: Url,
     token: Option<Arc<str>>,
+    screeners: Arc<tokio::sync::Mutex<screening::SnapshotCache>>,
 }
 #[derive(Deserialize)]
 struct AuthConfig {
@@ -417,47 +425,20 @@ impl DirectHttpProvider {
             }
             R::Screener {
                 market,
-                sector,
-                min_cap,
-                min_change,
-                min_volume,
-                sort,
-                descending,
-                offset,
+                sector: _,
+                min_cap: _,
+                min_change: _,
+                min_volume: _,
+                sort: _,
+                descending: _,
+                offset: _,
             } => {
                 let market = match market {
                     terminal_core::resources::EquityMarket::MY => "MY",
                     terminal_core::resources::EquityMarket::US => "US",
                 };
-                let sort = match sort {
-                    terminal_core::resources::ScreenerSort::MarketCap => "market_cap",
-                    terminal_core::resources::ScreenerSort::ChangePercent => "change_percent",
-                    terminal_core::resources::ScreenerSort::Volume => "volume",
-                    terminal_core::resources::ScreenerSort::Symbol => "symbol",
-                    terminal_core::resources::ScreenerSort::Price => "price",
-                };
-                let offset = offset.to_string();
-                let mut query = vec![
-                    ("market", market),
-                    ("sort", sort),
-                    ("descending", if *descending { "true" } else { "false" }),
-                    ("offset", &offset),
-                    ("limit", "100"),
-                ];
-                if let Some(sector) = sector {
-                    query.push(("sector", sector));
-                }
-                let filters = [
-                    ("min_cap", min_cap.map(|v| v.to_string())),
-                    ("min_change", min_change.map(|v| v.to_string())),
-                    ("min_volume", min_volume.map(|v| v.normalize().to_string())),
-                ];
-                for (key, value) in &filters {
-                    if let Some(value) = value {
-                        query.push((*key, value));
-                    }
-                }
-                P::Screener(self.get("api/market/screener", &query).await?)
+                let snapshot = self.screener_snapshot(market).await?;
+                P::Screener(screening::page(&snapshot, request)?)
             }
         })
     }
@@ -495,6 +476,7 @@ impl DirectHttpProvider {
             client,
             base: url,
             token: token.map(Arc::from),
+            screeners: Arc::default(),
         })
     }
     pub async fn namespace(&self, profile: &str) -> Result<String, ProviderError> {
@@ -529,6 +511,40 @@ impl DirectHttpProvider {
             profile,
         ))?)
     }
+    async fn screener_snapshot(
+        &self,
+        market: &str,
+    ) -> Result<Arc<Market<Vec<screening::SnapshotRow>>>, ProviderError> {
+        let mut cache = self.screeners.lock().await;
+        if let Some((at, value)) = cache.get(market) {
+            if Instant::now() < *at {
+                return Ok(value.clone());
+            }
+        }
+        let value = match equities::load(self, market).await {
+            Ok(value) => Arc::new(value),
+            Err(error) if error.authentication_failure() => return Err(error),
+            Err(error) => {
+                let mut unavailable = Market::fresh(Vec::new(), "Yahoo Finance native snapshot");
+                unavailable.status = MarketStatus::Unavailable;
+                unavailable.data = None;
+                unavailable.error = Some(error.to_string());
+                unavailable.retry_after = Some(error.retry_after().unwrap_or(30));
+                Arc::new(unavailable)
+            }
+        };
+        let ttl = if value.status == MarketStatus::Ok && !value.stale {
+            60
+        } else {
+            5
+        };
+        let ttl = value.retry_after.unwrap_or(ttl).clamp(1, 3600);
+        cache.insert(
+            market.to_owned(),
+            (Instant::now() + Duration::from_secs(ttl), value.clone()),
+        );
+        Ok(value)
+    }
     async fn get<T: DeserializeOwned>(
         &self,
         path: &str,
@@ -545,8 +561,12 @@ impl DirectHttpProvider {
         let response = request.send().await?;
         Self::decode(response).await
     }
-    async fn decode<T: DeserializeOwned>(
+    async fn decode<T: DeserializeOwned>(response: reqwest::Response) -> Result<T, ProviderError> {
+        Self::decode_limited(response, 2 * 1024 * 1024).await
+    }
+    async fn decode_limited<T: DeserializeOwned>(
         mut response: reqwest::Response,
+        limit: usize,
     ) -> Result<T, ProviderError> {
         let status = response.status();
         if !status.is_success() {
@@ -560,13 +580,12 @@ impl DirectHttpProvider {
                 retry_after,
             });
         }
-        const LIMIT: usize = 2 * 1024 * 1024;
-        if response.content_length().is_some_and(|n| n > LIMIT as u64) {
+        if response.content_length().is_some_and(|n| n > limit as u64) {
             return Err(ProviderError::Oversized);
         }
         let mut body = Vec::new();
         while let Some(chunk) = response.chunk().await? {
-            if body.len().saturating_add(chunk.len()) > LIMIT {
+            if body.len().saturating_add(chunk.len()) > limit {
                 return Err(ProviderError::Oversized);
             }
             body.extend_from_slice(&chunk);
@@ -657,7 +676,7 @@ mod tests {
         )
     }
     #[tokio::test]
-    async fn screener_filters_are_validated_and_serialized(
+    async fn screener_filters_are_validated_and_executed_natively(
     ) -> Result<(), Box<dyn std::error::Error>> {
         use terminal_core::resources::{EquityMarket, ResourceRequest, ScreenerSort};
         let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
@@ -668,12 +687,13 @@ mod tests {
             let mut bytes = [0; 4096];
             let count = stream.read(&mut bytes)?;
             stream.write_all(
-                response(r#"{"status":"ok","data":[],"source":"fixture"}"#).as_bytes(),
+                response(r#"{"status":"ok","data":{"total":0,"quotes":[]},"source":"fixture"}"#)
+                    .as_bytes(),
             )?;
             Ok(String::from_utf8_lossy(&bytes[..count]).into_owned())
         });
         let request = ResourceRequest::Screener {
-            market: EquityMarket::MY,
+            market: EquityMarket::US,
             sector: Some("Technology".into()),
             sort: ScreenerSort::ChangePercent,
             descending: false,
@@ -682,9 +702,15 @@ mod tests {
             min_change: Some("-2.5".parse()?),
             min_volume: Some("500.00".parse()?),
         };
-        DirectHttpProvider::new(&base, None)?
-            .resource(&request)
-            .await?;
+        let provider = DirectHttpProvider::new(&base, None)?;
+        provider.resource(&request).await?;
+        // A second sort shares the same complete snapshot, rather than another HTTP request.
+        let mut second = request.clone();
+        if let ResourceRequest::Screener { sort, offset, .. } = &mut second {
+            *sort = ScreenerSort::Volume;
+            *offset = 0;
+        }
+        provider.resource(&second).await?;
         let captured = task.join().map_err(|_| "server failed")??;
         let target = captured
             .lines()
@@ -696,16 +722,9 @@ mod tests {
             .query_pairs()
             .into_owned()
             .collect::<std::collections::BTreeMap<_, _>>();
-        for (key, value) in [
-            ("min_cap", "1000000.01"),
-            ("min_change", "-2.5"),
-            ("min_volume", "500"),
-            ("offset", "100"),
-            ("descending", "false"),
-            ("sector", "Technology"),
-        ] {
-            assert_eq!(query.get(key).map(String::as_str), Some(value));
-        }
+        assert_eq!(url.path(), "/api/market/provider/us-page");
+        assert_eq!(query.get("offset").map(String::as_str), Some("0"));
+        assert_eq!(query.len(), 1, "filters and paging must execute natively");
         let mut invalid = serde_json::to_value(request)?;
         invalid["min_volume"] = "0.5".into();
         let invalid: ResourceRequest = serde_json::from_value(invalid)?;

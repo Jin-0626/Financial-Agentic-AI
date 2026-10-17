@@ -1,4 +1,5 @@
-import json, unittest
+import json
+import unittest
 from langchain_core.messages import ToolMessage, HumanMessage
 from contracts.evidence import receipt, unwrap, pointer
 from orchestrator.tools.research import current_evidence
@@ -54,9 +55,7 @@ class ReceiptIntegrityTests(unittest.TestCase):
         )
 
     def test_native_receipts_survive_specialist_boundary(self):
-        message = self.evidence().model_copy(
-            update={"name": "calculate_historical_var"}
-        )
+        message = self.evidence().model_copy(update={"name": "calculate_historical_var"})
         data = {
             "status": "success",
             "data": {"var": 0.1},

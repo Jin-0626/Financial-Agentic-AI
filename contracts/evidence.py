@@ -68,9 +68,7 @@ def pointer(payload, path):
         part = part.replace("~1", "/").replace("~0", "~")
         try:
             result = (
-                result[int(part)]
-                if isinstance(result, list) and part.isdecimal()
-                else result[part]
+                result[int(part)] if isinstance(result, list) and part.isdecimal() else result[part]
             )
         except (KeyError, IndexError, TypeError, ValueError):
             raise ValueError("Evidence field was not returned by the tool") from None
