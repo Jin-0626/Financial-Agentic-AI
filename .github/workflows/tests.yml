@@ -43,8 +43,13 @@ jobs:
           python-version: '3.12'
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
       - run: rustup toolchain install 1.99.0 --profile minimal
-      - run: cargo +1.99.0 build --locked -p quant-engine -j 2
+      - name: Build native engine for Python integrations
+        run: cargo +1.99.0 build --locked -p mcp-server --bin financial-engine -j 2
       - run: cargo +1.99.0 build --locked -p terminal-server --features portfolio -j 2
+      - name: Verify native integration executables
+        run: |
+          test -x target/debug/financial-engine
+          test -x target/debug/terminal-server
       - run: uv sync --frozen
       - run: uvx --from ruff==0.17.0 ruff check .
       - run: uvx --from ruff==0.17.0 ruff format --check .
