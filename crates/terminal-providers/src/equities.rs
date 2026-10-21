@@ -4,15 +4,15 @@ use std::{
     str::FromStr,
 };
 
+use crate::{screening::SnapshotRow, DirectHttpProvider, ProviderError};
 use chrono::DateTime;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use terminal_core::{resources::AssetRow, Instrument, InstrumentId, Market, MarketStatus};
 use tokio::task::JoinSet;
-use crate::{screening::SnapshotRow, DirectHttpProvider, ProviderError};
 
 const PAGE_SIZE: usize = 250;
-const MAX_ROWS: usize = 20_000;
+const MAX_ROWS: usize = terminal_core::MAX_EQUITIES;
 const CONCURRENCY: usize = 4;
 
 #[derive(Deserialize)]
@@ -39,6 +39,26 @@ struct RawQuote {
 struct RawPage {
     total: usize,
     quotes: Vec<RawQuote>,
+    #[serde(flatten)]
+    provenance: PageProvenance,
+}
+
+#[derive(Clone, Copy, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum EquityFeed {
+    #[default]
+    Yahoo,
+    Nasdaq,
+}
+
+#[derive(Clone, Default, Deserialize, PartialEq, Eq)]
+#[serde(default)]
+struct PageProvenance {
+    feed: EquityFeed,
+    as_of: Option<String>,
+    excluded: usize,
+    snapshot_id: Option<String>,
+    reported_total: Option<usize>,
 }
 
 fn fresh<T>(value: Market<T>) -> Result<T, ProviderError> {
@@ -57,12 +77,13 @@ fn fresh<T>(value: Market<T>) -> Result<T, ProviderError> {
 
 impl RawQuote {
     fn normalize(self, expected: Option<&InstrumentId>) -> Result<SnapshotRow, ProviderError> {
-        let id = if self.symbol.starts_with("yahoo: ") {
-            InstrumentId::parse(&self.symbol)?
-        } else {
-            InstrumentId::parse(&format!("yahoo: {}", self.symbol))?
-        };
-    
+        let id = InstrumentId::parse(&self.symbol)?;
+        if !id.as_str().starts_with("yahoo:") || expected.is_some_and(|expected| expected != &id) {
+            return Err(ProviderError::Payload(
+                "equity quote identity mismatch".into(),
+            ));
+        }
+
         let price = self
             .regular_market_price
             .as_deref()
@@ -74,7 +95,7 @@ impl RawQuote {
                 || self
                     .exchange
                     .as_deref()
-                    .is_some_and(|exchange| exchange != "KLSE")
+                    .is_some_and(|exchange| !matches!(exchange, "KLS" | "KLSE"))
                 || price.is_none_or(|price| price <= Decimal::ZERO))
         {
             return Err(ProviderError::Payload(
@@ -149,15 +170,26 @@ fn append_page(
     Ok(())
 }
 
-async fn us(provider: &DirectHttpProvider) -> Result<Market<Vec<SnapshotRow>>, ProviderError> {
-    let first: Market<RawPage> = provider
-        .get("api/market/provider/us-page", &[("offset", "0")])
-        .await?;
+async fn paged(
+    provider: &DirectHttpProvider,
+    market: &str,
+) -> Result<Market<Vec<SnapshotRow>>, ProviderError> {
+    let endpoint = match market {
+        "MY" => "api/market/provider/my-page",
+        "US" => "api/market/provider/us-page",
+        _ => {
+            return Err(ProviderError::Configuration(
+                "Unsupported equity market".into(),
+            ))
+        }
+    };
+    let first: Market<RawPage> = provider.get(endpoint, &[("offset", "0")]).await?;
     let first = fresh(first)?;
+    let provenance = first.provenance.clone();
     let total = first.total;
     if total == 0 {
         return Err(ProviderError::Upstream {
-            message: "Broad US provider returned no securities; upstream coverage is unavailable"
+            message: "Equity provider returned no securities; upstream coverage is unavailable"
                 .into(),
             retry_after: Some(60),
         });
@@ -176,132 +208,80 @@ async fn us(provider: &DirectHttpProvider) -> Result<Market<Vec<SnapshotRow>>, P
             let provider = provider.clone();
             pending.spawn(async move {
                 let text = offset.to_string();
-                let page: Market<RawPage> = provider
-                    .get("api/market/provider/us-page", &[("offset", text.as_str())])
-                    .await?;
+                let page: Market<RawPage> =
+                    provider.get(endpoint, &[("offset", text.as_str())]).await?;
                 Ok::<_, ProviderError>((offset, fresh(page)?))
             });
         }
         let Some(result) = pending.join_next().await else {
             break;
         };
-        let (offset, page) = result
-        .map_err(|_| ProviderError::Payload("US snapshot task interrupted".into()))??;
+        let (offset, page) =
+            result.map_err(|_| ProviderError::Payload("US snapshot task interrupted".into()))??;
+        if page.provenance != provenance {
+            return Err(ProviderError::Payload(
+                "US provider source or snapshot changed during pagination".into(),
+            ));
+        }
         pages.insert(offset, page);
     }
 
-        for (offset, page) in pages {
-            append_page(&mut rows, &mut seen, page, total, offset)?;
+    for (offset, page) in pages {
+        append_page(&mut rows, &mut seen, page, total, offset)?;
+    }
+    if market == "MY"
+        && rows.iter().any(|row| {
+            !row.asset.instrument.id.as_str().ends_with(".KL")
+                || row
+                    .asset
+                    .currency
+                    .as_deref()
+                    .is_some_and(|value| value != "MYR")
+        })
+    {
+        return Err(ProviderError::Payload(
+            "Malaysian universe contains an unexpected identity/currency".into(),
+        ));
+    }
+    let source = match provenance.feed {
+        EquityFeed::Yahoo => {
+            if market == "MY" {
+                "Yahoo Finance screener · native MY quote snapshot"
+            } else {
+                "Yahoo Finance screener · native US quote snapshot"
+            }
         }
-    let mut value = Market::fresh(rows, "Yahoo Finance screener · native US quote snapshot");
-    value.coverage = Some(format!("{total} provider-listed US equities; not verified as every listed issuer. Ranked by displayed regular-session quote values."));
+        EquityFeed::Nasdaq => "Nasdaq · broad US fallback",
+    };
+    let mut value = Market::fresh(rows, source);
+    value.coverage = Some(format!("{total} provider-listed {market} equities; not verified as every listed issuer. Ranked by displayed regular-session quote values."));
     value.limitations = vec![
         "Broad provider coverage includes OTC securities and provider-classified equity instruments. No curated basket or liquidity filter is imposed.".into(),
         "Provider observations may be delayed and are not simultaneous. Rankings use regular-session values; page observation time is the oldest available quote.".into(),
     ];
-    Ok(value)
-}
-
-async fn my(provider: &DirectHttpProvider) -> Result<Market<Vec<SnapshotRow>>, ProviderError> {
-    let symbols: Market<Vec<String>> = provider.get("api/market/provider/my-symbols", &[]).await?;
-    let symbols = fresh(symbols)?;
-    if symbols.is_empty() || symbols.len() > 128 {
-        return Err(ProviderError::Payload(
-            "MY tracked set requires 1–128 symbols".into(),
+    if let Some(reported) = provenance.reported_total.filter(|count| *count != total) {
+        value.limitations.push(format!("Provider regional count is {reported}; retrieved exchange partitions contain {total} securities. Counts may differ during provider updates."));
+    }
+    if provenance.feed == EquityFeed::Nasdaq {
+        value.coverage = Some(format!(
+            "{total} supported Nasdaq provider results; broad US fallback, not every US/OTC issuer"
         ));
-    }
-    let mut seen = BTreeSet::new();
-    let mut requested = Vec::with_capacity(symbols.len());
-    for symbol in symbols {
-        let id = InstrumentId::parse(&symbol)?;
-        if !id.as_str().starts_with("yahoo:")
-            || !id.as_str().ends_with(".KL")
-            || !seen.insert(id.clone())
-        {
-            return Err(ProviderError::Payload(
-                "invalid or duplicate MY tracked identity".into(),
-            ));
-        }
-        requested.push(id);
-    }
-    let total = requested.len();
-    let mut symbols = requested.iter().cloned();
-    let mut pending = JoinSet::new();
-    let mut rows = BTreeMap::new();
-    let mut retry_after = None;
-    let mut limited = false;
-    loop {
-        while pending.len() < CONCURRENCY && !limited {
-            let Some(id) = symbols.next() else {
-                break;
-            };
-            let provider = provider.clone();
-            pending.spawn(async move {
-                let result = async {
-                    let quote: Market<RawQuote> = provider
-                        .get(
-                            "api/market/provider/equity-info",
-                            &[("instrument", id.as_str())],
-                        )
-                        .await?;
-                    fresh(quote)?.normalize(Some(&id))
-                }
-                .await;
-                (id, result)
-            });
-        }
-        let Some(result) = pending.join_next().await else {
-            break;
-        };
-        let (id, result) =
-            result.map_err(|_| ProviderError::Payload("MY snapshot task interrupted".into()))?;
-        match result {
-            Ok(row) => {
-                rows.insert(id, row);
-            }
-            Err(error) => {
-                if error.authentication_failure() {
-                    return Err(error);
-                }
-                retry_after = retry_after.max(error.retry_after());
-                if retry_after.is_some_and(|seconds| seconds >= 60) {
-                    limited = true;
-                }
+        value.limitations = vec![
+            "Yahoo screener returned empty coverage. Values come from the existing Nasdaq provider, without a curated basket or liquidity filter.".into(),
+            "Exchange, ISO currency and precise per-security observation times are unavailable in this feed; none are inferred. Quotes may be delayed.".into(),
+        ];
+        if let Some(as_of) = provenance.as_of {
+            value
+                .limitations
+                .push(format!("Nasdaq reported data date: {as_of}"));
+            if let Some(coverage) = &mut value.coverage {
+                coverage.push_str(&format!(" · {as_of}"));
             }
         }
+        if provenance.excluded != 0 {
+            value.limitations.push(format!("{} provider identifiers requiring Yahoo class/preferred-share mapping were omitted; identities were not guessed.", provenance.excluded));
+        }
     }
-    if rows.is_empty() {
-        return Err(ProviderError::Upstream {
-            message: "Malaysian tracked-set quotes unavailable".into(),
-            retry_after: Some(retry_after.unwrap_or(30)),
-        });
-    }
-    let missing: Vec<_> = requested
-        .iter()
-        .filter(|id| !rows.contains_key(*id))
-        .map(InstrumentId::display_symbol)
-        .collect();
-    let mut value = Market::fresh(
-        rows.into_values().collect(),
-        "Yahoo Finance quotes · native MY tracked set",
-    );
-    value.coverage = Some(format!(
-        "{} of {total} tracked Malaysian equities available; not an exchange-wide listing",
-        total - missing.len()
-    ));
-    value.limitations.push("Rankings apply only to the configured tracked set, not all Bursa listings. Provider observations may be delayed and are not simultaneous.".into());
-    if !missing.is_empty() {
-        value.limitations.push(format!(
-            "Unavailable tracked quotes omitted: {}",
-            missing.join(", ")
-        ));
-    }
-    if limited {
-        value
-            .limitations
-            .push("Refresh stopped after provider rate limiting; coverage is partial.".into());
-    }
-    value.retry_after = retry_after;
     Ok(value)
 }
 
@@ -310,8 +290,7 @@ pub(crate) async fn load(
     market: &str,
 ) -> Result<Market<Vec<SnapshotRow>>, ProviderError> {
     match market {
-        "US" => us(provider).await,
-        "MY" => my(provider).await,
+        "US" | "MY" => paged(provider, market).await,
         _ => Err(ProviderError::Configuration(
             "unsupported equity market".into(),
         )),
@@ -409,7 +388,8 @@ mod tests {
             &mut seen,
             RawPage {
                 total: 2,
-                quotes: vec![quote("A", "1")?]
+                quotes: vec![quote("A", "1")?],
+                provenance: PageProvenance::default(),
             },
             2,
             0
@@ -419,10 +399,11 @@ mod tests {
             &mut rows,
             &mut seen,
             RawPage {
-                total: 20_001,
-                quotes: vec![]
+                total: MAX_ROWS + 1,
+                quotes: vec![],
+                provenance: PageProvenance::default(),
             },
-            20_001,
+            MAX_ROWS + 1,
             0
         )
         .is_err());
@@ -431,7 +412,8 @@ mod tests {
             &mut seen,
             RawPage {
                 total: 2,
-                quotes: vec![quote("A", "1")?, quote("A", "2")?]
+                quotes: vec![quote("A", "1")?, quote("A", "2")?],
+                provenance: PageProvenance::default(),
             },
             2,
             0
@@ -447,6 +429,7 @@ mod tests {
             RawPage {
                 total: 0,
                 quotes: vec![],
+                provenance: PageProvenance::default(),
             },
             "fixture",
         );
@@ -460,6 +443,61 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn nasdaq_quotes_retain_source_date_and_unavailable_fields(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        use std::io::{Read, Write};
+        let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+        let base = format!("http://{}", listener.local_addr()?);
+        let server = std::thread::spawn(move || -> std::io::Result<()> {
+            let (mut socket, _) = listener.accept()?;
+            socket.set_read_timeout(Some(std::time::Duration::from_secs(3)))?;
+            let mut request = [0; 4096];
+            if socket.read(&mut request)? == 0 {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::UnexpectedEof,
+                    "missing HTTP request",
+                ));
+            }
+            let body = json!({"status":"ok","data":{
+                "total":1,"feed":"nasdaq","as_of":"Last price as of Oct 15, 2026",
+                "excluded":3,"snapshot_id":"fixture-revision",
+                "quotes":[{"symbol":"AAPL","shortName":"Apple Inc.","regularMarketPrice":"342.00000001","regularMarketVolume":1234}]
+            }}).to_string();
+            write!(
+                socket,
+                "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                body.len()
+            )?;
+            Ok(())
+        });
+        let result = paged(&DirectHttpProvider::new(&base, None)?, "US").await?;
+        server.join().map_err(|_| "fixture server panicked")??;
+        assert!(result
+            .source
+            .as_deref()
+            .is_some_and(|source| source.contains("Nasdaq")));
+        assert!(result
+            .coverage
+            .as_deref()
+            .is_some_and(|coverage| coverage.contains("Oct 15")));
+        assert!(result
+            .limitations
+            .iter()
+            .any(|note| note.contains("3 provider identifiers")));
+        let row = result
+            .data
+            .as_ref()
+            .and_then(|rows| rows.first())
+            .ok_or("missing result")?;
+        assert_eq!(row.asset.price.as_deref(), Some("342.00000001"));
+        assert_eq!(row.asset.instrument.id.as_str(), "yahoo:AAPL");
+        assert!(row.asset.instrument.exchange.is_none());
+        assert!(row.asset.currency.is_none());
+        assert!(row.observed_at.is_none());
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn broad_us_pages_are_assembled_with_four_workers(
     ) -> Result<(), Box<dyn std::error::Error>> {
         use std::{
@@ -467,29 +505,30 @@ mod tests {
             sync::{Arc, Condvar, Mutex},
             time::{Duration, Instant},
         };
-        let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
-        let base = format!("http://{}", listener.local_addr()?);
-        listener.set_nonblocking(true)?;
-        let concurrency = Arc::new((Mutex::new((0usize, 0usize)), Condvar::new()));
-        let observed = concurrency.clone();
-        let server = std::thread::spawn(
-            move || -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-                let mut workers = Vec::new();
-                let deadline = Instant::now() + Duration::from_secs(10);
-                while workers.len() < 5 {
-                    let (mut socket, _) = match listener.accept() {
-                        Ok(connection) => connection,
-                        Err(error)
-                            if error.kind() == std::io::ErrorKind::WouldBlock
-                                && Instant::now() < deadline =>
-                        {
-                            std::thread::sleep(Duration::from_millis(5));
-                            continue;
-                        }
-                        Err(error) => return Err(error.into()),
-                    };
-                    let concurrency = concurrency.clone();
-                    workers.push(std::thread::spawn(move || -> std::io::Result<()> {
+        for market in ["US", "MY"] {
+            let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+            let base = format!("http://{}", listener.local_addr()?);
+            listener.set_nonblocking(true)?;
+            let concurrency = Arc::new((Mutex::new((0usize, 0usize)), Condvar::new()));
+            let observed = concurrency.clone();
+            let server = std::thread::spawn(
+                move || -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+                    let mut workers = Vec::new();
+                    let deadline = Instant::now() + Duration::from_secs(10);
+                    while workers.len() < 5 {
+                        let (mut socket, _) = match listener.accept() {
+                            Ok(connection) => connection,
+                            Err(error)
+                                if error.kind() == std::io::ErrorKind::WouldBlock
+                                    && Instant::now() < deadline =>
+                            {
+                                std::thread::sleep(Duration::from_millis(5));
+                                continue;
+                            }
+                            Err(error) => return Err(error.into()),
+                        };
+                        let concurrency = concurrency.clone();
+                        workers.push(std::thread::spawn(move || -> std::io::Result<()> {
                     socket.set_nonblocking(false)?;
                     socket.set_read_timeout(Some(Duration::from_secs(3)))?;
                     let mut bytes = [0; 4096];
@@ -506,30 +545,31 @@ mod tests {
                         signal.notify_all();
                         let _state = signal.wait_timeout_while(state, Duration::from_secs(3), |state| state.1 < 4).map_err(|_| std::io::Error::other("poisoned fixture"))?;
                     }
-                    let quotes: Vec<_> = (offset..(offset + PAGE_SIZE).min(1001)).map(|i| json!({"symbol":format!("S{i}"), "regularMarketPrice":"1.00000001", "exchange":"PNK"})).collect();
+                    let quotes: Vec<_> = (offset..(offset + PAGE_SIZE).min(1001)).map(|i| json!({"symbol":if target.contains("my-page") {format!("{i:04}.KL")} else {format!("S{i}")}, "regularMarketPrice":"1.00000001", "exchange":if target.contains("my-page") {"KLS"} else {"PNK"}})).collect();
                     let body = json!({"status":"ok", "data":{"total":1001,"quotes":quotes}}).to_string();
                     write!(socket, "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len())?;
                     Ok(())
                 }));
-                }
-                for worker in workers {
-                    worker.join().map_err(|_| "fixture worker panicked")??;
-                }
-                Ok(())
-            },
-        );
-        let result = us(&DirectHttpProvider::new(&base, None)?).await;
-        server
-            .join()
-            .map_err(|_| "fixture server panicked")?
-            .map_err(|error| error.to_string())?;
-        let result = result?;
-        assert_eq!(result.data.as_ref().map(Vec::len), Some(1001));
-        assert_eq!(observed.0.lock().map_err(|_| "fixture lock poisoned")?.1, 4);
-        assert!(result
-            .coverage
-            .as_deref()
-            .is_some_and(|coverage| coverage.contains("1001")));
+                    }
+                    for worker in workers {
+                        worker.join().map_err(|_| "fixture worker panicked")??;
+                    }
+                    Ok(())
+                },
+            );
+            let result = paged(&DirectHttpProvider::new(&base, None)?, market).await;
+            server
+                .join()
+                .map_err(|_| "fixture server panicked")?
+                .map_err(|error| error.to_string())?;
+            let result = result?;
+            assert_eq!(result.data.as_ref().map(Vec::len), Some(1001));
+            assert_eq!(observed.0.lock().map_err(|_| "fixture lock poisoned")?.1, 4);
+            assert!(result
+                .coverage
+                .as_deref()
+                .is_some_and(|coverage| coverage.contains("1001")));
+        }
         Ok(())
     }
 }

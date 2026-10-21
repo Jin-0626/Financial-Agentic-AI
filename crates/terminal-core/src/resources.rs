@@ -72,7 +72,7 @@ impl ResourceRequest {
                 min_volume,
                 ..
             } => {
-                *offset <= 20_000
+                (*offset as usize) < crate::MAX_EQUITIES
                     && sector.as_ref().is_none_or(|value| value.len() <= 80)
                     && crate::browser::validate_filters(*min_cap, *min_change, *min_volume)
             }
@@ -243,6 +243,12 @@ impl ResourcePayload {
                 next.stale = true;
                 next.source = old.source.clone();
                 next.observed_at = old.observed_at;
+                next.currency = old.currency.clone();
+                next.instrument = old.instrument.clone();
+                next.interval = old.interval;
+                next.range = old.range;
+                next.coverage = old.coverage.clone();
+                next.limitations = old.limitations.clone();
                 if next.error.is_none() {
                     next.error =
                         Some("Provider is unavailable; showing last successful data".into());
@@ -289,8 +295,12 @@ impl ResourcePayload {
     }
     pub fn mark_stale(&mut self, error: String) {
         fn stale<T>(market: &mut Market<T>, error: String) {
-            market.status = crate::MarketStatus::Stale;
-            market.stale = true;
+            market.stale = market.data.is_some();
+            market.status = if market.stale {
+                crate::MarketStatus::Stale
+            } else {
+                crate::MarketStatus::Unavailable
+            };
             market.error = Some(error);
         }
         match self {
@@ -305,5 +315,58 @@ impl ResourcePayload {
             Self::Earnings(v) => stale(v, error),
             Self::Options(v) => stale(v, error),
         }
+    }
+}
+
+#[cfg(test)]
+mod stale_metadata_tests {
+    use super::*;
+    use crate::{HistoryRange, MarketStatus, TimeFrame};
+    use std::sync::Arc;
+
+    #[test]
+    fn failure_without_cached_data_remains_unavailable() {
+        let mut payload = ResourcePayload::News(Market::unavailable("No data".into()));
+        payload.mark_stale("Transport failed".into());
+        let ResourcePayload::News(market) = payload else {
+            panic!("News payload expected")
+        };
+        assert_eq!(market.status, MarketStatus::Unavailable);
+        assert!(!market.stale);
+        assert!(market.data.is_none());
+        assert_eq!(market.error.as_deref(), Some("Transport failed"));
+    }
+
+    #[test]
+    fn retained_history_keeps_its_display_metadata_and_current_failure() {
+        let mut old = Market::fresh(Arc::<[crate::Candle]>::from([]), "Fixture");
+        old.currency = Some("MYR".into());
+        old.interval = Some(TimeFrame::Day);
+        old.range = Some(HistoryRange::SixMonths);
+        old.coverage = Some("Unadjusted display OHLC".into());
+        old.limitations = vec!["Volume unavailable".into()];
+        let previous = ResourcePayload::History(old);
+        let mut failed = Market::unavailable("Provider failed".into());
+        failed.retry_after = Some(17);
+        failed.limitations = vec!["Retry later".into()];
+        let mut next = ResourcePayload::History(failed);
+        next.preserve_last_success(&previous);
+        let ResourcePayload::History(market) = &next else {
+            panic!("History expected")
+        };
+        assert_eq!(market.status, MarketStatus::Stale);
+        assert_eq!(market.currency.as_deref(), Some("MYR"));
+        assert_eq!(market.interval, Some(TimeFrame::Day));
+        assert_eq!(market.range, Some(HistoryRange::SixMonths));
+        assert_eq!(market.coverage.as_deref(), Some("Unadjusted display OHLC"));
+        assert_eq!(market.limitations, vec!["Volume unavailable"]);
+        assert_eq!(market.retry_after, Some(17));
+        assert_eq!(market.error.as_deref(), Some("Provider failed"));
+        let mut again = ResourcePayload::History(Market::unavailable("Still failed".into()));
+        again.preserve_last_success(&next);
+        let ResourcePayload::History(market) = again else {
+            panic!("History expected")
+        };
+        assert_eq!(market.limitations, vec!["Volume unavailable"]);
     }
 }

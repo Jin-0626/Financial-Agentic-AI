@@ -16,7 +16,7 @@ class NativeSnapshotTests(unittest.TestCase):
                 ) as provider,
             ):
                 self.assertEqual(screening.snapshot(market), {"data": [], "total": 0})
-                provider.assert_called_once_with(None, None, None, None, "symbol", False, 0, 20000)
+                provider.assert_called_once_with(None, None, None, None, "symbol", False, 0, 50000)
 
     def test_unknown_market_is_rejected(self):
         with self.assertRaises(ValueError):

@@ -156,37 +156,6 @@ class SQLitePortfolioRepository:
             finally:
                 await self._call(lambda: self._conn().rollback())
 
-    async def import_documents(self, documents):
-        """Atomic repeatable copy; never replace differing local documents."""
-
-        def copy_documents():
-            conn = self._conn()
-            imported = 0
-            conn.execute("BEGIN IMMEDIATE")
-            try:
-                for org, user, pid, revision, document in documents:
-                    if (
-                        not isinstance(document, dict)
-                        or document.get("id") != pid
-                        or document.get("revision") != revision
-                        or revision < 1
-                    ):
-                        raise ValueError("Invalid portfolio migration document")
-                    previous = self._load(org, user, pid)
-                    if previous is not None:
-                        if previous != document:
-                            raise ValueError("Portfolio migration conflicts with local data")
-                        continue
-                    self._write(org, user, pid, document)
-                    imported += 1
-                conn.commit()
-                return imported
-            finally:
-                conn.rollback()
-
-        async with self._lock:
-            return await self._call(copy_documents)
-
     async def close(self):
         async with self._lock:
             if self._closed:

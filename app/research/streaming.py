@@ -174,6 +174,9 @@ async def _stream_sse(
             raise ValueError(result["error"])
         trace.finish()
     except Exception as e:
+        splitter.flush()
+        for event in drain():
+            yield event
         trace.finish("error", e)
         logger.error(f"Streaming chat error: thread_id={thread_id}: {e}", exc_info=True)
         if "budget exhausted" in str(e):
@@ -190,7 +193,7 @@ async def _stream_sse(
         yield ev
 
     full_content = result["result"]
-    full_reasoning = "\n\n".join(p for p in reasoning_parts if p.strip()).strip() or None
+    full_reasoning = "".join(reasoning_parts).strip() or None
     logger.info(
         f"Streaming chat completed: thread_id={thread_id}, reply_length={len(full_content)}"
     )

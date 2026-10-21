@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { researchThreads, sameResearchThread } from "../src/research-screen";
 import { defaultBrowser } from "../src/browser-model";
 import { resourceKey } from "../src/subscriptions";
 import { expect, test, Page } from "@playwright/test";
@@ -399,7 +401,9 @@ test("multi-chart presets retain independent ranges and saved layouts", async ({
   for (const binding of await page.locator(".panel-binding").all())
     await expect(binding).toContainText("Linked · AAPL Apple Inc.");
   await workspaceTools(page);
-  await page.getByLabel("Saved layout").selectOption("Moomoo Market Desk");
+  await page
+    .getByLabel("Saved layout")
+    .selectOption(defaultWorkspace().active_layout);
   await expect(page.locator(".history")).toHaveCount(1);
   await workspaceTools(page);
   await page.getByLabel("Saved layout").selectOption("Four Chart Desk");
@@ -2659,6 +2663,18 @@ test("market filters, pagination, columns and identity-local presets persist ind
   await expect(page.getByLabel("Filter loaded market results")).toHaveValue(
     "Fixture stock 7",
   );
+  await page.getByRole("button", { name: "All stocks", exact: true }).click();
+  await expect(page.getByLabel("Market sector", { exact: true })).toHaveValue(
+    "",
+  );
+  await expect(page.getByLabel("Minimum volume", { exact: true })).toHaveValue(
+    "",
+  );
+  await expect(page.getByLabel("Filter loaded market results")).toHaveValue("");
+  await expect(page.getByLabel("Market sort", { exact: true })).toHaveValue(
+    "symbol",
+  );
+  await expect(page.locator(".market-custom-table tbody tr")).toHaveCount(100);
 });
 
 test("failed display writes retain column drafts and recover through retry", async ({
@@ -2869,3 +2885,364 @@ for (const state of ["empty", "unavailable", "no_expiries"] as const)
       });
     }
   });
+
+test("research recovers native runs, guards submissions and retains failed drafts", async ({
+  page,
+}) => {
+  await nativeFixture(page, false, true, true);
+  await page.addInitScript(() => {
+    const platform = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (
+          name: string,
+          args?: Record<string, unknown>,
+        ) => Promise<unknown>;
+      };
+      testResearchStarts: number;
+    };
+    const original = platform.__TAURI_INTERNALS__.invoke;
+    const runs: {
+      id: string;
+      thread: string;
+      message: string;
+      content: string;
+      reasoning: string;
+      activity: [];
+      running: boolean;
+      error: null;
+    }[] = [];
+    platform.testResearchStarts = 0;
+    platform.__TAURI_INTERNALS__.invoke = async (name, args) => {
+      if (name === "terminal_service") {
+        const request = args?.request as { type: string };
+        if (request.type === "threads")
+          return [
+            {
+              thread_id: "default-org__local-user__saved",
+              last_message: "Saved question title",
+            },
+          ];
+        if (request.type === "history") {
+          const complete = runs.find((value) => !value.running);
+          return {
+            messages: complete
+              ? [
+                  { role: "user", content: complete.message },
+                  { role: "assistant", content: complete.content },
+                ]
+              : [],
+          };
+        }
+      }
+      if (name === "terminal_research") {
+        const action = args?.action as {
+          type: string;
+          id: string;
+          request: { message: string; thread_id: string };
+        };
+        if (action.type === "list") return structuredClone(runs);
+        if (action.type === "start") {
+          platform.testResearchStarts++;
+          await new Promise((resolve) => setTimeout(resolve, 150));
+          if (action.request.message === "Fail this question")
+            throw new Error("Research unavailable fixture");
+          const run = {
+            id: action.id,
+            thread: action.request.thread_id,
+            message: action.request.message,
+            content: "Live research fixture",
+            reasoning: "",
+            activity: [] as [],
+            running: true,
+            error: null,
+          };
+          runs.push(run);
+          return [structuredClone(run)];
+        }
+        if (action.type === "cancel") {
+          const run = runs.find((value) => value.id === action.id);
+          if (run) run.running = false;
+          return structuredClone(
+            runs.filter((value) => value.id === action.id),
+          );
+        }
+      }
+      const value = await original(name, args);
+      if (
+        name === "terminal_resource" &&
+        (args?.request as { type: string })?.type === "capabilities"
+      ) {
+        (
+          value as { market: { features: { research: boolean } } }
+        ).market.features.research = true;
+      }
+      return value;
+    };
+  });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Workspace views" });
+  const open = async () => {
+    if (
+      !(await nav
+        .getByRole("button", { name: "research", exact: true })
+        .isVisible())
+    )
+      await nav.getByText("More", { exact: true }).click();
+    await nav.getByRole("button", { name: "research", exact: true }).click();
+  };
+  await open();
+  await expect(
+    page.getByRole("option", { name: "Saved question title" }),
+  ).toHaveCount(1);
+  await page
+    .getByLabel("Research message", { exact: true })
+    .fill("First submitted question");
+  await page
+    .getByRole("button", { name: "Send research", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Starting research…", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByLabel("Research response", { exact: true }),
+  ).toContainText("Live research fixture");
+  await expect(
+    page.getByLabel("Research question", { exact: true }),
+  ).toContainText("First submitted question");
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { testResearchStarts: number })
+          .testResearchStarts,
+    ),
+  ).toBe(1);
+  await nav.getByRole("button", { name: "dashboard", exact: true }).click();
+  await open();
+  await expect(
+    page.getByLabel("Research response", { exact: true }),
+  ).toContainText("Live research fixture");
+  await page
+    .getByRole("button", { name: "Cancel research", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Send research", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page
+      .locator(".message-content")
+      .filter({ hasText: "Live research fixture" }),
+  ).toHaveCount(1);
+  for (const [width, height] of [
+    [1440, 1000],
+    [960, 640],
+  ]) {
+    await page.setViewportSize({ width, height });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `test-results/research-${width}.png`,
+      fullPage: true,
+    });
+  }
+  await page.getByRole("button", { name: "New research", exact: true }).click();
+  const localThread = await page
+    .getByLabel("Research thread", { exact: true })
+    .inputValue();
+  await page
+    .getByLabel("Research message", { exact: true })
+    .fill("Unsent local question");
+  await page
+    .getByRole("button", { name: "Refresh research", exact: true })
+    .click();
+  await expect(
+    page.getByRole("option", { name: "New research", exact: true }),
+  ).toHaveCount(1);
+  await expect(page.getByLabel("Research thread", { exact: true })).toHaveValue(
+    localThread,
+  );
+  await expect(
+    page.getByLabel("Research message", { exact: true }),
+  ).toHaveValue("Unsent local question");
+  await page
+    .getByLabel("Research message", { exact: true })
+    .fill("Fail this question");
+  await page
+    .getByRole("button", { name: "Send research", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Research unavailable fixture",
+  );
+  await expect(
+    page.getByLabel("Research message", { exact: true }),
+  ).toHaveValue("Fail this question");
+  await expect(
+    page.getByRole("button", { name: "Send research", exact: true }),
+  ).toBeEnabled();
+});
+
+test("research thread merging preserves titles and does not mutate history", () => {
+  const threads = [
+    { thread_id: "org__user__thread", last_message: "Saved question title" },
+  ];
+  const run = {
+    id: "run",
+    thread: "thread",
+    message: "New question",
+    content: "",
+    reasoning: "",
+    activity: [],
+    running: true,
+    error: null,
+  };
+  const rows = researchThreads(threads, [run]);
+  expect(rows).toHaveLength(1);
+  expect(rows[0].last_message).toBe("Saved question title");
+  const untitled = [{ thread_id: "org__user__thread", last_message: null }];
+  expect(researchThreads(untitled, [run])[0].last_message).toBe("New question");
+  expect(untitled[0].last_message).toBeNull();
+  expect(sameResearchThread("org__other__thread", "org__user__thread")).toBe(
+    false,
+  );
+});
+
+test("market table reference layout keeps headers and instruments visible while scrolling", async ({
+  page,
+}) => {
+  await nativeFixture(page, false, true, false, true);
+  await page.goto("/");
+  await navigateScreen(page, "markets");
+  await page.getByRole("tab", { name: "MY Equities", exact: true }).click();
+  await expect(page.locator(".market-custom-table tbody tr")).toHaveCount(100);
+  await page.getByRole("button", { name: "All stocks", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "All stocks", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  for (const [width, height] of [
+    [1440, 1000],
+    [960, 640],
+  ]) {
+    await page.setViewportSize({ width, height });
+    const table = page.locator(".market-custom-table");
+    const header = table.locator("thead th").first();
+    await table.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    const before = await header.boundingBox();
+    await table.evaluate((element) => {
+      element.scrollTop = 500;
+    });
+    const after = await header.boundingBox();
+    expect(before && after && Math.abs(before.y - after.y) < 2).toBe(true);
+    await expect(table.locator("tbody td").first()).toHaveCSS(
+      "position",
+      "sticky",
+    );
+    expect(
+      await table.evaluate((element) => element.clientHeight),
+    ).toBeGreaterThanOrEqual(120);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await table.evaluate((element) => {
+      element.scrollTop = 0;
+    });
+    await page.screenshot({
+      path: `test-results/market-reference-${width}.png`,
+      fullPage: true,
+    });
+  }
+  await workspaceTools(page);
+  await page.getByRole("button", { name: "COMPACT", exact: true }).click();
+  await page.locator(".workspace-tools > summary").click();
+  await expect(page.locator(".workspace")).toHaveAttribute(
+    "data-compact",
+    "true",
+  );
+  const compactRow = await page
+    .locator(".market-custom-table tbody tr")
+    .first()
+    .boundingBox();
+  expect(compactRow?.height).toBeLessThanOrEqual(34);
+  await page.screenshot({
+    path: "test-results/market-reference-compact-960.png",
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Market columns", exact: true })
+    .click();
+  const columns = page.getByRole("dialog", {
+    name: "Market columns",
+    exact: true,
+  });
+  await columns
+    .getByLabel("Move Instrument column down", { exact: true })
+    .click();
+  await columns
+    .getByRole("button", { name: "Apply columns", exact: true })
+    .click();
+  await expect(
+    page.locator(".market-custom-table thead th").first(),
+  ).toHaveAttribute("data-column", "price");
+  await expect(
+    page
+      .locator('.market-custom-table tbody td[data-column="instrument"]')
+      .first(),
+  ).toHaveCSS("position", "sticky");
+  await expect(page.locator(".market-custom-table tbody td").first()).toHaveCSS(
+    "position",
+    "static",
+  );
+});
+
+
+test("grouped workspace can switch maximized tabs and split panels again", async ({ page }) => {
+  await nativeFixture(page);
+  await page.goto("/");
+  await page.getByLabel("Move watchlist", { exact: true }).click();
+  const menu = page.locator(".dock-menu[open]");
+  await menu.getByLabel("Destination group").selectOption("chart-group");
+  await menu.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(page.getByRole("separator", { name: "Resize panels" })).toHaveCount(0);
+  await page.getByLabel("Maximize watchlist", { exact: true }).click();
+  await page.getByRole("tab", { name: "CHART", exact: true }).click();
+  await expect(page.getByRole("img", { name: "OHLC candlestick chart" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "WATCHLIST", exact: true })).toBeVisible();
+  await page.getByLabel("Maximize chart", { exact: true }).click();
+  await page.getByLabel("Move chart", { exact: true }).click();
+  await menu.getByLabel("Destination group").selectOption("chart-group");
+  await menu.getByLabel("Dock position").selectOption("right");
+  await menu.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(page.getByRole("separator", { name: "Resize panels" })).toHaveCount(1);
+  await expect(page.locator(".watchlist")).toBeVisible();
+  await expect(page.getByRole("img", { name: "OHLC candlestick chart" })).toBeVisible();
+});
+
+
+test("desktop enables HTML panel drag and drop on Windows", () => {
+  const config = JSON.parse(readFileSync("src-tauri/tauri.conf.json", "utf-8"));
+  expect(config.app.windows[0].dragDropEnabled).toBe(false);
+});
+
+test("panel drag can group and split tabs without losing panel settings", async ({ page }) => {
+  await nativeFixture(page);
+  await page.goto("/");
+  const transfer = await page.evaluateHandle(() => new DataTransfer());
+  await page.getByRole("tab", { name: "WATCHLIST", exact: true }).dispatchEvent("dragstart", { dataTransfer: transfer });
+  const chart = page.locator(".dock-group").filter({ has: page.getByRole("tab", { name: "CHART", exact: true }) });
+  await chart.locator(".dock-drop.center").dispatchEvent("drop", { dataTransfer: transfer });
+  await expect(page.locator(".dock-group")).toHaveCount(1);
+  await page.getByRole("tab", { name: "WATCHLIST", exact: true }).dispatchEvent("dragstart", { dataTransfer: transfer });
+  await page.locator(".dock-drop.left").dispatchEvent("drop", { dataTransfer: transfer });
+  await expect(page.locator(".dock-group")).toHaveCount(2);
+  await expect(page.locator(".watchlist")).toBeVisible();
+  await expect(page.getByRole("img", { name: "OHLC candlestick chart" })).toBeVisible();
+  const saved = await browserSnapshot(page);
+  const layout = saved.preferences.workspace!.layouts.find((layout) => layout.name === saved.preferences.workspace!.active_layout)!;
+  expect(Object.keys(layout.panels!)).toEqual(expect.arrayContaining(["watchlist", "chart"]));
+  await transfer.dispose();
+});

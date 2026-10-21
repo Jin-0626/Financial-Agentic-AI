@@ -1,5 +1,8 @@
 //! Mock and existing FastAPI market adapters, independent of terminal and storage.
+pub mod curated;
 mod equities;
+pub mod native;
+mod native_decimal;
 pub mod research;
 mod screening;
 use chrono::Utc;

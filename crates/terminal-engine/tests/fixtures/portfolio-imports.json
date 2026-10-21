@@ -1,0 +1,86 @@
+[
+  {
+    "raw": "{\"portfolio_name\": \"Fixture\", \"currency\": \"USD\", \"transactions\": [{\"symbol\": \"aapl\", \"type\": \"BUY\", \"quantity\": \"2.5000\", \"price\": \"123.4500\", \"date\": \"2025-01-01\", \"notes\": \"\"}]}",
+    "preview_hash": "2f138d00d62c5f418fdabb54f6882b6fe8928959ccf655ab176fdda89b920aca",
+    "trades": [
+      {
+        "id": "import_7f0af405a5a7b4ae3ea264419ec06ffcef790e3812f0a2f7",
+        "symbol": "AAPL",
+        "side": "BUY",
+        "quantity": "2.5000",
+        "price": "123.4500",
+        "date": "2025-01-01",
+        "notes": ""
+      }
+    ]
+  },
+  {
+    "raw": "{\"portfolio_name\": \"测试基金\", \"currency\": \"USD\", \"transactions\": [{\"symbol\": \"AAPL\", \"type\": \"BUY\", \"quantity\": 1e-05, \"price\": 1.25, \"date\": \"2025-01-01T12:00:00Z\", \"notes\": \"é🚀\"}, {\"symbol\": \"AAPL\", \"type\": \"BUY\", \"quantity\": 1e-05, \"price\": 1.25, \"date\": \"2025-01-01T12:00:00Z\", \"notes\": \"é🚀\"}]}",
+    "preview_hash": "a378c19444800c2c4ac138eb5bccb719995e3dbea1fe7e6c8cc57382c3b66172",
+    "trades": [
+      {
+        "id": "import_534912418996d50110b64c6d6427c5d1788692bb77e68d22",
+        "symbol": "AAPL",
+        "side": "BUY",
+        "quantity": "0.00001",
+        "price": "1.25",
+        "date": "2025-01-01",
+        "notes": "é🚀"
+      },
+      {
+        "id": "import_c53250c97a3711571c03db6c3d008b3d7509f8fb153e8785",
+        "symbol": "AAPL",
+        "side": "BUY",
+        "quantity": "0.00001",
+        "price": "1.25",
+        "date": "2025-01-01",
+        "notes": "é🚀"
+      }
+    ]
+  },
+  {
+    "raw": "{\"portfolio_name\": \"Explicit\", \"currency\": \"MYR\", \"benchmark\": \"^KLSE\", \"transactions\": [{\"id\": \"seed-1\", \"symbol\": \"5326.kl\", \"type\": \"BUY\", \"quantity\": \"100\", \"price\": \"3.1000\", \"date\": \"2025-01-01\"}]}",
+    "preview_hash": "8e53fe2a00b56908e9dabcdfd95c635233b02421eaa368cdcedd12774d43b92e",
+    "trades": [
+      {
+        "id": "seed-1",
+        "symbol": "5326.KL",
+        "side": "BUY",
+        "quantity": "100",
+        "price": "3.1000",
+        "date": "2025-01-01",
+        "notes": ""
+      }
+    ]
+  },
+  {
+    "raw": "{\"portfolio_name\": \"Nullable ID\", \"currency\": \" USD \", \"extra_negative_zero\": -0, \"transactions\": [{\"id\": null, \"symbol\": \"AAPL\", \"type\": \"BUY\", \"quantity\": \"2.5000\", \"price\": \"0.0000\", \"date\": \"2025-01-01\"}]}",
+    "preview_hash": "53f5121c3109e678bcf4235f2fd0a15f1b1b97af44f359afe5c9b24e577ea565",
+    "trades": [
+      {
+        "id": "import_9a2187298c402fa0b0b02dc111bcdc6b4f2c323e4f4557dd",
+        "symbol": "AAPL",
+        "side": "BUY",
+        "quantity": "2.5000",
+        "price": "0.0000",
+        "date": "2025-01-01",
+        "notes": ""
+      }
+    ]
+  },
+  {
+    "raw": "{\"portfolio_name\": \"Falsy ID\", \"currency\": \" USD \", \"extra_negative_zero\": -0, \"transactions\": [{\"id\": 0, \"symbol\": \"AAPL\", \"type\": \"BUY\", \"quantity\": \"2.5000\", \"price\": \"0.0000\", \"date\": \"2025-01-01\"}]}",
+    "preview_hash": "c3b2843303d9ce7b0c7bab2c7ecfd443f3d98b75f7785904008ef4640a9cfa61",
+    "trades": [
+      {
+        "id": "import_9a2187298c402fa0b0b02dc111bcdc6b4f2c323e4f4557dd",
+        "symbol": "AAPL",
+        "side": "BUY",
+        "quantity": "2.5000",
+        "price": "0.0000",
+        "date": "2025-01-01",
+        "notes": ""
+      }
+    ]
+  }
+]

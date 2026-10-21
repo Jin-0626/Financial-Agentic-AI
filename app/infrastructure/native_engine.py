@@ -94,8 +94,11 @@ class NativeEngine:
         async with self.lock:
             if self.closed:
                 raise RuntimeError("Native engine is closed")
-            if org_id in self.connections and self.connections[org_id][2].done():
-                self.connections.pop(org_id)
+            finished = [org for org, (_, _, task) in self.connections.items() if task.done()]
+            for org in finished:
+                ready, _, _ = self.connections.pop(org)
+                if ready.done() and not ready.cancelled():
+                    ready.exception()
             if org_id not in self.connections:
                 if len(self.connections) >= 8:
                     raise ValueError("Native organization capacity reached")

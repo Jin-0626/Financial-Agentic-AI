@@ -218,9 +218,9 @@ impl Default for Workspace {
             compact: true,
             desktop: DesktopViewSettings::default(),
             browser: crate::browser::BrowserPreferences::default(),
-            active_layout: "Moomoo Market Desk".into(),
+            active_layout: "Market Desk".into(),
             layouts: vec![NamedLayout {
-                name: "Moomoo Market Desk".into(),
+                name: "Market Desk".into(),
                 panels: BTreeMap::from([
                     (
                         "chart".into(),
@@ -317,6 +317,30 @@ impl Workspace {
             }
         }
         self.validate()
+    }
+    /// Rename the former built-in preset without overwriting a user's layout.
+    pub fn rename_legacy_market_desk(&mut self) -> bool {
+        let mut changed = false;
+        for index in 0..self.layouts.len() {
+            if !self.layouts[index]
+                .name
+                .eq_ignore_ascii_case("Moomoo Market Desk")
+            {
+                continue;
+            }
+            let mut name = "Market Desk".to_owned();
+            let mut suffix = 2;
+            while self.layouts.iter().any(|layout| layout.name == name) {
+                name = format!("Market Desk ({suffix})");
+                suffix += 1;
+            }
+            if self.active_layout == self.layouts[index].name {
+                self.active_layout = name.clone();
+            }
+            self.layouts[index].name = name;
+            changed = true;
+        }
+        changed
     }
     pub fn validate(&self) -> Result<(), TerminalError> {
         self.desktop.validate()?;
@@ -419,6 +443,21 @@ mod tests {
         workspace.layouts.push(workspace.layouts[0].clone());
         assert!(workspace.validate().is_err());
         Ok(())
+    }
+    #[test]
+    fn legacy_preset_renaming_preserves_layouts_and_active_selection() {
+        let mut workspace = Workspace::default();
+        let mut legacy = workspace.layouts[0].clone();
+        legacy.name = "Moomoo Market Desk".into();
+        workspace.active_layout = legacy.name.clone();
+        workspace.layouts.push(legacy);
+        assert!(workspace.rename_legacy_market_desk());
+        assert_eq!(workspace.layouts.len(), 2);
+        assert_eq!(workspace.layouts[0].name, "Market Desk");
+        assert_eq!(workspace.active_layout, "Market Desk (2)");
+        assert_eq!(workspace.layouts[1].name, "Market Desk (2)");
+        assert!(workspace.validate().is_ok());
+        assert!(!workspace.rename_legacy_market_desk());
     }
     #[test]
     fn invalid_ratio_rejected() {

@@ -87,9 +87,9 @@ export function MarketsBrowser({
       </div>
       <p className="coverage-note">
         {view.market_tab === "MY"
-          ? "Malaysia: configured tracked set, not all Bursa listings. Rankings apply within this set."
+          ? "Malaysia: all retrieved provider-listed equities. Sorting and numeric filters apply across the complete retrieved universe."
           : view.market_tab === "US"
-            ? "Broad US provider coverage, including OTC; ranked by displayed regular-session quotes. This is not an exhaustive exchange listing."
+            ? "Broad US provider coverage; ranked by displayed quote values. Source and coverage are shown below; this is not an exhaustive exchange listing."
             : "Provider coverage; this is not an exhaustive exchange listing."}
       </p>
       {view.market_tab === "overview" ? (
@@ -291,9 +291,37 @@ function MarketTable({
     }
   };
   return (
-    <>
-      <div className="feature-toolbar">
+    <section
+      className="market-table-workspace"
+      aria-label={`${market} stock table`}
+    >
+      <div className="feature-toolbar market-table-tools">
         <div className="rank-views" aria-label="Equity rankings">
+          <button
+            disabled={disabled}
+            aria-pressed={
+              settings.sort === "symbol" &&
+              !settings.descending &&
+              !settings.sector &&
+              !settings.min_cap &&
+              !settings.min_change &&
+              !settings.min_volume &&
+              !settings.filter
+            }
+            onClick={() =>
+              change({
+                sector: null,
+                min_cap: null,
+                min_change: null,
+                min_volume: null,
+                filter: "",
+                sort: "symbol",
+                descending: false,
+              })
+            }
+          >
+            All stocks
+          </button>
           {(
             [
               { label: "Market Cap", sort: "market_cap", descending: true },
@@ -386,7 +414,7 @@ function MarketTable({
           <button disabled={disabled}>Apply sector</button>
         </form>
       )}
-      <div className="feature-toolbar">
+      <div className="feature-toolbar market-sort-tools">
         <label>
           Sort
           <select
@@ -437,7 +465,7 @@ function MarketTable({
           {visible.length}/{rows.length} loaded rows ·{" "}
           {market === "crypto"
             ? "Sorting applies to returned results"
-            : "Ranking and numeric filters are provider-side"}
+            : "Sorting and numeric filters apply across the complete retrieved stock universe"}
         </span>
       </div>
       <BrowserSaveStatus />
@@ -452,7 +480,14 @@ function MarketTable({
       {loading && snapshot.mode === "HTTP" && (
         <p role="status">Loading provider market data…</p>
       )}
-      {envelope && <DataInfo market={envelope} />}
+      {envelope && (
+        <div className="market-data-strip">
+          <p className="coverage-note" title={envelope.coverage ?? undefined}>
+            {envelope.coverage ?? "Provider coverage unavailable"}
+          </p>
+          <DataInfo market={envelope} />
+        </div>
+      )}
       <div className="resource-table market-custom-table">
         <table>
           <thead>
@@ -469,6 +504,17 @@ function MarketTable({
                 return (
                   <th
                     key={column}
+                    data-column={column}
+                    className={
+                      [
+                        "price",
+                        "change_percent",
+                        "volume",
+                        "market_cap",
+                      ].includes(column)
+                        ? "market-number"
+                        : undefined
+                    }
                     aria-sort={
                       sortable && settings.sort === sort
                         ? settings.descending
@@ -483,6 +529,14 @@ function MarketTable({
                         onClick={() => sortBy(sort as MarketSort)}
                       >
                         {marketLabels[column]}
+                        {settings.sort === sort && (
+                          <span
+                            className="market-sort-arrow"
+                            aria-hidden="true"
+                          >
+                            {settings.descending ? "↓" : "↑"}
+                          </span>
+                        )}
                       </button>
                     ) : (
                       marketLabels[column]
@@ -490,7 +544,7 @@ function MarketTable({
                   </th>
                 );
               })}
-              <th>Watchlist</th>
+              <th className="market-actions">Watchlist</th>
             </tr>
           </thead>
           <tbody>
@@ -504,9 +558,24 @@ function MarketTable({
                 }
               >
                 {settings.columns.map((column) => (
-                  <td key={column}>{cell(row, column)}</td>
+                  <td
+                    key={column}
+                    data-column={column}
+                    className={
+                      [
+                        "price",
+                        "change_percent",
+                        "volume",
+                        "market_cap",
+                      ].includes(column)
+                        ? "market-number"
+                        : undefined
+                    }
+                  >
+                    {cell(row, column)}
+                  </td>
                 ))}
-                <td>
+                <td className="market-actions">
                   <button
                     disabled={
                       writing || !!list?.symbols.includes(row.instrument.id)
@@ -554,13 +623,13 @@ function MarketTable({
             · provider results
           </span>
           <button
-            disabled={rows.length < 100 || offset >= 20000 || loading}
+            disabled={rows.length < 100 || offset >= 49900 || loading}
             onClick={() => setOffset((value) => value + 100)}
           >
             Next market page
           </button>
         </div>
       )}
-    </>
+    </section>
   );
 }

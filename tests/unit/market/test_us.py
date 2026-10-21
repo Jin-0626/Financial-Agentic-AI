@@ -63,6 +63,24 @@ class USSnapshotTests(unittest.TestCase):
             self.assertEqual(selected["total"], 3)
             self.assertEqual([row["instrument"]["symbol"] for row in selected["data"]], ["B", "C"])
 
+    def test_more_than_twenty_thousand_rows_are_ranked_before_pagination(self):
+        total = 20048
+
+        def fetch(offset):
+            return {
+                "total": total,
+                "quotes": [
+                    quote(f"S{i:05}", volume=i) for i in range(offset, min(total, offset + 250))
+                ],
+            }
+
+        with patch.object(us, "PAGE_SIZE", 250), patch.object(us, "fetch_page", side_effect=fetch):
+            result = us.screener(None, None, None, None, "volume", True, 0, 1)
+            self.assertEqual(result["total"], total)
+            self.assertEqual(result["data"][0]["instrument"]["symbol"], "S20047")
+            tail = us.screener(None, None, None, None, "symbol", False, 20000, 100)
+            self.assertEqual(len(tail["data"]), 48)
+
     def test_stable_symbol_pagination_and_exact_prices(self):
         with patch.object(us, "fetch_page", side_effect=self.page):
             result = us.screener(None, None, None, None, "symbol", False, 2, 2)

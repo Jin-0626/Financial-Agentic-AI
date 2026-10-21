@@ -17,7 +17,7 @@ import { Watchlist } from "./watchlist";
 import { DockWorkspace } from "./docking";
 import { FeatureScreen, MarketResource } from "./resources";
 import { SettingsScreen } from "./settings";
-import { price, numeric, defaultWorkspace, type Screen } from "./bridge";
+import { price, numeric, defaultWorkspace, DEFAULT_LAYOUT_NAME, type Screen } from "./bridge";
 export function AppView({ state }: { state: AppState }) {
   const {
     view,
@@ -188,7 +188,7 @@ export function AppView({ state }: { state: AppState }) {
                       >
                         <option value="">Templates</option>
                         {[
-                          " Market Desk",
+                          DEFAULT_LAYOUT_NAME,
                           "Two Chart Desk",
                           "Four Chart Desk",
                           "Market Overview",

@@ -1,4 +1,7 @@
 //! Engine-owned subscriptions, command execution, and immutable state publication.
+pub mod market;
+#[cfg(feature = "portfolio")]
+pub mod portfolio;
 pub mod research;
 pub mod resources;
 pub mod subscriptions;

@@ -9,8 +9,8 @@ from deepagents.backends import (
     StateBackend,
     FilesystemBackend,
 )
-from langgraph.store.postgres import PostgresStore
-from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.store.base import BaseStore
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from orchestrator.specialists import get_subagents_for_type
 from orchestrator.prompts import FINANCIAL_ANALYST_PROMPT, SPECIALIST_RESEARCH_PROMPT
 from orchestrator.tools.research import ResearchTools, SpecialistEvidence
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 tools = [*build_financial_tools(), run_script, analytics_catalog, run_analytics]
 
-# Global workspace and memory conventions refreshed in PostgreSQL at startup.
+# Global workspace and memory conventions refreshed in SQLite at startup.
 AGENTS_MEMORY = """# Financial research memory and workspace conventions
 
 The active system prompt defines research methodology and output requirements. Runtime
@@ -92,7 +92,7 @@ class _GlobalAgentsStore:
         return getattr(self._store, name)
 
 
-async def _ensure_agents_memory(store: PostgresStore):
+async def _ensure_agents_memory(store: BaseStore):
     """Ensures that the global AGENTS.md (system prompt configuration) exists and matches the current version, updating it if contents differ."""
     current = {"content": AGENTS_MEMORY, "encoding": "utf-8"}
     existing = await store.aget(AGENTS_NAMESPACE, AGENTS_KEY)
@@ -101,15 +101,11 @@ async def _ensure_agents_memory(store: PostgresStore):
         stored_content = value.get("content") if isinstance(value, dict) else None
         if stored_content == AGENTS_MEMORY:
             return
-        logger.info("Global /AGENTS.md differs from current version, updating.")
-        await store.aput(AGENTS_NAMESPACE, AGENTS_KEY, current)
-        return
-
     await store.aput(AGENTS_NAMESPACE, AGENTS_KEY, current)
-    logger.info("Created global /AGENTS.md")
+    logger.info("Updated global /AGENTS.md" if existing else "Created global /AGENTS.md")
 
 
-async def _ensure_user_habits(store: PostgresStore, user_id: str, org_id: str = "default-org"):
+async def _ensure_user_habits(store: BaseStore, user_id: str, org_id: str = "default-org"):
     HABITS_KEY = "/habits.md"
     NAMESPACE = ("memories", org_id, user_id)
 
@@ -170,7 +166,7 @@ def _configured_model():
 
 
 def create_agent(
-    checkpointer: PostgresSaver, store: PostgresStore, config=None, native_tools=()
+    checkpointer: BaseCheckpointSaver, store: BaseStore, config=None, native_tools=()
 ) -> Any:
     agent_tools = [*tools, *native_tools]
     default_backend = StateBackend()

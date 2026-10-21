@@ -130,7 +130,11 @@ export function DockWorkspace({
               role="tab"
               aria-selected={panel === node.active}
               draggable
-              onDragStart={() => setDrag(panel)}
+              onDragStart={(event) => {
+                event.dataTransfer.setData("text/plain", panel);
+                event.dataTransfer.effectAllowed = "move";
+                setDrag(panel);
+              }}
               onDragEnd={() => setDrag(null)}
               onDragOver={(event) => {
                 if (drag) event.preventDefault();
@@ -152,13 +156,14 @@ export function DockWorkspace({
                 );
                 setDrag(null);
               }}
-              onClick={() =>
+              onClick={() => {
+                if (maximized) setMaximized(panel);
                 onChange(
                   mapTree(root, node.id, (n) =>
                     n.type === "tabs" ? { ...n, active: panel } : n,
                   ),
-                )
-              }
+                );
+              }}
             >
               {(titles[panel] ?? panel).toUpperCase()}
             </button>
@@ -214,10 +219,10 @@ export function DockWorkspace({
               >
                 <option value="">Choose group</option>
                 {groups
-                  .filter((id) => id !== node.id)
+                  .filter((id) => id !== node.id || node.panels.length > 1)
                   .map((id) => (
                     <option key={id} value={id}>
-                      {id}
+                      {id === node.id ? "Current group (split)" : id}
                     </option>
                   ))}
               </select>
@@ -231,7 +236,11 @@ export function DockWorkspace({
                 ))}
               </select>
               <button
-                disabled={!target}
+                disabled={
+                  !groups.includes(target) ||
+                  (target === node.id &&
+                    (edge === "center" || node.panels.length < 2))
+                }
                 onClick={() => {
                   onChange(movePanel(root, node.active, target, edge));
                   setTarget("");

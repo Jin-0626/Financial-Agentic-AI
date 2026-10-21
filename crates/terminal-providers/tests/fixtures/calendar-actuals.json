@@ -1,0 +1,222 @@
+[
+  {
+    "event": {
+      "title": "CPI y/y",
+      "country": "USD",
+      "reference_period": "2026-08"
+    },
+    "observations": [
+      {
+        "date": "2026-08-01",
+        "value": "103"
+      },
+      {
+        "date": "2025-08-01",
+        "value": "100"
+      }
+    ],
+    "expected": {
+      "value": "3.0%",
+      "units": "percent",
+      "reference_period": "2026-08",
+      "source": "FRED / US Bureau of Labor Statistics",
+      "series_id": "CPIAUCSL",
+      "url": "https://fred.stlouisfed.org/series/CPIAUCSL"
+    }
+  },
+  {
+    "event": {
+      "title": "Core CPI m/m",
+      "country": "USD",
+      "reference_period": "2026-01"
+    },
+    "observations": [
+      {
+        "date": "2026-01-01",
+        "value": "101.5"
+      },
+      {
+        "date": "2025-12-01",
+        "value": "100"
+      }
+    ],
+    "expected": {
+      "value": "1.5%",
+      "units": "percent",
+      "reference_period": "2026-01",
+      "source": "FRED / US Bureau of Labor Statistics",
+      "series_id": "CPILFESL",
+      "url": "https://fred.stlouisfed.org/series/CPILFESL"
+    }
+  },
+  {
+    "event": {
+      "title": "Non-Farm Employment Change",
+      "country": "USD",
+      "reference_period": "2026-01"
+    },
+    "observations": [
+      {
+        "date": "2026-01-01",
+        "value": "151000"
+      },
+      {
+        "date": "2025-12-01",
+        "value": "150900"
+      }
+    ],
+    "expected": {
+      "value": "100.0 thousand persons",
+      "units": "thousand persons",
+      "reference_period": "2026-01",
+      "source": "FRED / US Bureau of Labor Statistics",
+      "series_id": "PAYEMS",
+      "url": "https://fred.stlouisfed.org/series/PAYEMS"
+    }
+  },
+  {
+    "event": {
+      "title": "Federal Funds Rate",
+      "country": "USD",
+      "reference_period": "2026-10-09"
+    },
+    "observations": [
+      {
+        "date": "2026-10-09",
+        "value": "4.25"
+      }
+    ],
+    "expected": {
+      "value": "4.2%",
+      "units": "percent",
+      "reference_period": "2026-10-09",
+      "source": "FRED / Board of Governors of the Federal Reserve System",
+      "series_id": "DFEDTARU",
+      "url": "https://fred.stlouisfed.org/series/DFEDTARU"
+    }
+  },
+  {
+    "event": {
+      "title": "ECB Deposit Facility Rate",
+      "country": "EUR",
+      "reference_period": "2026-10-09"
+    },
+    "observations": [
+      {
+        "date": "2026-10-09",
+        "value": "3.75"
+      }
+    ],
+    "expected": {
+      "value": "3.8%",
+      "units": "percent",
+      "reference_period": "2026-10-09",
+      "source": "FRED / European Central Bank",
+      "series_id": "ECBDFR",
+      "url": "https://fred.stlouisfed.org/series/ECBDFR"
+    }
+  },
+  {
+    "event": {
+      "title": "CPI y/y",
+      "country": "USD",
+      "actual": "99%"
+    },
+    "observations": [
+      {
+        "date": "2026-08-01",
+        "value": "103"
+      }
+    ],
+    "expected": null
+  },
+  {
+    "event": {
+      "title": "CPI y/y",
+      "country": "USD",
+      "reference_period": "2026-13"
+    },
+    "observations": [
+      {
+        "date": "2026-13-01",
+        "value": "103"
+      }
+    ],
+    "expected": null
+  },
+  {
+    "event": {
+      "title": "CPI y/y",
+      "country": "USD",
+      "reference_period": "2026-08"
+    },
+    "observations": [
+      {
+        "date": "2026-08-01",
+        "value": "103"
+      },
+      {
+        "date": "2025-08-01",
+        "value": "0"
+      }
+    ],
+    "expected": null
+  },
+  {
+    "event": {
+      "title": "CPI",
+      "country": "USD",
+      "reference_period": "2026-08"
+    },
+    "observations": [
+      {
+        "date": "2026-08-01",
+        "value": "103"
+      },
+      {
+        "date": "2025-08-01",
+        "value": "100"
+      }
+    ],
+    "expected": null
+  },
+  {
+    "event": {
+      "title": "Nonfarm Employment",
+      "country": "USD",
+      "reference_period": "2026-01"
+    },
+    "observations": [
+      {
+        "date": "2026-01-01",
+        "value": "999"
+      },
+      {
+        "date": "2025-12-01",
+        "value": "1001"
+      }
+    ],
+    "expected": {
+      "value": "-2.0 thousand persons",
+      "units": "thousand persons",
+      "reference_period": "2026-01",
+      "source": "FRED / US Bureau of Labor Statistics",
+      "series_id": "PAYEMS",
+      "url": "https://fred.stlouisfed.org/series/PAYEMS"
+    }
+  },
+  {
+    "event": {
+      "title": "Federal Funds Rate",
+      "country": "USD",
+      "reference_period": "2026-10-09"
+    },
+    "observations": [
+      {
+        "date": "2026-10-08",
+        "value": "4.5"
+      }
+    ],
+    "expected": null
+  }
+]

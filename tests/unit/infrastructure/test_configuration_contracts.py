@@ -40,7 +40,12 @@ class ConfigurationContractsTests(unittest.TestCase):
         # Platform directories are inherited from the OS, not application settings.
         self.assertFalse(reads - documented - {"LOCALAPPDATA", "XDG_DATA_HOME"})
         # These are consumed by third-party clients or by opt-in test commands.
-        inherited = {"OLLAMA_API_KEY", "TEST_DB_URL", "ENGINE_TEST_COMMAND", "PLAYWRIGHT_CHANNEL"}
+        inherited = {
+            "OLLAMA_API_KEY",
+            "ENGINE_TEST_COMMAND",
+            "RUST_SERVER_TEST_COMMAND",
+            "PLAYWRIGHT_CHANNEL",
+        }
         self.assertFalse(documented - reads - inherited)
         self.assertNotIn("ALPHA_VANTAGE_API_KEY", documented)
         self.assertNotIn("OLLAMA_MODEL", documented)

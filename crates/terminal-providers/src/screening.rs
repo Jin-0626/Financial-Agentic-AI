@@ -65,9 +65,9 @@ pub(crate) fn page(
     let mut selected = None;
     if let Some(source_rows) = snapshot.data.as_ref() {
         let mut rows: Vec<_> = source_rows.iter().collect();
-        if rows.len() > 20_000 {
+        if rows.len() > terminal_core::MAX_EQUITIES {
             return Err(ProviderError::Payload(
-                "snapshot exceeds 20000 instruments".into(),
+                "snapshot exceeds 50000 instruments".into(),
             ));
         }
         let mut identities = std::collections::BTreeSet::new();

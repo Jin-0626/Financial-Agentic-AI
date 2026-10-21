@@ -1,0 +1,1 @@
+Portfolio import fixtures are generated from app.portfolio.service.import_trades and Python json.dumps(sort_keys=True, allow_nan=False) plus SHA-256. They are deterministic synthetic data, contain no credentials or user records, and require no provider requests. Raw JSON is retained to check legacy import IDs and receipt hashes independently from Rust.

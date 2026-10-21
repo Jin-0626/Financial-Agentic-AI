@@ -1,6 +1,7 @@
 //! Terminal-independent domain contracts.
 pub mod browser;
 pub mod chart;
+pub mod portfolio;
 pub mod resources;
 pub mod services;
 pub mod watchlists;
@@ -11,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, sync::Arc};
 use thiserror::Error;
 
+pub const MAX_EQUITIES: usize = 50_000;
 pub const MAX_CANDLES: usize = 10_000;
 pub const MAX_WATCHLIST: usize = 128;
 pub const MAX_HISTORY: usize = 100;

@@ -320,6 +320,19 @@ class MarketServiceTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(result["status"], "unavailable")
             self.assertNotIn("blob", str(result))
 
+    async def test_failed_refresh_without_data_never_claims_stale_data(self):
+        key = ("unavailable",)
+        unavailable = {"status": "unavailable", "data": None, "stale": False}
+        await self.service.get(key, "fixture", 0, lambda: unavailable)
+
+        def fail():
+            raise ValueError("fixture provider failure")
+
+        result = await self.service.get(key, "fixture", 0, fail)
+        self.assertEqual(result["status"], "unavailable")
+        self.assertFalse(result["stale"])
+        self.assertIsNone(result["data"])
+
     async def test_rate_limit_cooldown_and_stale_snapshot(self):
         await self.service.get(
             ("q",),

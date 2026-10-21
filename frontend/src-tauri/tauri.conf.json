@@ -17,6 +17,7 @@
         "height": 1000,
         "resizable": true,
         "decorations": false,
+        "dragDropEnabled": false,
         "fullscreen": false,
         "minWidth": 960,
         "minHeight": 640

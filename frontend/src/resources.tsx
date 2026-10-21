@@ -503,7 +503,7 @@ export function FeatureScreen({
                 {offset + 1}–{offset + 100}
               </span>
               <button
-                disabled={offset >= 20000}
+                disabled={offset >= 49900}
                 onClick={() => setOffset(offset + 100)}
               >
                 Next
@@ -539,8 +539,10 @@ export function FeatureScreen({
           )
         ) : (
           <div className="empty">
-            This backend ({backend.service}) does not provide {screen}. Start
-            the full research backend with PostgreSQL to enable it.
+            This backend ({backend.service}) does not provide {screen}.
+            {screen === "research"
+              ? " Research uses the desktop’s configured backend. Check its Research readiness and RESEARCH_ENABLED setting."
+              : " Check the configured backend’s capabilities and service settings."}
           </div>
         )
       ) : screen === "markets" ? (

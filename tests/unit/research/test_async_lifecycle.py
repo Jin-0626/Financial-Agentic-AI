@@ -42,20 +42,70 @@ class AsyncLifecycleTests(unittest.IsolatedAsyncioTestCase):
                 return context
 
             with (
-                patch.object(app.AsyncPostgresStore, "from_conn_string", resource("store", store)),
-                patch.object(app.AsyncPostgresSaver, "from_conn_string", resource("saver", saver)),
+                patch.dict("os.environ", {"RESEARCH_ENABLED": "true"}),
+                patch.object(app.AsyncSqliteStore, "from_conn_string", resource("store", store)),
+                patch.object(app.AsyncSqliteSaver, "from_conn_string", resource("saver", saver)),
+                patch.object(
+                    app, "prepare_research_path", AsyncMock(return_value="fixture.sqlite3")
+                ),
+                patch.object(app, "configure_sqlite", AsyncMock()),
                 patch.object(app, "NativeEngine", return_value=engine),
                 patch.object(app, "SQLitePortfolioRepository", return_value=repository),
                 patch.object(app, "_ensure_agents_memory", AsyncMock()),
                 patch.object(app, "AgentRuntime", return_value=Mock()),
             ):
-                if fail:
-                    with self.assertRaisesRegex(RuntimeError, "fixture failure"):
-                        async with app.lifespan(app.app):
-                            pass
-                else:
-                    async with app.lifespan(app.app):
-                        pass
+                async with app.lifespan(app.app):
+                    self.assertEqual(app.app.state.terminal_full_ready, not fail)
+                    self.assertTrue(app.app.state.terminal_portfolio_ready)
             self.assertEqual(events[-2:], ["saver-close", "store-close"])
             repository.close.assert_awaited_once()
             engine.close.assert_awaited_once()
+
+    async def test_cancelled_research_startup_closes_optional_resources(self):
+        import asyncio
+        import app.bootstrap.application as app
+
+        entered = asyncio.Event()
+        events = []
+
+        async def wait():
+            entered.set()
+            await asyncio.Event().wait()
+
+        store = Mock(setup=AsyncMock(side_effect=wait))
+        saver = Mock()
+        engine = Mock(close=AsyncMock())
+        repository = Mock(setup=AsyncMock(), close=AsyncMock())
+
+        def resource(name, value):
+            @asynccontextmanager
+            async def context(*args):
+                try:
+                    yield value
+                finally:
+                    events.append(name)
+
+            return context
+
+        with (
+            patch.dict("os.environ", {"RESEARCH_ENABLED": "true"}),
+            patch.object(app.AsyncSqliteStore, "from_conn_string", resource("store", store)),
+            patch.object(app.AsyncSqliteSaver, "from_conn_string", resource("saver", saver)),
+            patch.object(app, "prepare_research_path", AsyncMock(return_value="fixture.sqlite3")),
+            patch.object(app, "configure_sqlite", AsyncMock()),
+            patch.object(app, "NativeEngine", return_value=engine),
+            patch.object(app, "SQLitePortfolioRepository", return_value=repository),
+        ):
+
+            async def start():
+                async with app.lifespan(app.app):
+                    self.fail("Cancelled initialization must not start the backend")
+
+            task = asyncio.create_task(start())
+            await asyncio.wait_for(entered.wait(), 2)
+            task.cancel()
+            with self.assertRaises(asyncio.CancelledError):
+                await task
+        self.assertEqual(events, ["saver", "store"])
+        engine.close.assert_awaited_once()
+        repository.close.assert_awaited_once()

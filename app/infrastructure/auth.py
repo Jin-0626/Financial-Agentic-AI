@@ -21,11 +21,15 @@ def production():
     return os.getenv("APP_ENV", "local").lower() == "production"
 
 
+OIDC_FIELDS = ("OIDC_ISSUER", "OIDC_AUDIENCE", "OIDC_JWKS_URL", "OIDC_CLIENT_ID")
+
+
 def configured():
-    return all(
-        os.getenv(name)
-        for name in ("OIDC_ISSUER", "OIDC_AUDIENCE", "OIDC_JWKS_URL", "OIDC_CLIENT_ID")
-    )
+    return all(os.getenv(name) for name in OIDC_FIELDS)
+
+
+def authentication_required():
+    return production() or any(os.getenv(name) for name in OIDC_FIELDS)
 
 
 def validate_config():
@@ -67,7 +71,7 @@ def claim_id(value):
 
 
 async def authenticated_identity(request: Request):
-    if not production() and not configured():
+    if not authentication_required():
         return None
     validate_config()
     authorization = request.headers.get("Authorization", "")
@@ -108,8 +112,8 @@ router = APIRouter(prefix="/auth", tags=["identity"])
 
 @router.get("/config")
 async def configuration():
-    required = production() or configured()
-    if configured():
+    required = authentication_required()
+    if required:
         validate_config()
     return {
         "required": required,

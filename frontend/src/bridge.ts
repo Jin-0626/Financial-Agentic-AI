@@ -157,14 +157,15 @@ export function normalizeWorkspace(workspace: Workspace): Workspace {
     })),
   };
 }
+export const DEFAULT_LAYOUT_NAME = "Market Desk";
 export const defaultWorkspace = (): Workspace => ({
   screen: "dashboard",
   compact: true,
   desktop: defaultViews(),
-  active_layout: " Market Desk",
+  active_layout: DEFAULT_LAYOUT_NAME,
   layouts: [
     {
-      name: "Market Desk",
+      name: DEFAULT_LAYOUT_NAME,
       panels: { chart: panelSpec("chart"), watchlist: panelSpec("watchlist") },
       root: {
         type: "split",

@@ -2,58 +2,62 @@
 
 import asyncio
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+import tempfile
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 from app.infrastructure.native_engine import NativeEngine
-from app.infrastructure.persistence import bridge_context
+from app.infrastructure.persistence import AsyncSqliteStore, AsyncSqliteSaver, configure_sqlite
 
 
 class DatabaseContextLifecycleTests(unittest.IsolatedAsyncioTestCase):
     async def test_success_releases_context(self):
-        context = MagicMock()
-        async with bridge_context(context) as resource:
-            self.assertIs(resource, context.__enter__.return_value)
-        context.__exit__.assert_called_once_with(None, None, None)
+        with tempfile.TemporaryDirectory() as temporary:
+            for adapter in (AsyncSqliteStore, AsyncSqliteSaver):
+                async with adapter.from_conn_string(
+                    str(Path(temporary) / "research.sqlite3")
+                ) as resource:
+                    await configure_sqlite(resource)
+                    await resource.setup()
+                with self.assertRaises(ValueError):
+                    await resource.conn.execute("SELECT 1")
 
-    async def test_failure_reaches_transaction_context(self):
-        context = MagicMock()
-        error = RuntimeError("transaction failed")
-        with self.assertRaises(RuntimeError) as raised:
-            async with bridge_context(context):
-                raise error
-        self.assertIs(raised.exception, error)
-        self.assertIs(context.__exit__.call_args.args[1], error)
+    async def test_failure_closes_connection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            for adapter in (AsyncSqliteStore, AsyncSqliteSaver):
+                with self.assertRaisesRegex(RuntimeError, "fixture failure"):
+                    async with adapter.from_conn_string(
+                        str(Path(temporary) / "research.sqlite3")
+                    ) as resource:
+                        await resource.setup()
+                        raise RuntimeError("fixture failure")
+                with self.assertRaises(ValueError):
+                    await resource.conn.execute("SELECT 1")
 
-    async def test_cancelled_open_releases_acquired_resource(self):
-        import threading
+    async def test_cancelled_operation_releases_connection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            for adapter in (AsyncSqliteStore, AsyncSqliteSaver):
+                opened = asyncio.Event()
+                resources = []
 
-        started = threading.Event()
-        finish = threading.Event()
-        events = []
-        context = MagicMock()
+                async def operation():
+                    async with adapter.from_conn_string(
+                        str(Path(temporary) / "research.sqlite3")
+                    ) as resource:
+                        await resource.setup()
+                        resources.append(resource)
+                        opened.set()
+                        await asyncio.Event().wait()
 
-        def enter():
-            started.set()
-            finish.wait(3)
-            events.append("opened")
-
-        context.__enter__.side_effect = enter
-        context.__exit__.side_effect = lambda *args: events.append("closed")
-
-        async def acquire():
-            async with bridge_context(context):
-                self.fail("cancelled open must not yield")
-
-        task = asyncio.create_task(acquire())
-        try:
-            self.assertTrue(await asyncio.to_thread(started.wait, 2))
-            task.cancel()
-            await asyncio.sleep(0)
-        finally:
-            finish.set()
-        with self.assertRaises(asyncio.CancelledError):
-            await task
-        self.assertEqual(events, ["opened", "closed"])
+                task = asyncio.create_task(operation())
+                try:
+                    await asyncio.wait_for(opened.wait(), 3)
+                finally:
+                    task.cancel()
+                    await asyncio.gather(task, return_exceptions=True)
+                self.assertTrue(task.cancelled())
+                with self.assertRaises(ValueError):
+                    await resources[0].conn.execute("SELECT 1")
 
 
 class NativeConnectionLifecycleTests(unittest.IsolatedAsyncioTestCase):
@@ -74,6 +78,26 @@ class NativeConnectionLifecycleTests(unittest.IsolatedAsyncioTestCase):
     async def cancel_task(self, task):
         task.cancel()
         await asyncio.gather(task, return_exceptions=True)
+
+    async def test_finished_connections_do_not_exhaust_organization_capacity(self):
+        for index in range(8):
+            ready = asyncio.get_running_loop().create_future()
+            ready.set_result({})
+            stop = asyncio.Event()
+            stop.set()
+            task = asyncio.create_task(stop.wait())
+            await task
+            self.engine.connections[f"old-{index}"] = (ready, stop, task)
+
+        tools = {"fixture": Mock()}
+
+        async def connect(org, ready, stop):
+            ready.set_result(tools)
+            await stop.wait()
+
+        with patch.object(self.engine, "_connection", side_effect=connect):
+            self.assertIs(await self.engine.tools("new-org"), tools)
+        self.assertEqual(set(self.engine.connections), {"new-org"})
 
     async def test_shared_waiters_receive_same_tools(self):
         ready, _, _ = await self.pending_connection()

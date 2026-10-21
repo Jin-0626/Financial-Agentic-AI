@@ -9,6 +9,21 @@ pub struct ResearchRequest {
     pub message: String,
     pub thread_id: String,
 }
+impl ResearchRequest {
+    pub fn validate(&self) -> Result<(), ProviderError> {
+        if self.message.trim().is_empty()
+            || self.message.len() > 32000
+            || self.thread_id.is_empty()
+            || self.thread_id.len() > 254
+            || self.thread_id.chars().any(char::is_control)
+        {
+            return Err(ProviderError::Configuration(
+                "Invalid research request".into(),
+            ));
+        }
+        Ok(())
+    }
+}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ResearchEvent {
@@ -49,16 +64,7 @@ impl DirectHttpProvider {
         input: &ResearchRequest,
         events: mpsc::Sender<ResearchEvent>,
     ) -> Result<(), ProviderError> {
-        if input.message.trim().is_empty()
-            || input.message.len() > 32000
-            || input.thread_id.is_empty()
-            || input.thread_id.len() > 254
-            || input.thread_id.chars().any(char::is_control)
-        {
-            return Err(ProviderError::Configuration(
-                "Invalid research request".into(),
-            ));
-        }
+        input.validate()?;
         let url = self
             .base
             .join("api/chat/stream")
@@ -123,17 +129,19 @@ impl SseDecoder {
             return Err(ProviderError::Oversized);
         }
         let mut events = Vec::new();
-        while let Some((at, width)) = self
-            .buffer
-            .windows(2)
-            .position(|value| value == b"\n\n")
-            .map(|at| (at, 2))
-            .or_else(|| {
-                self.buffer
-                    .windows(4)
-                    .position(|value| value == b"\r\n\r\n")
-                    .map(|at| (at, 4))
-            })
+        while let Some((at, width)) = [
+            self.buffer
+                .windows(2)
+                .position(|v| v == b"\n\n")
+                .map(|at| (at, 2)),
+            self.buffer
+                .windows(4)
+                .position(|v| v == b"\r\n\r\n")
+                .map(|at| (at, 4)),
+        ]
+        .into_iter()
+        .flatten()
+        .min_by_key(|(at, _)| *at)
         {
             let frame = std::str::from_utf8(&self.buffer[..at])
                 .map_err(|_| ProviderError::Payload("Invalid SSE UTF-8".into()))?;
@@ -163,6 +171,20 @@ mod tests {
             output.extend(decoder.push(&[*byte])?);
         }
         assert!(matches!(&output[0], ResearchEvent::Token { content } if content == "世界"));
+        Ok(())
+    }
+    #[test]
+    fn mixed_separators_preserve_event_order_at_every_chunk_boundary() -> Result<(), ProviderError>
+    {
+        let bytes = b"data: {\"type\":\"token\",\"content\":\"first\"}\r\n\r\ndata: {\"type\":\"token\",\"content\":\"second\"}\n\n";
+        for split in 0..=bytes.len() {
+            let mut decoder = SseDecoder::default();
+            let mut events = decoder.push(&bytes[..split])?;
+            events.extend(decoder.push(&bytes[split..])?);
+            assert_eq!(events.len(), 2);
+            assert!(matches!(&events[0], ResearchEvent::Token { content } if content == "first"));
+            assert!(matches!(&events[1], ResearchEvent::Token { content } if content == "second"));
+        }
         Ok(())
     }
 }

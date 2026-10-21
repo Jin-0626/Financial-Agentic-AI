@@ -36,11 +36,14 @@ function MarketGroup({
     rows = envelope?.data?.slice(0, 8) ?? [];
   return (
     <section className="market-overview-group">
-      <h3>{heading}</h3>
+      <header className="market-group-heading">
+        <h3>{heading}</h3>
+        <span>{market}</span>
+      </header>
       <p className="coverage-note">
         {market === "MY"
-          ? "Ranked MY tracked set · not exchange-wide leaders"
-          : "Broad US provider universe · ranked by regular-session quotes"}
+          ? "Ranked across retrieved MY equities · provider coverage"
+          : "Broad US provider universe · ranked by returned quote values"}
       </p>
       {envelope && <DataInfo market={envelope} />}{" "}
       {(error || envelope?.error || writeError) && (

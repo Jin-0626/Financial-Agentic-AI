@@ -1,4 +1,4 @@
-"""Loopback-only production-build fixture: real PostgreSQL/Rust, deterministic model/providers.
+"""Loopback-only production-build fixture: real SQLite/Rust, deterministic model/providers.
 Never import this fixture from application code or deploy it as a production server.
 """
 
@@ -8,14 +8,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import time
-import uuid
+import tempfile
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from unittest.mock import patch
 import jwt
-import psycopg
-from psycopg import sql
-from psycopg.conninfo import make_conninfo
 from cryptography.hazmat.primitives.asymmetric import rsa
 from langchain_core.messages import AIMessage
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
@@ -34,6 +31,7 @@ key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 issuer = "https://fixture.invalid"
 os.environ.update(
     APP_ENV="production",
+    RESEARCH_ENABLED="true",
     OIDC_ISSUER=issuer,
     OIDC_JWKS_URL=issuer + "/jwks",
     OIDC_CLIENT_ID="terminal-e2e",
@@ -102,10 +100,8 @@ original_lifespan = app.lifespan
 
 @asynccontextmanager
 async def lifespan(application):
-    admin_url = os.environ.get("TEST_DB_URL", app.DB_URL)
-    database = "terminal_e2e_" + uuid.uuid4().hex
-    with psycopg.connect(admin_url, autocommit=True) as conn:
-        conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
+    temporary = tempfile.TemporaryDirectory(prefix="terminal_e2e_")
+    directory = Path(temporary.name)
     model = FixtureModel(
         responses=[
             AIMessage(
@@ -120,7 +116,10 @@ async def lifespan(application):
     )
     try:
         with (
-            patch.object(app, "DB_URL", make_conninfo(admin_url, dbname=database)),
+            patch.object(app, "research_path", return_value=directory / "research.sqlite3"),
+            patch.dict(
+                os.environ, {"PORTFOLIO_SQLITE_PATH": str(directory / "portfolios.sqlite3")}
+            ),
             patch.object(
                 auth,
                 "jwks_client",
@@ -140,10 +139,7 @@ async def lifespan(application):
             async with original_lifespan(application):
                 yield
     finally:
-        if not database.startswith("terminal_e2e_"):
-            raise RuntimeError("Invalid disposable database name")
-        with psycopg.connect(admin_url, autocommit=True) as conn:
-            conn.execute(sql.SQL("DROP DATABASE {} WITH (FORCE)").format(sql.Identifier(database)))
+        temporary.cleanup()
 
 
 app.app.router.lifespan_context = lifespan

@@ -67,6 +67,24 @@ class IdentityTests(unittest.TestCase):
     def headers(self, **changes):
         return {"Authorization": "Bearer " + self.token(**changes)}
 
+    def test_partial_oidc_configuration_never_enables_anonymous_access(self):
+        keys = ("OIDC_ISSUER", "OIDC_AUDIENCE", "OIDC_JWKS_URL", "OIDC_CLIENT_ID")
+        for present in keys:
+            environment = {key: "" for key in keys}
+            environment.update({"APP_ENV": "local", present: CONFIG[present]})
+            with self.subTest(present=present), patch.dict(os.environ, environment):
+                for path in ("/api/auth/me", "/api/auth/config", "/api/portfolio/list"):
+                    self.assertEqual(self.client.get(path).status_code, 503, path)
+
+    def test_completely_unconfigured_local_auth_remains_available(self):
+        environment = {
+            key: "" for key in ("OIDC_ISSUER", "OIDC_AUDIENCE", "OIDC_JWKS_URL", "OIDC_CLIENT_ID")
+        }
+        environment["APP_ENV"] = "local"
+        with patch.dict(os.environ, environment):
+            self.assertEqual(self.client.get("/api/auth/me").json(), {"local": True})
+            self.assertFalse(self.client.get("/api/auth/config").json()["required"])
+
     def test_signature_claims_and_expiration_rejected(self):
         for changes in (
             {"aud": "other"},
@@ -110,6 +128,7 @@ class IdentityTests(unittest.TestCase):
     def test_research_thread_scope_and_body_cannot_override_identity(self):
         with (
             patch.object(research_resources.resources, "agent", object()),
+            patch.object(research_resources.resources, "checkpointer", object()),
             patch.object(
                 routes_service, "_chat", AsyncMock(return_value={"success": True})
             ) as chat,

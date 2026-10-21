@@ -112,7 +112,7 @@ async def screener(
     min_volume: Annotated[int | None, Query(ge=0)] = None,
     sort: Literal["market_cap", "change_percent", "volume", "symbol", "price"] = "market_cap",
     descending: bool = True,
-    offset: Annotated[int, Query(ge=0, le=20000)] = 0,
+    offset: Annotated[int, Query(ge=0, le=49900)] = 0,
     limit: Annotated[int, Query(ge=1, le=250)] = 100,
 ):
     return await cached(
@@ -144,8 +144,13 @@ async def screener_snapshot(market: Literal["MY", "US"] = "MY"):
 
 
 @router.get("/provider/us-page")
-async def native_us_page(offset: Annotated[int, Query(ge=0, le=19750, multiple_of=250)] = 0):
+async def native_us_page(offset: Annotated[int, Query(ge=0, le=49750, multiple_of=250)] = 0):
     return await cached("native-us-page", "yahoo", 60, raw_equities.us_page, offset)
+
+
+@router.get("/provider/my-page")
+async def native_my_page(offset: Annotated[int, Query(ge=0, le=49750, multiple_of=250)] = 0):
+    return await cached("native-my-page", "yahoo", 60, raw_equities.my_page, offset)
 
 
 @router.get("/provider/my-symbols")

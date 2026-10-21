@@ -36,6 +36,27 @@ async def events():
 
 
 class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
+    async def test_split_think_tags_stream_reasoning_and_preserve_partial_failure(self):
+        async def stream(*args, **kwargs):
+            for text in ("<thi", "nk>Working ", "through evidence", "</thi", "nk>Partial answer"):
+                yield ("messages", (AIMessageChunk(content=text), {}))
+            raise RuntimeError("Model disconnected fixture")
+
+        with (
+            patch.object(research_resources.resources, "agent", Mock(astream=stream)),
+            patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
+        ):
+            output = await events()
+        self.assertEqual(
+            "".join(e["content"] for e in output if e["type"] == "reasoning_token"),
+            "Working through evidence",
+        )
+        self.assertEqual(
+            "".join(e["content"] for e in output if e["type"] == "token"), "Partial answer"
+        )
+        self.assertEqual(output[-1]["type"], "error")
+        self.assertNotIn("done", [e["type"] for e in output])
+
     async def test_json_and_stream_same_final_result(self):
         state = {
             "messages": [
@@ -176,6 +197,7 @@ class FinancialOutputTests(unittest.IsolatedAsyncioTestCase):
         application.include_router(routes_routes.router, prefix="/api")
         with (
             patch.object(research_resources.resources, "agent", agent(state)),
+            patch.object(research_resources.resources, "checkpointer", AsyncMock()),
             patch.object(routes_resources, "_ensure_user_habits", AsyncMock()),
             TestClient(application) as client,
         ):
@@ -256,3 +278,24 @@ class HistoryReloadTests(unittest.IsolatedAsyncioTestCase):
             result = await research_history._get_history("org__user__thread")
         self.assertEqual([m.role for m in result.messages], ["user", "assistant"])
         self.assertEqual(result.messages[-1].content, "Verified answer")
+
+
+class ThinkSplitterTests(unittest.TestCase):
+    def test_every_chunk_boundary_and_unclosed_reasoning(self):
+        from app.research.protocol import _ThinkStreamSplitter
+
+        text = "Before <THINK>reasoning text</THINK>After"
+        for split in range(len(text) + 1):
+            content, reasoning = [], []
+            splitter = _ThinkStreamSplitter(reasoning.append, content.append)
+            splitter.push(text[:split])
+            splitter.push(text[split:])
+            splitter.flush()
+            self.assertEqual("".join(content), "Before After")
+            self.assertEqual("".join(reasoning), "reasoning text")
+        content, reasoning = [], []
+        splitter = _ThinkStreamSplitter(reasoning.append, content.append)
+        splitter.push("<think>Still working")
+        self.assertEqual("".join(reasoning), "Still working")
+        splitter.flush()
+        self.assertEqual(content, [])

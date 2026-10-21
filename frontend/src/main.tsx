@@ -14,6 +14,7 @@ import {
   numeric,
   ranges,
   defaultWorkspace,
+  DEFAULT_LAYOUT_NAME,
   normalizeWorkspace,
   panelSpec,
   panelIds,
@@ -194,7 +195,7 @@ export function useAppState() {
       return;
     }
     const root =
-      name === "Moomoo Market Desk"
+      name === DEFAULT_LAYOUT_NAME
         ? split(group("watchlist"), group("chart"), "horizontal", 0.19)
         : name === "Portfolio Research"
           ? split(

@@ -6,6 +6,11 @@ drawings, named watchlists, market tables, options inspection, calendars, portfo
 research, backtesting and traces. Coverage and availability depend on the provider;
 unavailable fields and stale observations are explicit.
 
+The Rust server preview is opt-in; the existing server remains the default while
+remaining workflows migrate. The preview includes direct macro and current-week
+economic calendar resources. Its optional `portfolio` feature exposes metadata
+CRUD and export; full workflow parity remains incomplete.
+
 ## Prerequisites
 
 - Rust **1.99.0**, Cargo, rustfmt and Clippy. Workspace crates use edition 2021;
@@ -15,8 +20,7 @@ unavailable fields and stale observations are explicit.
 - Node.js **24** and npm, matching CI.
 - Windows desktop builds: Visual Studio C++ Build Tools and WebView2. Linux Tauri
   builds also need the platform GTK/WebKit development packages.
-- PostgreSQL **16** for research memory/checkpoints only. Markets and SQLite
-  portfolios can run without PostgreSQL. Research needs a configured Ollama model.
+- SQLite is embedded; no database server is required. Research needs a configured Ollama model.
 
 ## Architecture
 
@@ -29,8 +33,9 @@ Python/yfinance retains Yahoo session handling and individual provider requests.
 Desktop equity normalization, four-worker snapshot assembly, filtering, exact decimal
 price sorting and pagination execute in Rust against shared complete snapshots.
 Other provider resources still use the existing Python normalization. Malaysia uses
-an explicitly configured tracked set; US uses broad provider
-coverage, including OTC securities. Neither list is advertised as an exhaustive
+the complete retrieved Yahoo Malaysian universe; US uses paginated exchange partitions, including OTC,
+with the existing Nasdaq feed as an explicitly labeled fallback for empty Yahoo
+coverage. Neither list is advertised as an exhaustive
 exchange directory. Yahoo and CoinGecko identities remain distinct.
 
 Rust quantitative calculations run through the organization-scoped `financial-engine`
@@ -47,6 +52,8 @@ dependency graph remains independent of Polars; analytics crates use Polars sepa
 |   |-- terminal-storage/       # Dedicated SQLite worker for desktop settings
 |   |-- terminal-engine/        # Background scheduling and subscription ownership
 |   |-- terminal-ui/            # Typed native presentation boundary
+|   |-- terminal-server/        # Opt-in Rust HTTP API during staged migration
+|   |-- terminal-tools/         # Bounded native provider/market commands
 |   |-- quant-engine/           # Financial calculations and numerical validation
 |   |-- data-pipeline/          # Provider ingestion and scoped snapshot storage
 |   `-- mcp-server/             # Bounded financial-engine stdio protocol
@@ -55,7 +62,7 @@ dependency graph remains independent of Polars; analytics crates use Polars sepa
 |   |-- src-tauri/              # Separate Cargo workspace and desktop binary
 |   `-- tests/                  # Deterministic Playwright browser suites
 |-- app/
-|   |-- bootstrap/              # Full backend and lightweight market startup
+|   |-- bootstrap/              # Unified backend and existing launch target
 |   |-- market/                 # Existing market provider gateway
 |   |-- portfolio/              # SQLite documents, revisions and import workflows
 |   |-- research/               # Research routes, streaming and lifecycle
@@ -91,10 +98,10 @@ must be exported in the shell that launches the desktop; Tauri does not load `.e
 
 ### Markets and local portfolios
 
-Start the lightweight gateway in one shell:
+Start the shared gateway in one shell:
 
 ```powershell
-uv run --frozen python -m uvicorn app.bootstrap.market_application:app --host 127.0.0.1 --port 8000 --http h11 --log-level info
+uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11 --log-level info
 ```
 
 Then launch the desktop from another shell:
@@ -109,25 +116,25 @@ Live HTTP is the default; new profiles select `5326.KL` and `6M`. For a determin
 market demonstration without a backend, set `$env:TERMINAL_PROVIDER = 'mock'` before
 launching. Server-backed workflows remain unavailable in mock mode.
 
-The lightweight gateway exposes `/api/health`, market data and SQLite portfolio
-routes. Research, traces and backtesting require the full backend below. The browser
-UI requires the native runtime outside deterministic Playwright fixtures.
+The unified gateway exposes markets, SQLite portfolios and Research through the
+same backend URL, identity and port. The old `app.bootstrap.market_application:app`
+launch target resolves to this same application. Research initialization is optional:
+if it fails, markets remain available and `/api/health` explains its readiness.
+The browser UI requires the native runtime outside deterministic Playwright fixtures.
 
 ### Full research backend
 
-Create a PostgreSQL role and database with your PostgreSQL administrator account,
-then set `DB_URL` in `.env` to the resulting URI. For example:
+Research memory and checkpoints use a local SQLite file, created automatically.
+Optionally set `RESEARCH_SQLITE_PATH` to an absolute file path in `.env`.
 
 ```powershell
-createuser -h 127.0.0.1 -U postgres --pwprompt terminal
-createdb -h 127.0.0.1 -U postgres -O terminal analysis_deepagent
 uv run --frozen python scripts/setup_analytics.py
 uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11 --log-level info
 ```
 
 Choose an available `MODEL_NAME` and its `OLLAMA_URL`; hosted Ollama may also require
-`OLLAMA_API_KEY`. Use the full backend in place of the lightweight gateway on port
-8000. Research memory/checkpoint tables and local SQLite migrations are initialized
+`OLLAMA_API_KEY`. Markets and Research share this backend on port 8000; there is no second Research
+URL. Set `RESEARCH_ENABLED=false` for market-only operation. Research memory/checkpoint tables and local SQLite migrations are initialized
 at application startup; there is no separate ORM migration command.
 
 Production requires verified OIDC issuer, JWKS URL, API audience and public client ID.
@@ -135,7 +142,7 @@ The desktop discovers `/api/auth/config`, validates `/api/auth/me`, and accepts 
 externally obtained `TERMINAL_ACCESS_TOKEN`. Interactive desktop login is not
 implemented. Credentials stay native; no `VITE_*` credential configuration is used.
 
-### Storage and existing portfolios
+### Local storage
 
 - Desktop watchlists, layouts, chart settings and history: Tauri application-data
   `state.sqlite3`, namespace-scoped by backend, verified identity and profile.
@@ -143,18 +150,16 @@ implemented. Credentials stay native; no `VITE_*` credential configuration is us
 - Portfolio records: `financial-research-terminal/portfolios.sqlite3` below
   `%LOCALAPPDATA%` on Windows or `$XDG_DATA_HOME`/`~/.local/share` on Linux.
   Override with `PORTFOLIO_SQLITE_PATH`. Its separate SQLite schema is version 1.
-- PostgreSQL: research memory/checkpoints, not active portfolio storage.
+- Research memory and checkpoints: `financial-research-terminal/research.sqlite3`
+  in the same OS application-data directory. Override with `RESEARCH_SQLITE_PATH`.
+  LangGraph owns its memory/checkpoint table migrations. Namespace and thread IDs
+  retain organization/user isolation. Use one backend process per local file.
+  Back up the file while the backend is stopped (or use SQLite's online backup API);
+  copying only the main file while running can omit WAL writes.
+- Existing PostgreSQL records are left untouched. SQLite starts with local records;
+  changing the storage backend does not automatically copy old Research history.
+  `DB_URL` is no longer read by application startup.
 - `.engine-data`: organization-scoped native snapshots and artifacts.
-
-To explicitly copy old PostgreSQL portfolios into SQLite, configure the source
-`DB_URL` and destination `PORTFOLIO_SQLITE_PATH`, back up the destination, then run:
-
-```powershell
-uv run --frozen python -m app.portfolio.migrate
-```
-
-The source is read-only. Identical documents are skipped; conflicting destination
-records fail atomically. Startup does not migrate old server portfolios automatically.
 
 ## Testing and linting
 
@@ -163,9 +168,9 @@ is required. The numerical baseline implementations live under `tests/support`
 and are never production fallbacks.
 
 ```powershell
-cargo +1.99.0 test --locked --workspace -j 2
+cargo +1.99.0 test --locked --workspace --all-features -j 2
 cargo +1.99.0 fmt --all --check
-cargo +1.99.0 clippy --locked --workspace --all-targets -- -D warnings
+cargo +1.99.0 clippy --locked --workspace --all-targets --all-features -- -D warnings
 uv run --frozen python -B -m unittest discover -s tests -t . -v
 uvx --from ruff==0.17.0 ruff check .
 uvx --from ruff==0.17.0 ruff format --check .
@@ -174,13 +179,16 @@ npm --prefix frontend run build
 ```
 
 On Linux, use `.venv/bin/python` for `uv pip check`. To enable native integration
-tests, export `ENGINE_TEST_COMMAND` as a JSON argv array pointing to the built
-`financial-engine` binary. Export `TEST_DB_URL` only for a dedicated test database.
+tests, export `ENGINE_TEST_COMMAND` and `RUST_SERVER_TEST_COMMAND` as JSON argv
+arrays pointing to the built `financial-engine` and portfolio-enabled
+`terminal-server` binaries. Research storage tests use temporary SQLite files.
 Set `PYTHON_DOTENV_DISABLED=1` when running isolated fixtures. Without these settings,
 applicable integration tests skip explicitly.
 
 ```powershell
+cargo +1.99.0 build --locked -p mcp-server -p terminal-server --features terminal-server/portfolio
 $env:ENGINE_TEST_COMMAND = '["target/debug/financial-engine.exe"]'
+$env:RUST_SERVER_TEST_COMMAND = '["target/debug/terminal-server.exe"]'
 $env:PYTHON_DOTENV_DISABLED = '1'
 uv run --frozen python -B -m unittest discover -s tests -t . -v
 $env:PLAYWRIGHT_CHANNEL = 'msedge'
@@ -218,5 +226,16 @@ second frontend. Inspect its schemas with
 Backend services run separately. Restart backend and desktop together after native
 market API changes.
 
-See [CLEANUP_AUDIT.md](CLEANUP_AUDIT.md) for the pruning manifest, compatibility
-changes, recovery instructions and verification results.
+### Continuous integration
+
+The [regression workflow](.github/workflows/tests.yml) runs on pushes, pull
+requests, and manual dispatch. It checks the Rust workspace with all features on
+Windows and Linux, including the opt-in native portfolio service. Separate jobs
+run Python/backend tests with temporary SQLite databases, development and production
+browser tests, and Windows Tauri tests, formatting, Clippy, and a locked release
+build. Browser reports and the standalone Windows executable are retained for
+14 days in workflow artifacts. Superseded runs are cancelled.
+
+The executable artifact is an unsigned build for validation; the workflow does
+not deploy services, publish releases, or switch the default backend. Live tests
+remain opt-in; normal CI uses fixtures and disposable databases.

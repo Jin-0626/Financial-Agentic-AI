@@ -36,7 +36,9 @@ Thumbs.db
 frontend/node_modules/
 frontend/dist/
 frontend/test-results/
+frontend/test-results-*/
 frontend/playwright-report/
+frontend/playwright-report-*/
 *.tsbuildinfo
 
 frontend/src-tauri/gen/
@@ -52,3 +54,11 @@ analytics-runtime/.venv/
 
 # Offline benchmark reports
 benchmark-results/
+
+# Local audit, rebuild and handoff reports (not repository deliverables)
+/docs/
+/CLEANUP_AUDIT.md
+/cleanup-pruned-files.txt
+/audit.md
+/rebuild.md
+/readiness.md

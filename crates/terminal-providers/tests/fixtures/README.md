@@ -1,0 +1,1 @@
+Synthetic economic-calendar fixtures generated independently with app.market.calendar.verified_calendar_actual. No provider calls, credentials or user records. Both Python and Rust tests verify the same cases, including period matching, missing data, monthly/yearly changes and half-even rounding.

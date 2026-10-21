@@ -6,6 +6,10 @@ from app.research import resources
 logger = logging.getLogger(__name__)
 
 
+class HistoryUnavailableError(RuntimeError):
+    """Research persistence could not complete an operation."""
+
+
 async def _get_history(thread_id: str) -> ChatHistoryResponse:
     try:
         config = {"configurable": {"thread_id": thread_id}}
@@ -16,7 +20,7 @@ async def _get_history(thread_id: str) -> ChatHistoryResponse:
         return ChatHistoryResponse(thread_id=thread_id, messages=messages)
     except Exception as e:
         logger.error(f"Get history error: {e}", exc_info=True)
-        return ChatHistoryResponse(thread_id=thread_id, messages=[])
+        raise HistoryUnavailableError("Research history temporarily unavailable") from e
 
 
 def _parse_thread_owner(thread_id: str) -> tuple[str | None, str | None]:
@@ -61,29 +65,30 @@ async def _list_threads(
                     continue
 
             info = ThreadInfo(thread_id=thread_id)
-            try:
-                # Modern message channels may contain deltas, not a materialized list.
-                # Reconstruct through the graph instead of treating checkpoint blobs as UI state.
-                snapshot = await resources.resources.agent.aget_state(config)
-                values = snapshot.values if snapshot else {}
-                if values:
-                    msgs = message_formatting._get_messages_from_state(values)
-                    if msgs:
-                        last_user_msg = next((m for m in reversed(msgs) if m.role == "user"), None)
-                        info.last_message = (
-                            last_user_msg.content
-                            if last_user_msg
-                            else (msgs[-1].content[:50] if msgs else None)
-                        )
-            except Exception:
-                pass
+            # Modern message channels may contain deltas, not a materialized list.
+            # Reconstruct through the graph instead of treating checkpoint blobs as UI state.
+            snapshot = await resources.resources.agent.aget_state(config)
+            values = snapshot.values if snapshot else {}
+            if values:
+                msgs = message_formatting._get_messages_from_state(values)
+                if msgs:
+                    last_user_msg = next((m for m in reversed(msgs) if m.role == "user"), None)
+                    info.last_message = (
+                        last_user_msg.content
+                        if last_user_msg
+                        else (msgs[-1].content[:50] if msgs else None)
+                    )
             seen_threads.add(thread_id)
             threads.append(info)
         return threads
     except Exception as e:
         logger.error(f"List threads error: {e}", exc_info=True)
-        return []
+        raise HistoryUnavailableError("Research history temporarily unavailable") from e
 
 
 async def _delete_thread(thread_id: str):
-    await resources.resources.checkpointer.adelete_thread(thread_id)
+    try:
+        await resources.resources.checkpointer.adelete_thread(thread_id)
+    except Exception as error:
+        logger.exception("Delete thread failed")
+        raise HistoryUnavailableError("Research history temporarily unavailable") from error

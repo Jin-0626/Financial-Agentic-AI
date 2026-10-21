@@ -1,0 +1,1 @@
+Test-only RSA key generated for offline JWT regression tests. Never use this public fixture for deployment, credentials, or real identities. The matching JWKS is injected directly into the test cache; tests make no identity-provider requests.

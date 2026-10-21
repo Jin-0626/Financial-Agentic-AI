@@ -66,4 +66,7 @@ class RawEquityTests(unittest.TestCase):
             ),
             patch("app.market.us.fetch_page", return_value={"total": 0, "quotes": []}),
         ):
-            self.assertEqual(raw_equities.us_page(0)["data"], {"total": 0, "quotes": []})
+            data = raw_equities.us_page(0)["data"]
+            self.assertEqual(data["total"], 0)
+            self.assertEqual(data["quotes"], [])
+            self.assertEqual(data["feed"], "yahoo")

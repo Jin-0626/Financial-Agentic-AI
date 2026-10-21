@@ -10,14 +10,13 @@ dependencies = [
     "requests>=2.31.0",
     "langchain-core>=1.5.4",
     "langchain-ollama>=1.1.0",
-    "langgraph-checkpoint-postgres>=3.1.2",
     "pandas>=3.0.5",
-    "psycopg[binary]>=3.3.6",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.3",
     "uvicorn>=0.53.0",
     "yfinance>=1.7.0",
     "pyjwt[crypto]>=2.10,<3",
+    "langgraph-checkpoint-sqlite>=3.1.2",
 ]
 
 [tool.ruff]

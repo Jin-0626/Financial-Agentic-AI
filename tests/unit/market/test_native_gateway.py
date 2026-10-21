@@ -12,6 +12,7 @@ class NativeGatewayTests(unittest.TestCase):
     def test_gateway_serves_existing_market_contract_without_other_services(self):
         environment = {
             "APP_ENV": "local",
+            "RESEARCH_ENABLED": "false",
             "OIDC_ISSUER": "",
             "OIDC_AUDIENCE": "",
             "OIDC_JWKS_URL": "",
@@ -30,7 +31,7 @@ class NativeGatewayTests(unittest.TestCase):
             patch("app.market.routes.data_quotes.quote", return_value=payload) as provider,
         ):
             with TestClient(app) as client:
-                self.assertEqual(client.get("/api/health").json()["service"], "market-data")
+                self.assertEqual(client.get("/api/health").json()["service"], "research-terminal")
                 self.assertEqual(client.get("/api/auth/me").json(), {"local": True})
                 response = client.get("/api/market/quote", params={"instrument": "yahoo:5326.KL"})
                 self.assertEqual(response.status_code, 200)
@@ -47,7 +48,7 @@ class NativeGatewayTests(unittest.TestCase):
                     client.get("/api/portfolio/list").json()["portfolios"][0]["id"], pid
                 )
                 capabilities = client.get("/api/market/capabilities").json()
-                self.assertEqual(capabilities["service"], "market-data")
+                self.assertEqual(capabilities["service"], "research-terminal")
                 self.assertTrue(capabilities["features"]["portfolio"])
                 self.assertFalse(capabilities["features"]["research"])
                 self.assertNotIn("portfolio", capabilities["widgets"])

@@ -71,22 +71,6 @@ class SQLitePortfolioTests(unittest.IsolatedAsyncioTestCase):
             await task
         self.assertEqual(await self.repo.load("o", "u", doc["id"]), doc)
 
-    async def test_migration_is_repeatable_and_conflicts_roll_back(self):
-        doc = {"id": "legacy", "revision": 7, "saved_at": "2026-10-16", "transactions": []}
-        rows = [("o", "u", "legacy", 7, doc)]
-        self.assertEqual(await self.repo.import_documents(rows), 1)
-        self.assertEqual(await self.repo.import_documents(rows), 0)
-        extra = {**doc, "id": "extra"}
-        with self.assertRaises(ValueError):
-            await self.repo.import_documents(
-                [
-                    ("o", "u", "extra", 7, extra),
-                    ("o", "u", "legacy", 7, {**doc, "different": True}),
-                ]
-            )
-        self.assertIsNone(await self.repo.load("o", "u", "extra"))
-        self.assertEqual(await self.repo.load("o", "u", "legacy"), doc)
-
     async def test_future_schema_is_rejected(self):
         await self.repo.close()
         with closing(sqlite3.connect(self.path)) as conn:

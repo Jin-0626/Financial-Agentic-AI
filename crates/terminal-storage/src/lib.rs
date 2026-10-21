@@ -1,4 +1,5 @@
 //! SQLite is confined to one worker thread; callers exchange bounded requests.
+pub mod portfolio;
 use rusqlite::{params, Connection};
 use std::{path::PathBuf, thread, time::Duration};
 use terminal_core::{InstrumentId, Preferences, TerminalError, Watchlist};
@@ -357,6 +358,9 @@ impl Repository {
             self.save(&preferences)?;
         }
         preferences.validate()?;
+        if preferences.workspace.rename_legacy_market_desk() {
+            self.save(&preferences)?;
+        }
         Ok((self.load_watchlist()?, preferences))
     }
     fn add_symbol(&mut self, id: &InstrumentId) -> Result<Watchlist, StorageError> {
@@ -400,6 +404,27 @@ impl Repository {
 mod tests {
     use super::*;
     use rusqlite::OptionalExtension;
+    #[test]
+    fn legacy_layout_name_is_renamed_on_load_and_reopening(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("layout-name.db");
+        let mut repo = Repository::open(&path, "identity")?;
+        let mut prefs = Preferences::default();
+        prefs.workspace.active_layout = "Moomoo Market Desk".into();
+        prefs.workspace.layouts[0].name = prefs.workspace.active_layout.clone();
+        repo.save(&prefs)?;
+        let (_, loaded) = repo.load()?;
+        assert_eq!(loaded.workspace.active_layout, "Market Desk");
+        assert_eq!(loaded.workspace.layouts[0].name, "Market Desk");
+        assert_eq!(loaded.version, 7);
+        drop(repo);
+        let mut repo = Repository::open(&path, "identity")?;
+        assert_eq!(repo.load()?.1.workspace.active_layout, "Market Desk");
+        let mut other = Repository::open(&path, "other-identity")?;
+        assert_eq!(other.load()?.1.workspace.active_layout, "Market Desk");
+        Ok(())
+    }
     #[test]
     fn preferences_v4_view_migration_preserves_density_layouts_and_lists(
     ) -> Result<(), Box<dyn std::error::Error>> {

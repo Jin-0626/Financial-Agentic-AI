@@ -6,11 +6,16 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from app.infrastructure.persistence import AsyncPostgresStore, AsyncPostgresSaver
+from app.infrastructure.persistence import (
+    AsyncSqliteStore,
+    AsyncSqliteSaver,
+    configure_sqlite,
+    prepare_research_path,
+)
 from app.research.runtime import AgentRuntime
 from app.infrastructure.native_engine import NativeEngine, set_engine
 from app.portfolio.sqlite_repository import SQLitePortfolioRepository
-from app.infrastructure.config import DB_URL
+from app.infrastructure.config import research_path
 from app.market.routes import router as market_router
 from app.backtesting.routes import router as backtest_router
 from app.market.service import market_service
@@ -36,20 +41,42 @@ async def lifespan(app):
     repository = SQLitePortfolioRepository()
     try:
         engine = NativeEngine()
+        await repository.setup()
+        set_engine(engine)
+        set_repository(repository)
+        app.state.terminal_portfolio_ready = True
+        app.state.terminal_full_ready = False
+        app.state.terminal_research_error = None
         async with AsyncExitStack() as stack:
-            store = await stack.enter_async_context(AsyncPostgresStore.from_conn_string(DB_URL))
-            checkpointer = await stack.enter_async_context(
-                AsyncPostgresSaver.from_conn_string(DB_URL)
-            )
-            await store.setup()
-            await checkpointer.setup()
-            await repository.setup()
-            await _ensure_agents_memory(store)
-            set_engine(engine)
-            set_repository(repository)
-            resources.configure(store, checkpointer, AgentRuntime(checkpointer, store, engine))
-            app.state.terminal_full_ready = True
-            app.state.terminal_portfolio_ready = True
+            if os.getenv("RESEARCH_ENABLED", "true").lower() == "true":
+                research_stack = await stack.enter_async_context(AsyncExitStack())
+                try:
+                    path = await prepare_research_path(research_path())
+                    store = await research_stack.enter_async_context(
+                        AsyncSqliteStore.from_conn_string(path)
+                    )
+                    checkpointer = await research_stack.enter_async_context(
+                        AsyncSqliteSaver.from_conn_string(path)
+                    )
+                    await configure_sqlite(store)
+                    await configure_sqlite(checkpointer)
+                    await store.setup()
+                    await checkpointer.setup()
+                    await _ensure_agents_memory(store)
+                    runtime = AgentRuntime(checkpointer, store, engine)
+                except Exception:
+                    await research_stack.aclose()
+                    resources.configure(None, None, None)
+                    app.state.terminal_research_error = "Research initialization failed; check MODEL_NAME, OLLAMA_URL and RESEARCH_SQLITE_PATH, then restart the backend."
+                    logger.warning(app.state.terminal_research_error)
+                else:
+                    resources.configure(store, checkpointer, runtime)
+                    app.state.terminal_full_ready = True
+            else:
+                resources.configure(None, None, None)
+                app.state.terminal_research_error = (
+                    "Research is disabled. Set RESEARCH_ENABLED=true and restart this backend."
+                )
             yield
     finally:
         app.state.terminal_full_ready = False
@@ -88,6 +115,20 @@ app.include_router(backtest_router, prefix="/api")
 _frontend = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 if (_frontend / "assets").exists():
     app.mount("/assets", StaticFiles(directory=_frontend / "assets"), name="assets")
+
+
+@app.get("/api/health")
+async def health():
+    return {
+        "status": "ok",
+        "service": "research-terminal",
+        "readiness": {
+            "market": True,
+            "storage": getattr(app.state, "terminal_portfolio_ready", False),
+            "research": getattr(app.state, "terminal_full_ready", False),
+        },
+        "research_error": getattr(app.state, "terminal_research_error", None),
+    }
 
 
 @app.get("/{path:path}")

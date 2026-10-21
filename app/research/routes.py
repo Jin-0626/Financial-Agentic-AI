@@ -1,3 +1,4 @@
+from collections.abc import Awaitable
 from app.research import protocol
 import asyncio
 import logging
@@ -17,10 +18,27 @@ logger = logging.getLogger(__name__)
 router = APIRouter(dependencies=[Depends(authenticated_identity)])
 
 
+async def history_result[HistoryResult](operation: Awaitable[HistoryResult]) -> HistoryResult:
+    try:
+        return await operation
+    except history.HistoryUnavailableError:
+        raise HTTPException(
+            503, "Research history temporarily unavailable. Retry shortly."
+        ) from None
+
+
+def require_research():
+    current = resources.resources
+    if current.agent is None or current.checkpointer is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Research is unavailable on this backend. Check /api/health for Research readiness and configuration.",
+        )
+
+
 @router.post("/chat")
 async def chat(body: ChatRequest, identity=Depends(authenticated_identity)):
-    if not resources.resources.agent:
-        raise HTTPException(status_code=500, detail="Agent not initialized")
+    require_research()
     try:
         data = body.model_dump()
         if identity is not None:
@@ -71,8 +89,7 @@ async def retired_upload():
 
 @router.post("/chat/stream")
 async def chat_stream(body: ChatRequest, identity=Depends(authenticated_identity)):
-    if not resources.resources.agent:
-        raise HTTPException(status_code=500, detail="Agent not initialized")
+    require_research()
     data = body.model_dump()
     if identity is not None:
         data.update(org_id=identity.org, user_id=identity.user)
@@ -115,19 +132,24 @@ async def retired_sandbox():
 async def get_history(
     thread_id: str, org_id: str = Depends(organization), user_id: str = Depends(user)
 ):
-    return await history._get_history(messages._owned_thread(thread_id, org_id, user_id))
+    require_research()
+    return await history_result(
+        history._get_history(messages._owned_thread(thread_id, org_id, user_id))
+    )
 
 
 @router.get("/threads", response_model=list[ThreadInfo])
 async def list_threads(org_id: str = Depends(organization), user_id: str = Depends(user)):
-    return await history._list_threads(org_id, user_id)
+    require_research()
+    return await history_result(history._list_threads(org_id, user_id))
 
 
 @router.delete("/threads/{thread_id}")
 async def delete_thread(
     thread_id: str, org_id: str = Depends(organization), user_id: str = Depends(user)
 ):
-    await history._delete_thread(messages._owned_thread(thread_id, org_id, user_id))
+    require_research()
+    await history_result(history._delete_thread(messages._owned_thread(thread_id, org_id, user_id)))
     return {"status": "ok"}
 
 

@@ -4,7 +4,16 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+[features]
+portfolio = ["dep:quant-engine", "dep:rust_decimal", "dep:sha2", "dep:rand", "dep:thiserror"]
+
 [dependencies]
+quant-engine = { path = "../quant-engine", optional = true }
+rust_decimal = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+chrono.workspace = true
 serde_json.workspace = true
 serde.workspace = true
 terminal-core = { path = "../terminal-core" }

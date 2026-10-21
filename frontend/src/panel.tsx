@@ -1,6 +1,6 @@
 import { StockLabel } from "./stock-label";
 import { useState, type ReactNode } from "react";
-import { type PanelSpec, type Snapshot, type Range } from "./bridge";
+import { DEFAULT_LAYOUT_NAME, type PanelSpec, type Snapshot, type Range } from "./bridge";
 import { ChartEditor } from "./chart-editor";
 import { MarketChart } from "./chart";
 import { FeatureScreen, MarketResource, useResource } from "./resources";
@@ -68,7 +68,7 @@ export function Panel({
           spec={spec}
           layout={
             snapshot.preferences.workspace?.active_layout ??
-            "Moomoo Market Desk"
+            DEFAULT_LAYOUT_NAME
           }
           panel={id}
           instrument={selected ?? "none"}

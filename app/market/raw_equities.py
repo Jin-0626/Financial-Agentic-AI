@@ -29,6 +29,8 @@ def project(info):
         if isinstance(price, (int, float)) and not isinstance(price, bool) and math.isfinite(price)
         else None
     )
+    if isinstance(price, str):
+        row["regularMarketPrice"] = price
     for key in ("marketCap", "regularMarketVolume", "regularMarketChangePercent"):
         row[key] = common.number(info.get(key))
     timestamp = common.number(info.get("regularMarketTime"))
@@ -39,14 +41,30 @@ def project(info):
 
 
 def us_page(offset: int):
-    response = us.fetch_page(offset)
+    return equity_page(offset, "US")
+
+
+def my_page(offset: int):
+    return equity_page(offset, "MY")
+
+
+def equity_page(offset: int, market: str):
+    response = us.fetch_page(offset) if market == "US" else us.fetch_page(offset, "my")
     values = response.get("quotes")
     if not isinstance(values, list):
         raise ValueError("US provider page has no quote array")
     return common.result(
-        {"total": response.get("total"), "quotes": [project(row) for row in values]},
-        "Yahoo Finance",
-        "Broad provider-listed US equity page, including OTC",
+        {
+            "total": response.get("total"),
+            "quotes": [project(row) for row in values],
+            "feed": response.get("_feed", "yahoo"),
+            "as_of": response.get("_as_of"),
+            "excluded": response.get("_excluded", 0),
+            "snapshot_id": response.get("_snapshot_id"),
+            "reported_total": response.get("_reported_total"),
+        },
+        "Nasdaq" if response.get("_feed") == "nasdaq" else "Yahoo Finance",
+        f"Complete provider-listed {market} equity page; no tracked-set restriction",
     )
 
 

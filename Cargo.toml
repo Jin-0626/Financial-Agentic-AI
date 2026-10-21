@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/quant-engine", "crates/data-pipeline", "crates/mcp-server", "crates/terminal-core", "crates/terminal-providers", "crates/terminal-storage", "crates/terminal-engine", "crates/terminal-ui"]
+members = ["crates/quant-engine", "crates/data-pipeline", "crates/mcp-server", "crates/terminal-core", "crates/terminal-providers", "crates/terminal-storage", "crates/terminal-engine", "crates/terminal-ui", "crates/terminal-tools", "crates/terminal-server"]
 resolver = "2"
 
 [workspace.package]
@@ -10,12 +10,12 @@ publish = false
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive", "rc"] }
-serde_json = { version = "1", features = ["float_roundtrip"] }
+serde_json = { version = "1", features = ["float_roundtrip", "raw_value"] }
 thiserror = "2"
 schemars = "1"
 chrono = { version = "0.4", features = ["serde"] }
 rust_decimal = { version = "=1.43.0", features = ["serde-str", "maths"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "time", "process", "signal"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "time", "process", "signal", "net"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 polars = { version = "=0.55.2", default-features = false, features = ["lazy", "parquet"] }
 sha2 = "0.10"
@@ -27,6 +27,9 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 quick-xml = "0.38"
 jsonschema = { version = "0.33", default-features = false }
 rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled"] }
+
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"] }
+jsonwebtoken = { version = "11.1", default-features = false, features = ["rust_crypto"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

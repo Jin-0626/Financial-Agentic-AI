@@ -1,10 +1,7 @@
 """SSE framing and incremental reasoning/text parsing; no runtime resources."""
 
 import json
-import re
 from typing import Any
-
-THINK_RE = re.compile(r"<think>(.*?)</think>", re.DOTALL | re.IGNORECASE)
 
 
 def _sse(event_type: str, payload: dict[str, Any]) -> str:
@@ -29,13 +26,13 @@ def _coerce_text(value: Any) -> str:
 
 
 class _ThinkStreamSplitter:
-    """Incrementally split a streaming text stream into reasoning
-    (<think>...</think>) and visible content."""
+    """Stream reasoning separately while retaining only incomplete tag fragments."""
 
     def __init__(self, on_reasoning, on_content):
         self._on_reasoning = on_reasoning
         self._on_content = on_content
         self._buffer = ""
+        self._reasoning = False
 
     def push(self, text: str) -> None:
         self._buffer += text
@@ -43,33 +40,34 @@ class _ThinkStreamSplitter:
 
     def flush(self) -> None:
         if self._buffer:
-            self._on_content(self._buffer)
+            self._emit(self._buffer)
             self._buffer = ""
 
+    def _emit(self, text: str) -> None:
+        if text:
+            (self._on_reasoning if self._reasoning else self._on_content)(text)
+
     def _drain(self) -> None:
-        while True:
-            buf = self._buffer
-            if "<think" not in buf:
-                if buf:
-                    self._on_content(buf)
-                    self._buffer = ""
-                return
-            m = THINK_RE.search(buf)
-            if m:
-                if m.start() > 0:
-                    self._on_content(buf[: m.start()])
-                reasoning = m.group(1).strip()
-                if reasoning:
-                    self._on_reasoning(reasoning)
-                self._buffer = buf[m.end() :]
+        while self._buffer:
+            tag = "</think>" if self._reasoning else "<think>"
+            lower = self._buffer.lower()
+            at = lower.find(tag)
+            if at >= 0:
+                self._emit(self._buffer[:at])
+                self._buffer = self._buffer[at + len(tag) :]
+                self._reasoning = not self._reasoning
                 continue
-            # Unclosed <think at the tail: flush completed content before it,
-            # keep the tag onward until it closes.
-            last_start = buf.rfind("<think")
-            if last_start > 0:
-                self._on_content(buf[:last_start])
-                self._buffer = buf[last_start:]
-                continue
+            pending = next(
+                (
+                    size
+                    for size in range(min(len(tag) - 1, len(lower)), 0, -1)
+                    if lower.endswith(tag[:size])
+                ),
+                0,
+            )
+            ready = len(self._buffer) - pending
+            self._emit(self._buffer[:ready])
+            self._buffer = self._buffer[ready:]
             return
 
 

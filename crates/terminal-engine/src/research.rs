@@ -19,6 +19,7 @@ use tokio::{
 pub struct ResearchSnapshot {
     pub id: String,
     pub thread: String,
+    pub message: String,
     pub content: String,
     pub reasoning: String,
     pub activity: Vec<ResearchEvent>,
@@ -41,6 +42,7 @@ pub enum ResearchAction {
     List,
 }
 struct Job {
+    order: u64,
     latest: watch::Receiver<ResearchSnapshot>,
     cancel: watch::Sender<bool>,
     task: JoinHandle<()>,
@@ -65,10 +67,14 @@ impl ResearchRuns {
             return Err("Research engine is shutting down".into());
         }
         match action {
-            ResearchAction::List => Ok(jobs
-                .values()
-                .map(|job| job.latest.borrow().clone())
-                .collect()),
+            ResearchAction::List => {
+                let mut ordered: Vec<_> = jobs.values().collect();
+                ordered.sort_by_key(|job| job.order);
+                Ok(ordered
+                    .into_iter()
+                    .map(|job| job.latest.borrow().clone())
+                    .collect())
+            }
             ResearchAction::Snapshot { id } => jobs
                 .get(&id)
                 .map(|job| vec![job.latest.borrow().clone()])
@@ -79,6 +85,7 @@ impl ResearchRuns {
                 Ok(vec![job.latest.borrow().clone()])
             }
             ResearchAction::Start { id, request } => {
+                request.validate().map_err(|error| error.to_string())?;
                 if id.is_empty()
                     || id.len() > 64
                     || !id
@@ -89,7 +96,8 @@ impl ResearchRuns {
                     return Err("Invalid or duplicate research request ID".into());
                 }
                 if jobs.values().any(|job| {
-                    job.latest.borrow().running && job.latest.borrow().thread == request.thread_id
+                    job.latest.borrow().running
+                        && same_thread(&job.latest.borrow().thread, &request.thread_id)
                 }) {
                     return Err("This thread already has an active request".into());
                 }
@@ -116,9 +124,17 @@ impl ResearchRuns {
                     Provider::Http(provider) => provider.clone(),
                     Provider::Mock(_) => return Err("Research requires HTTP mode".into()),
                 };
+                let order = jobs
+                    .values()
+                    .map(|job| job.order)
+                    .max()
+                    .unwrap_or(0)
+                    .checked_add(1)
+                    .ok_or("Research sequence exhausted")?;
                 let state = ResearchSnapshot {
                     id: id.clone(),
                     thread: request.thread_id.clone(),
+                    message: request.message.clone(),
                     content: String::new(),
                     reasoning: String::new(),
                     activity: Vec::new(),
@@ -135,13 +151,15 @@ impl ResearchRuns {
                     loop {
                         tokio::select! {
                             result = &mut stream => {
-                                while let Ok(event) = receiver.try_recv() { apply_event(&mut state, event); }
-                                if let Err(error) = result { state.error = Some(error.to_string()); } break;
+                                let mut terminal = false;
+                                while let Ok(event) = receiver.try_recv() {
+                                    if apply_event(&mut state, event) { terminal = true; break; }
+                                }
+                                if !terminal { if let Err(error) = result { state.error = Some(error.to_string()); } } break;
                             }
                             _ = canceled.changed() => { state.error = Some("Research canceled".into()); break; }
                             event = receiver.recv() => {
                                 if let Some(event) = event { if apply_event(&mut state, event) { break; } } else { state.error = Some("Research stream closed".into()); break; }
-                                if state.content.len() + state.reasoning.len() > 2 * 1024 * 1024 { state.error = Some("Research output exceeds 2 MiB".into()); break; }
                                 sender.send_replace(state.clone());
                             }
                         }
@@ -152,6 +170,7 @@ impl ResearchRuns {
                 jobs.insert(
                     id.clone(),
                     Job {
+                        order,
                         latest,
                         cancel,
                         task,
@@ -183,7 +202,33 @@ impl ResearchRuns {
         }
     }
 }
+fn same_thread(a: &str, b: &str) -> bool {
+    a == b
+        || (!a.contains("__")
+            && b.strip_suffix(a)
+                .is_some_and(|prefix| prefix.ends_with("__")))
+        || (!b.contains("__")
+            && a.strip_suffix(b)
+                .is_some_and(|prefix| prefix.ends_with("__")))
+}
+const MAX_RESEARCH_OUTPUT: usize = 2 * 1024 * 1024;
 fn apply_event(state: &mut ResearchSnapshot, event: ResearchEvent) -> bool {
+    let retained = state.content.len().saturating_add(state.reasoning.len());
+    let size = match &event {
+        ResearchEvent::Token { content } | ResearchEvent::ReasoningToken { content } => {
+            retained.saturating_add(content.len())
+        }
+        ResearchEvent::Done { result, reasoning } => result.len().saturating_add(
+            reasoning
+                .as_ref()
+                .map_or(state.reasoning.len(), String::len),
+        ),
+        _ => retained,
+    };
+    if size > MAX_RESEARCH_OUTPUT {
+        state.error = Some("Research output exceeds 2 MiB".into());
+        return true;
+    }
     match event {
         ResearchEvent::Token { content } => state.content.push_str(&content),
         ResearchEvent::ReasoningToken { content } => state.reasoning.push_str(&content),
@@ -219,6 +264,104 @@ fn apply_event(state: &mut ResearchSnapshot, event: ResearchEvent) -> bool {
 mod tests {
     use super::*;
     use std::io::{BufRead, Read, Write};
+    #[test]
+    fn terminal_and_incremental_events_share_output_limit() {
+        let mut state = ResearchSnapshot {
+            id: "test".into(),
+            thread: "test".into(),
+            message: String::new(),
+            content: "kept".into(),
+            reasoning: "r".repeat(MAX_RESEARCH_OUTPUT - 4),
+            activity: vec![],
+            running: true,
+            error: None,
+        };
+        assert!(apply_event(
+            &mut state,
+            ResearchEvent::Done {
+                result: "too large".into(),
+                reasoning: None
+            }
+        ));
+        assert_eq!(state.content, "kept");
+        assert_eq!(
+            state.error.as_deref(),
+            Some("Research output exceeds 2 MiB")
+        );
+        state.error = None;
+        assert!(apply_event(
+            &mut state,
+            ResearchEvent::Token {
+                content: "x".into()
+            }
+        ));
+        assert_eq!(state.content, "kept");
+        state.error = None;
+        assert!(apply_event(
+            &mut state,
+            ResearchEvent::Done {
+                result: "ok".into(),
+                reasoning: Some("short".into())
+            }
+        ));
+        assert_eq!(state.content, "ok");
+        assert!(state.error.is_none());
+    }
+
+    #[tokio::test]
+    async fn list_uses_start_order_and_retains_submitted_questions(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0")?;
+        let runs = ResearchRuns::new(Provider::Http(terminal_providers::DirectHttpProvider::new(
+            &format!("http://{}", listener.local_addr()?),
+            None,
+        )?));
+        for (id, thread, message) in [
+            ("z-first", "thread-1", "First question"),
+            ("a-second", "thread-2", "Second question"),
+        ] {
+            runs.action(ResearchAction::Start {
+                id: id.into(),
+                request: ResearchRequest {
+                    message: message.into(),
+                    thread_id: thread.into(),
+                },
+            })
+            .await?;
+        }
+        assert!(runs
+            .action(ResearchAction::Start {
+                id: "alias-duplicate".into(),
+                request: ResearchRequest {
+                    message: "Duplicate".into(),
+                    thread_id: "org__user__thread-1".into()
+                },
+            })
+            .await
+            .is_err());
+        assert!(runs
+            .action(ResearchAction::Start {
+                id: "invalid".into(),
+                request: ResearchRequest {
+                    message: "   ".into(),
+                    thread_id: "thread-3".into()
+                },
+            })
+            .await
+            .is_err());
+        let snapshots = runs.action(ResearchAction::List).await?;
+        assert_eq!(
+            snapshots
+                .iter()
+                .map(|value| value.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["z-first", "a-second"]
+        );
+        assert_eq!(snapshots[1].message, "Second question");
+        runs.shutdown().await;
+        drop(listener);
+        Ok(())
+    }
     #[tokio::test]
     async fn cancellation_closes_upstream_and_retains_run_state(
     ) -> Result<(), Box<dyn std::error::Error>> {

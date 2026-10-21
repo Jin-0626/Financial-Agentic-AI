@@ -89,7 +89,12 @@ class MarketService:
 
     @staticmethod
     def failure(cached, message, retry):
-        if cached and time.monotonic() - cached[0] < 3600:
+        if (
+            cached
+            and time.monotonic() - cached[0] < 3600
+            and isinstance(cached[1], dict)
+            and cached[1].get("data") is not None
+        ):
             return {
                 **copy.deepcopy(cached[1]),
                 "status": "stale",

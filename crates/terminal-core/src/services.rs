@@ -11,7 +11,7 @@ pub struct Position {
     pub average_cost: Decimal,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[serde(default, deny_unknown_fields)]
 pub struct Portfolio {
     pub name: String,
     pub owner: String,
@@ -19,6 +19,18 @@ pub struct Portfolio {
     pub benchmark: String,
     pub period: String,
     pub positions: Vec<Position>,
+}
+impl Default for Portfolio {
+    fn default() -> Self {
+        Self {
+            name: "My portfolio".into(),
+            owner: String::new(),
+            currency: "USD".into(),
+            benchmark: "SPY".into(),
+            period: "1y".into(),
+            positions: Vec::new(),
+        }
+    }
 }
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum TradeSide {
@@ -35,6 +47,7 @@ pub struct Trade {
     pub quantity: Decimal,
     pub price: Decimal,
     pub date: chrono::NaiveDate,
+    #[serde(default)]
     pub notes: String,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -140,11 +153,11 @@ impl ServiceRequest {
             |id: &str| !id.is_empty() && id.len() <= 254 && !id.chars().any(char::is_control);
         let portfolio = |p: &Portfolio| {
             !p.name.trim().is_empty()
-                && p.name.len() <= 80
+                && p.name.chars().count() <= 80
                 && p.positions.len() <= 50
                 && p.currency.len() == 3
                 && p.currency.bytes().all(|b| b.is_ascii_uppercase())
-                && p.owner.len() <= 128
+                && p.owner.chars().count() <= 128
                 && matches!(
                     p.period.as_str(),
                     "1mo" | "3mo" | "6mo" | "1y" | "2y" | "5y"
@@ -172,7 +185,7 @@ impl ServiceRequest {
                     && identifier(&trade.id)
                     && trade.quantity > Decimal::ZERO
                     && trade.price >= Decimal::ZERO
-                    && trade.notes.len() <= 1000
+                    && trade.notes.chars().count() <= 1000
                     && crate::InstrumentId::parse(&trade.symbol).is_ok()
                     && trade.date <= chrono::Utc::now().date_naive()
             }
