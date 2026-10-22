@@ -1,14 +1,13 @@
 //! Shared market services for HTTP and native callers. Rendering never waits here.
 use serde_json::{json, Value};
-use std::{
-    collections::BTreeMap,
-    future::Future,
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::collections::BTreeMap;
+use std::future::Future;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 pub use terminal_core::resources::ResourceRequest as MarketRequest;
 use terminal_core::TerminalError;
-use terminal_providers::{native::NativeMarketProvider, ProviderError};
+use terminal_providers::native::NativeMarketProvider;
+use terminal_providers::ProviderError;
 use tokio::sync::{Mutex, Semaphore};
 
 const MAX_ENTRIES: usize = 256;
@@ -52,7 +51,12 @@ struct Entry {
     success_at: Option<Instant>,
     bytes: usize,
 }
-type Entries = BTreeMap<MarketRequest, (Instant, Arc<Mutex<Entry>>)>;
+struct CacheSlot {
+    last_used: Instant,
+    entry: Arc<Mutex<Entry>>,
+}
+
+type Entries = BTreeMap<MarketRequest, CacheSlot>;
 #[derive(Clone)]
 pub struct MarketService<S: MarketSource = NativeMarketProvider> {
     source: S,
@@ -60,6 +64,7 @@ pub struct MarketService<S: MarketSource = NativeMarketProvider> {
     flights: Arc<Semaphore>,
 }
 impl<S: MarketSource> MarketService<S> {
+    /// Create an empty, bounded cache shared by clones of this service.
     pub fn new(source: S) -> Self {
         Self {
             source,
@@ -67,6 +72,9 @@ impl<S: MarketSource> MarketService<S> {
             flights: Arc::new(Semaphore::new(64)),
         }
     }
+    /// Load a validated resource, sharing in-flight work and immutable responses.
+    ///
+    /// Requests exceeding the deadline or cache capacity return a typed error.
     pub async fn execute(&self, request: MarketRequest) -> Result<Arc<Value>, TerminalError> {
         request.validate()?;
         tokio::time::timeout(Duration::from_secs(60), self.execute_validated(request))
@@ -84,8 +92,8 @@ impl<S: MarketSource> MarketService<S> {
             if !entries.contains_key(&request) && entries.len() >= MAX_ENTRIES {
                 let oldest = entries
                     .iter()
-                    .filter(|(_, (_, entry))| Arc::strong_count(entry) == 1)
-                    .min_by_key(|(_, (time, _))| *time)
+                    .filter(|(_, slot)| Arc::strong_count(&slot.entry) == 1)
+                    .min_by_key(|(_, slot)| slot.last_used)
                     .map(|(key, _)| key.clone());
                 match oldest {
                     Some(key) => {
@@ -94,11 +102,12 @@ impl<S: MarketSource> MarketService<S> {
                     None => return Err(TerminalError::QueueFull),
                 }
             }
-            let entry = entries
-                .entry(request.clone())
-                .or_insert_with(|| (Instant::now(), Arc::new(Mutex::new(Entry::default()))));
-            entry.0 = Instant::now();
-            entry.1.clone()
+            let entry = entries.entry(request.clone()).or_insert_with(|| CacheSlot {
+                last_used: Instant::now(),
+                entry: Arc::new(Mutex::new(Entry::default())),
+            });
+            entry.last_used = Instant::now();
+            Arc::clone(&entry.entry)
         };
         let mut cached = entry.lock().await;
         if cached.due.is_some_and(|due| due > Instant::now()) {
@@ -153,11 +162,11 @@ impl<S: MarketSource> MarketService<S> {
         let mut entries = self.entries.lock().await;
         let mut total = 0;
         let mut idle = Vec::new();
-        for (key, (used, entry)) in entries.iter() {
-            if let Ok(value) = entry.try_lock() {
+        for (key, slot) in entries.iter() {
+            if let Ok(value) = slot.entry.try_lock() {
                 total += value.bytes;
-                if Arc::strong_count(entry) == 1 {
-                    idle.push((*used, key.clone(), value.bytes));
+                if Arc::strong_count(&slot.entry) == 1 {
+                    idle.push((slot.last_used, key.clone(), value.bytes));
                 }
             }
         }
@@ -172,9 +181,16 @@ impl<S: MarketSource> MarketService<S> {
     }
 }
 fn failure(previous: Option<&Value>, message: &str, retry: u64) -> Value {
-    let mut value=previous.filter(|value|!value["data"].is_null()).cloned().unwrap_or_else(||json!({
-        "data":null,"source":null,"observed_at":null,"coverage":"Provider unavailable","limitations":[]
-    }));
+    let mut value = match previous {
+        Some(value) if !value["data"].is_null() => value.clone(),
+        _ => json!({
+            "data": null,
+            "source": null,
+            "observed_at": null,
+            "coverage": "Provider unavailable",
+            "limitations": [],
+        }),
+    };
     let stale = !value["data"].is_null();
     value["status"] = json!(if stale { "stale" } else { "unavailable" });
     value["stale"] = json!(stale);
@@ -229,7 +245,7 @@ mod tests {
             .await
             .get(&key)
             .ok_or("missing entry")?
-            .1
+            .entry
             .clone();
         entry.lock().await.due = Some(Instant::now());
         source.fail.store(true, Ordering::SeqCst);
@@ -243,6 +259,47 @@ mod tests {
         Ok(())
     }
     #[tokio::test]
+    async fn capacity_evicts_oldest_idle_slot_without_removing_active_work(
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let service = MarketService::new(Source::default());
+        let key = |index| MarketRequest::Search {
+            query: format!("symbol{index}"),
+        };
+        let now = Instant::now();
+        let active = {
+            let mut entries = service.entries.lock().await;
+            for index in 0..MAX_ENTRIES {
+                entries.insert(
+                    key(index),
+                    CacheSlot {
+                        last_used: now - Duration::from_secs(index as u64),
+                        entry: Arc::new(Mutex::new(Entry::default())),
+                    },
+                );
+            }
+            Arc::clone(
+                &entries
+                    .get(&key(MAX_ENTRIES - 1))
+                    .ok_or("missing active slot")?
+                    .entry,
+            )
+        };
+        service.execute(key(MAX_ENTRIES)).await?;
+        let entries = service.entries.lock().await;
+        assert_eq!(entries.len(), MAX_ENTRIES);
+        assert!(!entries.contains_key(&key(MAX_ENTRIES - 2)));
+        assert!(entries.contains_key(&key(MAX_ENTRIES)));
+        assert!(Arc::ptr_eq(
+            &active,
+            &entries
+                .get(&key(MAX_ENTRIES - 1))
+                .ok_or("active slot removed")?
+                .entry
+        ));
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn stale_data_expires_and_invalid_requests_never_reach_source(
     ) -> Result<(), Box<dyn std::error::Error>> {
         let source = Source::default();
@@ -255,7 +312,7 @@ mod tests {
             .await
             .get(&key)
             .ok_or("missing entry")?
-            .1
+            .entry
             .clone();
         {
             let mut value = entry.lock().await;

@@ -10,7 +10,7 @@
     "test": "playwright test",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
-    "desktop:check": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
+    "desktop:check": "cargo test --locked -p financial-terminal-desktop",
     "test:production": "playwright test -c playwright.production.config.ts"
   },
   "dependencies": {

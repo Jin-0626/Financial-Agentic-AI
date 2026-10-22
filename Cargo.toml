@@ -1,5 +1,8 @@
 [workspace]
-members = ["crates/quant-engine", "crates/data-pipeline", "crates/mcp-server", "crates/terminal-core", "crates/terminal-providers", "crates/terminal-storage", "crates/terminal-engine", "crates/terminal-ui", "crates/terminal-tools", "crates/terminal-server"]
+members = ["crates/*", "frontend/src-tauri"]
+# Plain Cargo commands stay usable on headless backend development machines.
+# Use --workspace for every package, including the desktop application.
+default-members = ["crates/*"]
 resolver = "2"
 
 [workspace.package]
@@ -9,6 +12,14 @@ rust-version = "1.99"
 publish = false
 
 [workspace.dependencies]
+terminal-core = { path = "crates/terminal-core" }
+terminal-providers = { path = "crates/terminal-providers" }
+terminal-storage = { path = "crates/terminal-storage" }
+terminal-engine = { path = "crates/terminal-engine" }
+terminal-ui = { path = "crates/terminal-ui" }
+tauri = { version = "2.12.1", features = [] }
+tauri-build = { version = "2.7.1", features = [] }
+
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["float_roundtrip", "raw_value"] }
 thiserror = "2"

@@ -1,10 +1,11 @@
 [package]
 name = "financial-terminal-desktop"
-version = "0.1.0"
+version.workspace = true
 description = "Native financial terminal with a Rust market engine"
 license = "AGPL-3.0-or-later"
 edition = "2024"
-rust-version = "1.99"
+rust-version.workspace = true
+publish.workspace = true
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,25 +14,20 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.7.1", features = [] }
+tauri-build.workspace = true
 
 [dependencies]
-serde_json = "1.0"
-tauri = { version = "2.12.1", features = [] }
-terminal-core = { path = "../../crates/terminal-core" }
-terminal-providers = { path = "../../crates/terminal-providers" }
-terminal-storage = { path = "../../crates/terminal-storage" }
-terminal-engine = { path = "../../crates/terminal-engine" }
-terminal-ui = { path = "../../crates/terminal-ui" }
-tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
+serde_json.workspace = true
+tauri.workspace = true
+terminal-core.workspace = true
+terminal-providers.workspace = true
+terminal-storage.workspace = true
+terminal-engine.workspace = true
+terminal-ui.workspace = true
+tokio.workspace = true
 
-[workspace]
-
-[lints.rust]
-unsafe_code = "forbid"
-[lints.clippy]
-unwrap_used = "deny"
-expect_used = "deny"
+[lints]
+workspace = true
 
 [dev-dependencies]
-tempfile = "3"
+tempfile.workspace = true

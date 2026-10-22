@@ -1,110 +1,143 @@
 # Financial Research Terminal
 
-A single-window Tauri/React financial workspace backed by a native Rust engine and
-an existing FastAPI provider gateway. The desktop includes charts, indicators and
-drawings, named watchlists, market tables, options inspection, calendars, portfolios,
-research, backtesting and traces. Coverage and availability depend on the provider;
-unavailable fields and stale observations are explicit.
+A Tauri/React desktop application for financial analysis, backed by a Rust engine and a FastAPI provider gateway. Market availability depends on provider coverage; stale data and unavailable fields are labeled explicitly.
 
-The Rust server preview is opt-in; the existing server remains the default while
-remaining workflows migrate. The preview includes direct macro and current-week
-economic calendar resources. Its optional `portfolio` feature exposes metadata
-CRUD and export; full workflow parity remains incomplete.
+## Contents
 
-## Prerequisites
+- [Features](#features)
+- [Architecture](#architecture)
+- [Repository Structure](#repository-structure)
+- [Getting Started](#getting-started)
+- [Configuration](#configuration)
+- [Local Storage](#local-storage)
+- [Development and Validation](#development-and-validation)
+- [Desktop Builds](#desktop-builds)
+- [Contributing](#contributing)
+- [License](#license)
 
-- Rust **1.99.0**, Cargo, rustfmt and Clippy. Workspace crates use edition 2021;
-  the separate Tauri crate uses edition 2024.
-- Python **3.12+** and **uv**. The optional analytics interpreter is separately locked
-  to **Python 3.12** and provisioned by uv.
-- Node.js **24** and npm, matching CI.
-- Windows desktop builds: Visual Studio C++ Build Tools and WebView2. Linux Tauri
-  builds also need the platform GTK/WebKit development packages.
-- SQLite is embedded; no database server is required. Research needs a configured Ollama model.
+## Features
+
+- Candlestick charts, indicators, drawing tools, and saved multi-panel layouts.
+- Named watchlists, configurable market tables, screening, and instrument search.
+- Malaysian and US equities, cryptocurrency data, options inspection, news, and calendars.
+- SQLite portfolios with transaction entry, import review, and revision handling.
+- Research conversations with persistent memory and checkpoints.
+- Rust financial calculations, backtesting, and execution traces.
+
+Live HTTP mode defaults to `5326.KL` and the `6M` history range. Seeded mock mode supports market exploration without a backend.
 
 ## Architecture
 
-React consumes typed Tauri commands and revisioned native updates. Rust owns market
-subscriptions, cancellation, retries, stale retention, request deduplication and
-obsolete-response rejection, with four concurrent upstream requests. UI components
-do not access SQLite or provider HTTP APIs directly.
+### Component Responsibilities
 
-Python/yfinance retains Yahoo session handling and individual provider requests.
-Desktop equity normalization, four-worker snapshot assembly, filtering, exact decimal
-price sorting and pagination execute in Rust against shared complete snapshots.
-Other provider resources still use the existing Python normalization. Malaysia uses
-the complete retrieved Yahoo Malaysian universe; US uses paginated exchange partitions, including OTC,
-with the existing Nasdaq feed as an explicitly labeled fallback for empty Yahoo
-coverage. Neither list is advertised as an exhaustive
-exchange directory. Yahoo and CoinGecko identities remain distinct.
+| Layer | Location | Responsibility |
+| --- | --- | --- |
+| Desktop interface | `frontend/src/` | React views, charts, layouts, and typed native-command consumption. |
+| Desktop host | `frontend/src-tauri/` | Tauri runtime and desktop integration. |
+| Shared domain | `crates/terminal-core/` | Domain types and shared Rust contracts. |
+| Market runtime | `crates/terminal-engine/`, `crates/terminal-providers/` | Market services, subscriptions, scheduling, and provider adapters. |
+| Native persistence | `crates/terminal-storage/` | SQLite repositories. |
+| Native presentation | `crates/terminal-ui/` | Presentation boundary for native consumers. |
+| Provider gateway | `app/` | Default FastAPI backend and Python provider access. |
+| Research orchestration | `orchestrator/`, `contracts/`, `skills/` | Research agents, tools, identity/evidence contracts, and specialist instructions. |
+| Quantitative execution | `crates/quant-engine/`, `crates/mcp-server/` | Rust financial calculations exposed through the `financial-engine` stdio MCP binary. |
+| Numerical analytics | `financial_analytics/`, `analytics-runtime/` | Isolated Python numerical operations and their locked environment. |
+| Ingestion and utilities | `crates/data-pipeline/`, `crates/terminal-tools/`, `scripts/` | Ingestion, scoped storage, setup, benchmarks, and provider utilities. |
+| Optional HTTP runtime | `crates/terminal-server/` | Preview Rust server; backend parity is incomplete. |
 
-Rust quantitative calculations run through the organization-scoped `financial-engine`
-stdio MCP binary. Python orchestrates Deep Agents research and isolated offline
-analytics. There is no Python fallback for operations promoted to Rust. The desktop
-dependency graph remains independent of Polars; analytics crates use Polars separately.
+### Runtime Boundaries
+
+- React communicates with the native desktop through typed commands and revisioned updates.
+- Rust coordinates market work; Python/yfinance performs Yahoo sessions and individual provider requests.
+- FastAPI is the default backend for server-backed workflows. Research orchestration uses Rust financial tools and isolated Python analytics.
+- Mock mode supplies synthetic market data without a backend; it does not support server-backed workflows.
+
+Rust owns market subscriptions, bounded concurrency, deduplication, cancellation, retries, and stale-data retention. React consumes typed native commands and revisioned updates.
+
+Python/yfinance still handles Yahoo sessions and individual provider requests. Rust assembles equity snapshots and performs filtering, exact decimal sorting, and pagination. Malaysian and US results reflect retrieved provider coverage, not an exhaustive exchange directory.
+
+The `financial-engine` stdio MCP binary provides Rust quantitative calculations. Python orchestrates Research and isolated numerical analytics. The normal desktop dependency graph excludes Polars.
+
+The Rust HTTP server remains an opt-in preview. It includes direct macro and current-week economic calendar resources, plus portfolio metadata CRUD and export behind its optional `portfolio` feature. Full backend parity is incomplete; FastAPI remains the default.
+
+## Repository Structure
 
 ```text
 .
-|-- Cargo.toml                  # Rust workspace; financial-engine binary
-|-- crates/
-|   |-- terminal-core/          # Domain types, preferences, events and commands
-|   |-- terminal-providers/     # Mock/HTTP adapters and native screener ranking
-|   |-- terminal-storage/       # Dedicated SQLite worker for desktop settings
-|   |-- terminal-engine/        # Background scheduling and subscription ownership
-|   |-- terminal-ui/            # Typed native presentation boundary
-|   |-- terminal-server/        # Opt-in Rust HTTP API during staged migration
-|   |-- terminal-tools/         # Bounded native provider/market commands
-|   |-- quant-engine/           # Financial calculations and numerical validation
-|   |-- data-pipeline/          # Provider ingestion and scoped snapshot storage
-|   `-- mcp-server/             # Bounded financial-engine stdio protocol
-|-- frontend/
-|   |-- src/                    # Active React workspace and shared controls
-|   |-- src-tauri/              # Separate Cargo workspace and desktop binary
-|   `-- tests/                  # Deterministic Playwright browser suites
-|-- app/
-|   |-- bootstrap/              # Unified backend and existing launch target
-|   |-- market/                 # Existing market provider gateway
-|   |-- portfolio/              # SQLite documents, revisions and import workflows
-|   |-- research/               # Research routes, streaming and lifecycle
-|   |-- backtesting/            # Native calculation routes and history retrieval
-|   `-- infrastructure/         # Authentication, native transport and persistence
-|-- orchestrator/              # Deep Agents, specialists, policy and tools
-|-- contracts/                 # Shared identity/context/evidence contracts
-|-- financial_analytics/       # Reviewed isolated Python analytics operations
-|-- analytics-runtime/         # Separate locked Python 3.12 numerical environment
-|-- scripts/                   # Setup, offline benchmarks and curated providers
-|-- skills/                    # Skills supplied to the research specialists
-|-- tests/                     # Unit/integration tests and independent baselines
-`-- .github/workflows/         # Windows/Linux Rust, Python and desktop checks
+├── Cargo.toml                 # Virtual workspace: 11 Rust packages
+├── Cargo.lock                 # Shared Rust dependency lockfile
+├── rust-toolchain.toml        # Pinned compiler and tools
+├── crates/
+│   ├── terminal-core/         # Domain types and shared contracts
+│   ├── terminal-providers/    # Market and provider adapters
+│   ├── terminal-storage/      # SQLite repositories
+│   ├── terminal-engine/       # Services and subscription scheduling
+│   ├── terminal-ui/           # Native presentation boundary
+│   ├── terminal-server/       # Opt-in Rust HTTP server
+│   ├── terminal-tools/        # Provider and market utilities
+│   ├── quant-engine/          # Financial calculations
+│   ├── data-pipeline/         # Ingestion and scoped storage
+│   └── mcp-server/            # financial-engine executable
+├── frontend/
+│   ├── src/                   # React application
+│   ├── src-tauri/             # Desktop Rust workspace member
+│   └── tests/                 # Browser tests
+├── app/                       # FastAPI backend
+├── orchestrator/              # Research agents and tools
+├── contracts/                 # Identity and evidence contracts
+├── financial_analytics/       # Isolated numerical operations
+├── analytics-runtime/         # Locked Python analytics environment
+├── scripts/                   # Setup, benchmarks, and provider commands
+├── skills/                    # Research specialist instructions
+├── tests/                     # Python tests and numerical baselines
+└── .github/workflows/         # CI checks
 ```
 
-## Setup
+All Rust packages share the root lockfile and `target/` directory. Plain Cargo commands select the 10 headless crates; `--workspace` includes the desktop.
 
-Run commands from the repository root. Commands below use PowerShell.
+## Getting Started
+
+### Prerequisites
+
+- **Rust 1.99.0**, Cargo, rustfmt, and Clippy.
+- **Python 3.12+** and **uv**. Optional numerical analytics use a separate Python 3.12 environment.
+- **Node.js 24** and **npm**.
+- **Windows:** Visual Studio C++ Build Tools and WebView2.
+- **Linux:** Tauri GTK/WebKit development libraries. Follow the [platform prerequisites](https://v2.tauri.app/start/prerequisites/).
+- **Research:** An available Ollama model and a configured server URL.
+
+SQLite is embedded; no database server is required.
+
+### Installation
+
+Run these PowerShell commands from the repository root:
 
 ```powershell
 rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
 uv sync --frozen
-cargo +1.99.0 build --locked --workspace
 npm --prefix frontend ci
 npm --prefix frontend run build
+cargo +1.99.0 build --locked --workspace
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-`uv sync` creates `.venv`; activation is unnecessary with `uv run`. Edit `.env` for
-your backend configuration. No production keys are included. The Python backend
-loads root `.env` without replacing already exported variables. Native Tauri settings
-must be exported in the shell that launches the desktop; Tauri does not load `.env`.
+`uv sync` creates `.venv`. Use `uv run` without activating it.
 
-### Markets and local portfolios
+Edit `.env` before starting the backend. For market-only operation, set `RESEARCH_ENABLED=false`. To enable Research, configure an available model and prepare its analytics environment:
 
-Start the shared gateway in one shell:
+```powershell
+uv run --frozen python scripts/setup_analytics.py
+```
+
+### Run the Application
+
+Start the backend in one terminal:
 
 ```powershell
 uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11 --log-level info
 ```
 
-Then launch the desktop from another shell:
+Launch the desktop in another:
 
 ```powershell
 $env:TERMINAL_PROVIDER = 'http'
@@ -112,78 +145,67 @@ $env:TERMINAL_BACKEND_URL = 'http://127.0.0.1:8000'
 npm --prefix frontend run desktop:dev
 ```
 
-Live HTTP is the default; new profiles select `5326.KL` and `6M`. For a deterministic
-market demonstration without a backend, set `$env:TERMINAL_PROVIDER = 'mock'` before
-launching. Server-backed workflows remain unavailable in mock mode.
+Markets, portfolios, and Research share the same backend URL and identity. If Research initialization fails, markets remain available; `/api/health` reports readiness.
 
-The unified gateway exposes markets, SQLite portfolios and Research through the
-same backend URL, identity and port. The old `app.bootstrap.market_application:app`
-launch target resolves to this same application. Research initialization is optional:
-if it fails, markets remain available and `/api/health` explains its readiness.
-The browser UI requires the native runtime outside deterministic Playwright fixtures.
-
-### Full research backend
-
-Research memory and checkpoints use a local SQLite file, created automatically.
-Optionally set `RESEARCH_SQLITE_PATH` to an absolute file path in `.env`.
+For mock market data, set the provider before launching:
 
 ```powershell
-uv run --frozen python scripts/setup_analytics.py
-uv run --frozen python -m uvicorn app:app --host 127.0.0.1 --port 8000 --http h11 --log-level info
+$env:TERMINAL_PROVIDER = 'mock'
+npm --prefix frontend run desktop:dev
 ```
 
-Choose an available `MODEL_NAME` and its `OLLAMA_URL`; hosted Ollama may also require
-`OLLAMA_API_KEY`. Markets and Research share this backend on port 8000; there is no second Research
-URL. Set `RESEARCH_ENABLED=false` for market-only operation. Research memory/checkpoint tables and local SQLite migrations are initialized
-at application startup; there is no separate ORM migration command.
+Server-backed workflows are unavailable in mock mode. Outside browser-test fixtures, the frontend requires the Tauri runtime.
 
-Production requires verified OIDC issuer, JWKS URL, API audience and public client ID.
-The desktop discovers `/api/auth/config`, validates `/api/auth/me`, and accepts an
-externally obtained `TERMINAL_ACCESS_TOKEN`. Interactive desktop login is not
-implemented. Credentials stay native; no `VITE_*` credential configuration is used.
+## Configuration
 
-### Local storage
+See [.env.example](.env.example) for the complete configuration template.
 
-- Desktop watchlists, layouts, chart settings and history: Tauri application-data
-  `state.sqlite3`, namespace-scoped by backend, verified identity and profile.
-  Preferences are version 7; SQLite schema is version 2.
-- Portfolio records: `financial-research-terminal/portfolios.sqlite3` below
-  `%LOCALAPPDATA%` on Windows or `$XDG_DATA_HOME`/`~/.local/share` on Linux.
-  Override with `PORTFOLIO_SQLITE_PATH`. Its separate SQLite schema is version 1.
-- Research memory and checkpoints: `financial-research-terminal/research.sqlite3`
-  in the same OS application-data directory. Override with `RESEARCH_SQLITE_PATH`.
-  LangGraph owns its memory/checkpoint table migrations. Namespace and thread IDs
-  retain organization/user isolation. Use one backend process per local file.
-  Back up the file while the backend is stopped (or use SQLite's online backup API);
-  copying only the main file while running can omit WAL writes.
-- Existing PostgreSQL records are left untouched. SQLite starts with local records;
-  changing the storage backend does not automatically copy old Research history.
-  `DB_URL` is no longer read by application startup.
-- `.engine-data`: organization-scoped native snapshots and artifacts.
+The Python backend loads the root `.env` without replacing exported variables. Tauri does **not** load `.env`; export desktop settings in the launching terminal.
 
-## Testing and linting
+| Variable | Purpose |
+| --- | --- |
+| `TERMINAL_PROVIDER` | `http` for backend data or `mock` for synthetic market data. |
+| `TERMINAL_BACKEND_URL` | Backend origin; defaults to `http://127.0.0.1:8000`. |
+| `TERMINAL_ACCESS_TOKEN` | Externally obtained bearer token when authentication is required. |
+| `RESEARCH_ENABLED` | Enable Research; set to `false` for market-only operation. |
+| `MODEL_NAME` | Available provider-qualified Ollama model name. |
+| `OLLAMA_URL` | Local or hosted Ollama server URL. |
+| `OLLAMA_API_KEY` | Optional hosted Ollama credential. |
+| `RESEARCH_SQLITE_PATH` | Override the Research memory/checkpoint database path. |
+| `PORTFOLIO_SQLITE_PATH` | Override the portfolio database path. |
 
-The Python suite uses standard-library **unittest**, not pytest; no pytest install
-is required. The numerical baseline implementations live under `tests/support`
-and are never production fallbacks.
+Production authentication requires a configured OIDC issuer, JWKS URL, API audience, and public client ID. The desktop discovers `/api/auth/config` and validates identity through `/api/auth/me`. Interactive desktop login is not implemented.
+
+## Local Storage
+
+| Data | Location |
+| --- | --- |
+| Watchlists, layouts, chart settings, and command history | Tauri application-data directory, `state.sqlite3`. |
+| Portfolios | `financial-research-terminal/portfolios.sqlite3` under the OS application-data directory. |
+| Research memory and checkpoints | `financial-research-terminal/research.sqlite3` under the OS application-data directory. |
+| Native snapshots and artifacts | `.engine-data/`. |
+
+On Windows, the backend application-data base is `%LOCALAPPDATA%`. On Linux, it is `$XDG_DATA_HOME` or `~/.local/share`.
+
+Desktop preferences use version 7 and SQLite schema version 2. Portfolios use schema version 1; LangGraph manages Research table migrations. Storage remains identity-scoped.
+
+Use one backend process per Research database. Stop it before copying the database, or use SQLite's online backup API so WAL writes are included.
+
+Existing PostgreSQL records are not copied automatically. Application startup no longer reads `DB_URL`.
+
+## Development and Validation
+
+### Rust
 
 ```powershell
 cargo +1.99.0 test --locked --workspace --all-features -j 2
 cargo +1.99.0 fmt --all --check
 cargo +1.99.0 clippy --locked --workspace --all-targets --all-features -- -D warnings
-uv run --frozen python -B -m unittest discover -s tests -t . -v
-uvx --from ruff==0.17.0 ruff check .
-uvx --from ruff==0.17.0 ruff format --check .
-uv pip check --python .venv/Scripts/python.exe
-npm --prefix frontend run build
 ```
 
-On Linux, use `.venv/bin/python` for `uv pip check`. To enable native integration
-tests, export `ENGINE_TEST_COMMAND` and `RUST_SERVER_TEST_COMMAND` as JSON argv
-arrays pointing to the built `financial-engine` and portfolio-enabled
-`terminal-server` binaries. Research storage tests use temporary SQLite files.
-Set `PYTHON_DOTENV_DISABLED=1` when running isolated fixtures. Without these settings,
-applicable integration tests skip explicitly.
+### Python and Native Integrations
+
+Python tests use standard-library `unittest`. Build both native executables and configure their paths to enable integration coverage:
 
 ```powershell
 cargo +1.99.0 build --locked -p mcp-server -p terminal-server --features terminal-server/portfolio
@@ -191,51 +213,61 @@ $env:ENGINE_TEST_COMMAND = '["target/debug/financial-engine.exe"]'
 $env:RUST_SERVER_TEST_COMMAND = '["target/debug/terminal-server.exe"]'
 $env:PYTHON_DOTENV_DISABLED = '1'
 uv run --frozen python -B -m unittest discover -s tests -t . -v
+uvx --from ruff==0.17.0 ruff check .
+uvx --from ruff==0.17.0 ruff format --check .
+uv pip check --python .venv/Scripts/python.exe
+```
+
+On Linux, omit `.exe` from binary paths and use `.venv/bin/python` for the dependency check. Tests requiring unconfigured native commands skip explicitly. Storage tests use temporary SQLite databases.
+
+### Frontend and Desktop
+
+```powershell
+npm --prefix frontend run build
 $env:PLAYWRIGHT_CHANNEL = 'msedge'
 npm --prefix frontend test
 npm --prefix frontend run test:production
 npm --prefix frontend run desktop:check
-cargo +1.99.0 fmt --manifest-path frontend/src-tauri/Cargo.toml --check
-cargo +1.99.0 clippy --manifest-path frontend/src-tauri/Cargo.toml --locked --all-targets -- -D warnings
 ```
 
-Alternatively install Chromium with `npx --prefix frontend playwright install chromium`
-and leave `PLAYWRIGHT_CHANNEL` unset. Both browser suites use deterministic native
-bridge fixtures; production tests serve `frontend/dist`, so build it first and do
-not rebuild it while that suite is running.
-
-Offline benchmarks run as modules, for example
-`uv run --frozen python -m scripts.benchmark_offline moving_average`. Build the
-corresponding release binary/examples first. Reports go to ignored
-`benchmark-results/`; benchmarks do not access live providers or saved portfolios.
-
-## Desktop build
+Alternatively, install Chromium and leave `PLAYWRIGHT_CHANNEL` unset:
 
 ```powershell
-# Standalone Windows executable using already-built frontend assets:
-cargo +1.99.0 build --manifest-path frontend/src-tauri/Cargo.toml --locked --features tauri/custom-protocol
-# Production installer; also builds frontend assets:
+npx --prefix frontend playwright install chromium
+```
+
+Browser tests use deterministic native-bridge fixtures. Production tests serve `frontend/dist`; build it first and do not rebuild it during the suite.
+
+## Desktop Builds
+
+Build a standalone Windows debug executable using existing frontend assets:
+
+```powershell
+cargo +1.99.0 build --locked -p financial-terminal-desktop --features tauri/custom-protocol
+```
+
+Output: `target/debug/financial-terminal-desktop.exe`.
+
+Build the production installer and frontend assets:
+
+```powershell
 npm --prefix frontend run desktop:build
 ```
 
-The standalone debug binary is
-`frontend/src-tauri/target/debug/financial-terminal-desktop.exe`. The root workspace
-binary is `target/debug/financial-engine.exe`; it is a private MCP service, not a
-second frontend. Inspect its schemas with
-`cargo +1.99.0 run --locked -p mcp-server --bin financial-engine -- schema`.
-Backend services run separately. Restart backend and desktop together after native
-market API changes.
+Backend services run separately. Restart the backend and desktop together after native market API changes.
 
-### Continuous integration
+## Contributing
 
-The [regression workflow](.github/workflows/tests.yml) runs on pushes, pull
-requests, and manual dispatch. It checks the Rust workspace with all features on
-Windows and Linux, including the opt-in native portfolio service. Separate jobs
-run Python/backend tests with temporary SQLite databases, development and production
-browser tests, and Windows Tauri tests, formatting, Clippy, and a locked release
-build. Browser reports and the standalone Windows executable are retained for
-14 days in workflow artifacts. Superseded runs are cancelled.
+Place changes in the component that owns the behavior, using the responsibility table above. Keep shared contracts separate from provider-specific handling, and keep numerical analytics in its isolated runtime.
 
-The executable artifact is an unsigned build for validation; the workflow does
-not deploy services, publish releases, or switch the default backend. Live tests
-remain opt-in; normal CI uses fixtures and disposable databases.
+Keep changes focused and preserve public contracts, exact decimal values, identity isolation, and provider provenance. Add regression tests for behavior changes and run the relevant checks above.
+
+Follow the applicable [Google Rust Style Guide](https://google.github.io/styleguide/rustguide.html). The workspace enforces stable rustfmt with a 100-column width, forbids unsafe code, and denies `unwrap` and `expect` through Clippy.
+
+The [pull request template](.github/pull_request_template.md) requests the change, validation results, and configuration impact. Report skipped or unverified checks explicitly. Use fixtures and disposable databases for write tests.
+
+[CI](.github/workflows/tests.yml) runs Rust checks on Windows and Linux, backend tests, both browser suites, and Windows desktop checks. It retains browser reports and an unsigned Windows executable for 14 days; it does not deploy services or publish releases.
+
+## License
+
+The desktop crate declares `AGPL-3.0-or-later` in [its Cargo manifest](frontend/src-tauri/Cargo.toml). A repository-wide license file is not currently included.
